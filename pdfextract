@@ -17,7 +17,7 @@ command :text do |c|
 
   c.action do |args, options|
     args.each do |filename|
-      xml = convert filename, :to => :xml { |pdf| pdf.text_runs }
+      xml = convert filename, :to => :xml do |pdf| pdf.text_runs end
       say xml
     end
   end
@@ -46,7 +46,7 @@ command :sections do |c|
 
   c.action do |args, options|
     args.each do |filename|
-      xml = convert filename, :to => :xml { |pdf| pdf.sections }
+      xml = convert filename, :to => :xml do |pdf| pdf.sections end
       say xml
     end
   end

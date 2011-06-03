@@ -39,19 +39,22 @@ class Receiver
   end
 
   def expand_listeners_to_callback_methods
-    # TODO
-    # for each in listeners
-    #   create callback method if it doesn't exist that
-    #   looks up callback_name in listeners, executes each
-    #   fn with data from the callback, and adds the result
-    #   to spatial type :type.
+    # TODO merge on callback_name
+    @listeners.each_pair do |callback_name, callback_handler|
+      p = proc do |*args|
+        spatial_objects = callback_handler[:fn].call args
+        @pdf.spatial_objects[callback_handler[:type]] << spatial_objects
+      end
+      
+      self.class.send :define_method, callback_name, p
+    end
   end
 
 end
 
 class Pdf
   
-  attr_accessor :operating_type, :spatial_calls, :spatial_builders
+  attr_accessor :operating_type, :spatial_calls, :spatial_builders, :spatial_objects
   
   def method_missing name, *args
     throw StandardError.new "No such spatial type #{name}"
@@ -70,8 +73,7 @@ class Pdf
     self.spatials :text_runs do |parser|
       parser.for :show_text_with_positioning do |data|
         # TODO Make SpatialObjects
-        # TODO How are they added to @spatial_objects?
-        puts o
+        puts data
       end
     end
 
@@ -131,8 +133,9 @@ def parse filename, &block
   pdf.spatial_calls.each do |spatial_call|
     pdf.spatial_builders[spatial_call[:name]].call receiver
   end
+  receiver.expand_listeners_to_callback_methods
 
-  PDF::Reader.new filename, receiver
+  PDF::Reader.file filename, receiver
   
   pdf
 end
@@ -153,7 +156,7 @@ end
 
 # Usage
 
-view "/home/karl/some.pdf" do |pdf|
+view "/Users/karl/some.pdf" do |pdf|
   pdf.text_runs do |run|
     double_height = {
       :height => {:grow_by_percent => 1},
@@ -165,7 +168,7 @@ view "/home/karl/some.pdf" do |pdf|
   pdf.sections
 end
 
-convert "/home/karl/some.pdf", :to => :xml do |pdf|
+convert "/Users/karl/some.pdf", :to => :xml do |pdf|
   pdf.text_runs
   pdf.sections
 end

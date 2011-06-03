@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+
+require 'commander/import'
+require_relative 'lib/pdf'
+
+program :name, 'pdfextract'
+program :version, '0.0.1'
+program :description, 'Content extraction toolkit for PDFs'
+
+global_option '-p', '--password STRING', 'Decrypt the input PDF with password' do |pw|
+  $password = pw
+end
+
+command :text do |c|
+  c.syntax 'pdfextract text filename [options]'
+  c.description 'Extract runs of text to an XML file'
+
+  c.action do |args, options|
+    args.each do |filename|
+      xml = convert filename, :to => :xml { |pdf| pdf.text_runs }
+      say xml
+    end
+  end
+end
+
+command :mask do |c|
+  c.syntax 'pdfextract mask filename pagenumber [options]'
+  c.description 'Create a mask image of text bounding boxes'
+  c.option '--output-dir STRING', String, 'Output directory'
+
+  c.action do |args, options|
+    args.each do |filename|
+      image = view filename do |pdf|
+        pdf.text_runs
+        pdf.regions
+        pdf.sections
+      end
+      # TODO Write image.
+    end
+  end
+end
+
+command :sections do |c|
+  c.syntax 'pdfextract sections filename [options]'
+  c.description 'Analyze PDF as a report, output text in sections to an XML file'
+
+  c.action do |args, options|
+    args.each do |filename|
+      xml = convert filename, :to => :xml { |pdf| pdf.sections }
+      say xml
+    end
+  end
+end
+

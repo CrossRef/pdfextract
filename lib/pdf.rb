@@ -72,9 +72,26 @@ class Pdf
     
     self.spatials :text_runs do |parser|
       parser.for :show_text_with_positioning do |data|
-        # TODO Make SpatialObjects
-        puts data
+        so = SpatialObject.new
+        so[:x] = 0
+        so[:y] = 0
+        so[:width] = 0
+        so[:height] = 0
+        so[:content] = data
+        so
       end
+
+      # TODO According to pdf-reader example, need to handle:
+      # :show_text_with_positioning
+      # :show_text
+      # :super_show_text
+      # :move_to_next_line_and_show_text
+      # :set_spacing_next_line_show_text
+
+      # TODO Somehow handle font type and size changes.
+      # e.g. need to declare want to see each :show_text along
+      # with the set font type and set font size that occur
+      # before it.
     end
 
     self.spatials :images do

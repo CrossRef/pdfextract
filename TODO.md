@@ -18,9 +18,22 @@
   via a new method in parser - parser.previous :text_runs { ... }.
   Spatial objects such as margins depend on the positions of text
   runs.
-
+* Determine units of and apply correctly :rise and :leading.
+* Handle UserUnit transformations.
 
 ## Tasks, up to 3 hours
+
+* Handle new line operators, and all show text operators.
+* Handle font metrics correctly, including glyph widths, displacement
+  vectors and bounding boxes.
+* Handle type 3 font font matrices.
+* Handle writing mode selection for composite fonts (type 0)
+  (different font metrics). 
+* Some way of splitting SpatialObjects by page.
+* !! Handle type 3 font operators. These may not be supported by 
+  pdf-reader!
+* Some sort of includable set of parser.for calls that handle
+  modification of the graphics matrix. 
 
 ## Long tasks, greater than 3 hours
 

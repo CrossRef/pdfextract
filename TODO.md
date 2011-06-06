@@ -20,6 +20,7 @@
   runs.
 * Determine units of and apply correctly :rise and :leading.
 * Handle UserUnit transformations.
+* Reset global text state at the end of each page.
 
 ## Tasks, up to 3 hours
 
@@ -37,3 +38,6 @@
 
 ## Long tasks, greater than 3 hours
 
+* Examine text_runs spatial definition and determine processing that
+  is generic. Move into Parser methods. E.g. Handling global /
+  object-specific state.

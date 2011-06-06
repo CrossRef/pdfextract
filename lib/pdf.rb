@@ -46,7 +46,9 @@ class Receiver
     @listeners.each_pair do |callback_name, callback_handler|
       p = proc do |*args|
         spatial_objects = callback_handler[:fn].call args
-        @pdf.spatial_objects[callback_handler[:type]] << spatial_objects
+        if not spatial_objects.nil?
+          @pdf.spatial_objects[callback_handler[:type]] << spatial_objects
+        end
       end
       
       self.class.send :define_method, callback_name, p
@@ -73,14 +75,27 @@ class Pdf
     @spatial_objects = {}
     
     self.spatials :text_runs do |parser|
+      state = {
+        :x => 0,
+        :y => 0,
+        :width => 0,
+        :height => 0
+      }
+      
       parser.for :show_text_with_positioning do |data|
         so = SpatialObject.new
-        so[:x] = 0
-        so[:y] = 0
+        so[:x] = state[:x]
+        so[:y] = state[:y]
         so[:width] = 0
         so[:height] = 0
         so[:content] = data
         so
+      end
+
+      parser.for :move_text_position do |data|
+        state[:x] += data[0]
+        state[:y] += data[1]
+        nil
       end
 
       # TODO According to pdf-reader example, need to handle:
@@ -89,11 +104,9 @@ class Pdf
       # :super_show_text
       # :move_to_next_line_and_show_text
       # :set_spacing_next_line_show_text
-
-      # TODO Somehow handle font type and size changes.
-      # e.g. need to declare want to see each :show_text along
-      # with the set font type and set font size that occur
-      # before it.
+      
+      # TODO Add state modifiers for other text positioning
+      # callbacks.
     end
 
     self.spatials :images do
@@ -132,7 +145,6 @@ class Pdf
 
     p = Proc.new do
       # TODO Check for missing depends_on in the spatials_calls stack.
-      
       @spatial_calls << {
         :name => name,
         :explicit => true

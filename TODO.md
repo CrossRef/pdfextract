@@ -20,7 +20,7 @@
   runs.
 * Determine units of and apply correctly :rise and :leading.
 * Handle UserUnit transformations.
-* Reset global text state at the end of each page.
+* DONE Reset global text state at the end of each page.
 
 ## Tasks, up to 3 hours
 
@@ -35,6 +35,8 @@
   pdf-reader!
 * Some sort of includable set of parser.for calls that handle
   modification of the graphics matrix. 
+* Add spatials parser.post { }, use in text_runs to sort and merge
+  adjacent runs.
 
 ## Long tasks, greater than 3 hours
 

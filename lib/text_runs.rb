@@ -2,7 +2,7 @@ module TextRuns
 
   def include_text_runs
     self.spatials :text_runs do |parser|
-      global_state = {
+      clean_state = {
         :x => 0,
         :y => 0,
         :width => 0,
@@ -11,9 +11,16 @@ module TextRuns
         :char_spacing => 0,
         :word_spacing => 0,
         :leading => 0,
-        :rise => 0
+        :rise => 0,
       }
+      global_state = clean_state.dup
       state = global_state
+
+      parser.for :begin_page do |data|
+        # TODO Handle UserUnits if set by page.
+        global_state = clean_state.dup
+        nil
+      end
 
       parser.for :begin_text_object do |data|
         state = global_state.dup
@@ -77,15 +84,40 @@ module TextRuns
         state[:height] = data[1]
         nil
       end
-      
-      parser.for :show_text_with_positioning do |data|
+
+      parser.for :show_text do |data|
         so = SpatialObject.new
         so[:x] = compute_x state
         so[:y] = compute_y state
         so[:width] = 0 # TODO sum_char_widths state, data
         so[:height] = state[:height]
-        so[:content] = data
+        so[:content] = data.first
         so
+      end
+      
+      parser.for :show_text_with_positioning do |data|
+        data = data.first # TODO Handle elsewhere.
+        
+        offset = 0.0
+        runs = []
+        
+        data.each do |text_or_offset|
+          #puts text_or_offset.class
+          case text_or_offset.class.to_s
+          when "Fixnum"
+            offset -= text_or_offset / 1000.0
+          when "String"
+            so = SpatialObject.new
+            so[:x] = compute_x(state) + offset
+            so[:y] = compute_y state
+            so[:width] = 0 # TODO sum_char_widths state, data
+            so[:height] = state[:height]
+            so[:content] = text_or_offset
+            runs << so
+          end
+        end
+
+        runs
       end
 
       parser.for :move_text_position do |data|

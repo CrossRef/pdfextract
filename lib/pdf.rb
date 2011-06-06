@@ -47,9 +47,17 @@ class Receiver
     @listeners.each_pair do |callback_name, callback_handler|
       p = proc do |*args|
         spatial_objects = callback_handler[:fn].call args
+        
         if not spatial_objects.nil?
-          @pdf.spatial_objects[callback_handler[:type]] << spatial_objects
+          if spatial_objects.class != Array
+            spatial_objects = [spatial_objects]
+          end
+          
+          spatial_objects.each do |obj|
+            @pdf.spatial_objects[callback_handler[:type]] << obj
+          end
         end
+        
       end
       
       self.class.send :define_method, callback_name, p

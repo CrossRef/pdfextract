@@ -2,6 +2,7 @@ require 'pdf-reader'
 require 'nokogiri'
 
 require_relative 'util'
+require_relative 'text_runs'
 
 # A DSL that aids in developing an understanding of the spatial
 # construction of PDF pages.
@@ -59,6 +60,8 @@ end
 
 class Pdf
   
+  include TextRuns
+  
   attr_accessor :operating_type, :spatial_calls, :spatial_builders, :spatial_objects
   
   def method_missing name, *args
@@ -73,41 +76,8 @@ class Pdf
     @spatial_builders = {}
     @spatial_calls = []
     @spatial_objects = {}
-    
-    self.spatials :text_runs do |parser|
-      state = {
-        :x => 0,
-        :y => 0,
-        :width => 0,
-        :height => 0
-      }
-      
-      parser.for :show_text_with_positioning do |data|
-        so = SpatialObject.new
-        so[:x] = state[:x]
-        so[:y] = state[:y]
-        so[:width] = 0
-        so[:height] = 0
-        so[:content] = data
-        so
-      end
 
-      parser.for :move_text_position do |data|
-        state[:x] += data[0]
-        state[:y] += data[1]
-        nil
-      end
-
-      # TODO According to pdf-reader example, need to handle:
-      # :show_text_with_positioning
-      # :show_text
-      # :super_show_text
-      # :move_to_next_line_and_show_text
-      # :set_spacing_next_line_show_text
-      
-      # TODO Add state modifiers for other text positioning
-      # callbacks.
-    end
+    include_text_runs
 
     self.spatials :images do
       parser.for :begin_inline_image_data do |data|
@@ -157,6 +127,7 @@ class Pdf
 
     self.class.send :define_method, name, p
   end
+  
 end
 
 def parse filename, &block

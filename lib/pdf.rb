@@ -1,4 +1,7 @@
 require 'pdf-reader'
+require 'nokogiri'
+
+require_relative 'util'
 
 # A DSL that aids in developing an understanding of the spatial
 # construction of PDF pages.
@@ -61,7 +64,6 @@ class Pdf
   end
 
   def spatials name, options = {}, &block
-    @operating_type = name
     add_spatials_method name, options, &block
   end
 
@@ -122,8 +124,11 @@ class Pdf
   private
   
   def add_spatials_method name, options={}, &block
-    @spatial_builders[name] = block
     @spatial_objects[name] = []
+    @spatial_builders[name] = proc { |receiver|
+      @operating_type = name
+      block.call receiver
+    }
 
     p = Proc.new do
       # TODO Check for missing depends_on in the spatials_calls stack.
@@ -167,8 +172,30 @@ end
 def convert filename, options = {}, &block
   pdf = parse filename, &block
 
-  # TODO For each called object type, iterate over its spatial
-  # objects and output to the type specified by :to.
+  case options[:to]
+  when :xml
+    builder = Nokogiri::XML::Builder.new do |xml|
+      xml.pdf {
+        pdf.spatial_objects.each_pair do |type, objs|
+          objs.each do |obj|
+            xml.send spatial_name_to_tag_name(type.to_s)
+          end
+        end
+      }
+    end
+
+    builder.to_xml
+     
+  when :html
+    builder = Nokogiri::XML::Builder.new do |doc|
+      doc.html {
+        doc.body {
+        }
+      }
+    end
+  when :text
+    ""
+  end
 end
 
 # Usage
@@ -185,8 +212,10 @@ view "/Users/karl/some.pdf" do |pdf|
   pdf.sections
 end
 
-convert "/Users/karl/some.pdf", :to => :xml do |pdf|
+xml = convert "/Users/karl/some.pdf", :to => :xml do |pdf|
   pdf.text_runs
   pdf.sections
 end
+
+puts xml
 

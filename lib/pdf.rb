@@ -165,20 +165,18 @@ end
 def view filename, options = {}, &block
   pdf = parse filename, &block
 
-  # TODO For each called object type that was explicity called,
-  # render it to an image.
-end
-
-def convert filename, options = {}, &block
-  pdf = parse filename, &block
-
-  case options[:to]
+  case options[:as]
   when :xml
     builder = Nokogiri::XML::Builder.new do |xml|
       xml.pdf {
         pdf.spatial_objects.each_pair do |type, objs|
           objs.each do |obj|
-            xml.send spatial_name_to_tag_name(type.to_s)
+            attribs = obj.reject {|key, value| key == :content }
+            xml.send spatial_name_to_tag_name(type.to_s), attribs do
+              if obj.key? :content
+                xml.text obj[:content].to_s
+              end
+            end
           end
         end
       }
@@ -195,12 +193,16 @@ def convert filename, options = {}, &block
     end
   when :text
     ""
+
+  when :png
+    nil
+    
   end
 end
 
 # Usage
 
-view "/Users/karl/some.pdf" do |pdf|
+view "/Users/karl/some.pdf", :as => :png do |pdf|
   pdf.text_runs do |run|
     double_height = {
       :height => {:grow_by_percent => 1},
@@ -212,7 +214,7 @@ view "/Users/karl/some.pdf" do |pdf|
   pdf.sections
 end
 
-xml = convert "/Users/karl/some.pdf", :to => :xml do |pdf|
+xml = view "/Users/karl/some.pdf", :as => :xml do |pdf|
   pdf.text_runs
   pdf.sections
 end

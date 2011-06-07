@@ -12,8 +12,8 @@
 
 ## Small tasks, 10 minutes or so
 
-* Improve inclusion of spatial object modules. Shouldn't need to call,
-  for example, include_text_runs.
+* DONE Improve inclusion of spatial object modules. Shouldn't need to 
+  call, for example, include_text_runs.
 * Pass set of previously constructed spatial objects to sptials calls,
   via a new method in parser - parser.previous :text_runs { ... }.
   Spatial objects such as margins depend on the positions of text

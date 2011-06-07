@@ -17,7 +17,7 @@ command :text do |c|
 
   c.action do |args, options|
     args.each do |filename|
-      xml = convert filename, :to => :xml do |pdf| pdf.text_runs end
+      xml = PdfExtract::view filename, :as => :xml do |pdf| pdf.text_runs end
       say xml
     end
   end
@@ -30,7 +30,7 @@ command :mask do |c|
 
   c.action do |args, options|
     args.each do |filename|
-      image = view filename do |pdf|
+      image = PdfExtract::view filename, :as => :png do |pdf|
         pdf.text_runs
         pdf.regions
         pdf.sections
@@ -46,7 +46,7 @@ command :sections do |c|
 
   c.action do |args, options|
     args.each do |filename|
-      xml = convert filename, :to => :xml do |pdf| pdf.sections end
+      xml = PdfExtract::view filename, :as => :xml do |pdf| pdf.sections end
       say xml
     end
   end

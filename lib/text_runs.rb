@@ -1,3 +1,5 @@
+require 'matrix'
+
 module PdfExtract
 
   module TextRuns
@@ -8,6 +10,11 @@ module PdfExtract
       0
     end
 
+    def self.glyph_height c, state
+      # TODO
+      0
+    end
+
     def self.glyph_displacement c, state
       # TODO Determine writing mode
       # TODO Pick correct displacement values
@@ -15,38 +22,44 @@ module PdfExtract
     end
 
     def self.make_text_runs text, state
-      # TODO Apply text matrix
       # TODO Apply CTM
       # TODO Ignore chars outside the page :MediaBox?
-      # TODO Determine where & when to recent text matrix.
       # TODO Mul UserUnit if specified by page.
-      # TODO If :char_space is 0 use font glyph width?
-      # TODO If :word_space is 0, check for word space in font def.
       # TODO Include writing mode, so that runs can be joined either
       #      virtically or horizontally in the join stage.
+
+      state.push state.last.dup # Record :tm
       
       objs = []
-
-      x = state.last[:x] - (state.last[:tj] / 1000.0)
-      y = state.last[:y] + state.last[:rise]
-      h_scale_mod = (1 + (state.last[:horizontal_scale] / 100.0))
-      total_displacement_x = 0
-      total_displacement_y = 0
+      h_scale_mod = (1 + (state.last[:h_scale] / 100.0))
       
       text.split(//).each do |c|
-        so = SpatialObject.new
-        so[:x] = x + total_displacement_x
-        so[:y] = y + total_displacement_y
-        so[:width] = glyph_width(c, state) * h_scale_mod
-        so[:height] = state.last[:height]
-        so[:content] = c
-
-        dx, dy = glyph_displacement c, state
-        total_displacement_x += dx
-        total_displacement_y += dy
+        s = state.last
         
+        trm = Matrix[ [s[:font_size] * s[:h_scale], 0, 0],
+                      [0, s[:font_size], 0],
+                      [0, s[:rise], 1] ]
+        trm = trm * s[:tm] # TODO * CTM
+        
+        so = SpatialObject.new
+        so[:x] = trm.row(2)[0]
+        so[:y] = trm.row(2)[1]
+        so[:width] = glyph_width(c, state) * h_scale_mod
+        so[:height] = glyph_height(c, state)
+        so[:content] = c
         objs << so
+        
+        disp_x, disp_y = glyph_displacement(c, state)
+        spacing = s[:char_spacing] if c != ' '
+        spacing = s[:word_spacing] if c == ' '
+        tx = ((disp_x - (s[:tj] / 1000.0)) * s[:font_size] + spacing) * s[:h_scale]
+        ty = (disp_y - (s[:tj] / 1000.0)) * s[:font_size] + spacing
+              
+        s[:tm] = s[:tm] * Matrix[ [1, 0, 0], [0, 1, 0], [tx, 0, 1] ]
+        # TODO Above should use either tx or ty depending on writing mode.
       end
+      
+      state.pop # Restore :tm
 
       objs
     end
@@ -60,23 +73,15 @@ module PdfExtract
         parser.for :begin_page do |data|
           page = data
           state << {
-            :horizontal_scale => 100,
+            :tm => Matrix.identity(3),
+            :h_scale => 100,
             :char_spacing => 0,
             :word_spacing => 0,
             :leading => 0,
             :rise => 0,
-            :a => 1,
-            :b => 0,
-            :c => 0,
-            :d => 1,
-            :e => 0,
-            :f => 0,
             :font => nil,
-            :x => 0,
-            :y => 0,
-            :width => 0,
-            :height => 0,
-            :tj => 0
+            :tj => 0,
+            :font_size => 0
           }
           nil
         end
@@ -96,41 +101,43 @@ module PdfExtract
         # State change operators.
 
         parser.for :set_text_leading do |data|
-          state.last[:leading] = data
+          state.last[:leading] = data.first
           nil
         end
 
         parser.for :set_text_rise do |data|
-          state.last[:rise] = data
+          state.last[:rise] = data.first
           nil
         end
 
         parser.for :set_character_spacing do |data|
-          state.last[:char_spacing] = data
+          state.last[:char_spacing] = data.first
           nil
         end
 
         parser.for :set_word_spacing do |data|
-          state.last[:word_spacing] = data
+          state.last[:word_spacing] = data.first
           nil
         end
 
         parser.for :set_horizontal_text_scaling do |data|
-          state.last[:horizontal_scale] = data
+          state.last[:h_scale] = data.first
           nil
         end
 
         # Position change operators.
 
         parser.for :move_text_position do |data|
-          state.last[:x] += data[0]
-          state.last[:y] += data[1]
+          state.last[:tm] = state.last[:tm] * Matrix[
+            [1, 0, 0], [0, 1, 0], [data[0], data[1], 1]
+          ]
           nil
         end
 
         parser.for :move_text_position_and_set_leading do |data|
-          state.last[:x] += data[0]
-          state.last[:y] += data[1]
+          state.last[:tm] = state.last[:tm] * Matrix[
+            [1, 0, 0], [0, 1, 0], [data[0], data[1], 1]
+          ]
           state.last[:leading] = data[1]
           nil
         end
@@ -139,7 +146,7 @@ module PdfExtract
 
         parser.for :set_text_font_and_size do |data|
           # TODO set state.last[:font] to font object.
-          state.last[:height] = data[1]
+          state.last[:font_size] = data[1]
           nil
         end
 
@@ -151,12 +158,8 @@ module PdfExtract
           # | c d 0 |
           # | e f 1 |
           # --     --
-          state.last[:a] = data[0]
-          state.last[:b] = data[1]
-          state.last[:c] = data[2]
-          state.last[:d] = data[3]
-          state.last[:e] = data[4]
-          state.last[:f] = data[5]
+          a, b, c, d, e, f = data
+          state.last[:tm] = Matrix[ [a, b, 0], [c, d, 0], [e, f, 1] ]
           nil
         end
 

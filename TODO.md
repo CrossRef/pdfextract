@@ -18,14 +18,14 @@
   via a new method in parser - parser.previous :text_runs { ... }.
   Spatial objects such as margins depend on the positions of text
   runs.
-* Determine units of and apply correctly :rise and :leading.
+* DONE Determine units of and apply correctly :rise and :leading.
 * Handle UserUnit transformations.
 * DONE Reset global text state at the end of each page.
 
 ## Tasks, up to 3 hours
 
-* Handle new line operators, and all show text operators.
-* Handle font metrics correctly, including glyph widths, displacement
+* DONE Handle new line operators, and all show text operators.
+* DONE Handle font metrics correctly, including glyph widths, displacement
   vectors and bounding boxes.
 * Handle type 3 font font matrices.
 * Handle writing mode selection for composite fonts (type 0)
@@ -33,8 +33,6 @@
 * Some way of splitting SpatialObjects by page.
 * !! Handle type 3 font operators. These may not be supported by 
   pdf-reader!
-* Some sort of includable set of parser.for calls that handle
-  modification of the graphics matrix. 
 * Add spatials parser.post { }, use in text_runs to sort and merge
   adjacent runs.
 

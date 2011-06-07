@@ -2,82 +2,148 @@ module PdfExtract
 
   module TextRuns
 
-    def self.compute_x state
-      # TODO Apply CTM and text matrix.
-      # TODO units of :rise?
-      state[:x] + state[:rise]
+    def self.glyph_width c, state
+      # TODO Find glyph width in font.
+      # TODO Honour font operators that have changed state
+      0
     end
 
-    def self.compute_y state
-      # TODO Apply CTM and text matrix.
-      # TODO units of :leading?
-      state[:y] + state[:leading]
+    def self.glyph_displacement c, state
+      # TODO Determine writing mode
+      # TODO Pick correct displacement values
+      [0, 0]
+    end
+
+    def self.make_text_runs text, state
+      # TODO Apply text matrix
+      # TODO Apply CTM
+      # TODO Ignore chars outside the page :MediaBox?
+      # TODO Determine where & when to recent text matrix.
+      # TODO Mul UserUnit if specified by page.
+      # TODO If :char_space is 0 use font glyph width?
+      # TODO If :word_space is 0, check for word space in font def.
+      # TODO Include writing mode, so that runs can be joined either
+      #      virtically or horizontally in the join stage.
+      
+      objs = []
+
+      x = state.last[:x] - (state.last[:tj] / 1000.0)
+      y = state.last[:y] + state.last[:rise]
+      h_scale_mod = (1 + (state.last[:horizontal_scale] / 100.0))
+      total_displacement_x = 0
+      total_displacement_y = 0
+      
+      text.split(//).each do |c|
+        so = SpatialObject.new
+        so[:x] = x + total_displacement_x
+        so[:y] = y + total_displacement_y
+        so[:width] = glyph_width(c, state) * h_scale_mod
+        so[:height] = state.last[:height]
+        so[:content] = c
+
+        dx, dy = glyph_displacement c, state
+        total_displacement_x += dx
+        total_displacement_y += dy
+        
+        objs << so
+      end
+
+      objs
     end
 
     def self.include_in pdf
+
       pdf.spatials :text_runs do |parser|
-        clean_state = {
-          :x => 0,
-          :y => 0,
-          :width => 0,
-          :height => 0,
-          :horizontal_scale => 1,
-          :char_spacing => 0,
-          :word_spacing => 0,
-          :leading => 0,
-          :rise => 0,
-          :a => 1,
-          :b => 0,
-          :c => 0,
-          :d => 1,
-          :e => 0,
-          :f => 0
-        }
-        global_state = clean_state.dup
-        state = global_state
+        state = []
+        page = nil
 
         parser.for :begin_page do |data|
-          # TODO Handle UserUnits if set by page.
-          global_state = clean_state.dup
+          page = data
+          state << {
+            :horizontal_scale => 100,
+            :char_spacing => 0,
+            :word_spacing => 0,
+            :leading => 0,
+            :rise => 0,
+            :a => 1,
+            :b => 0,
+            :c => 0,
+            :d => 1,
+            :e => 0,
+            :f => 0,
+            :font => nil,
+            :x => 0,
+            :y => 0,
+            :width => 0,
+            :height => 0,
+            :tj => 0
+          }
           nil
         end
 
         parser.for :begin_text_object do |data|
-          state = global_state.dup
+          state.push state.last.dup
           nil
         end
 
         parser.for :end_text_object do |data|
           # When not defining a text object, text operators alter a
           # global state.
-          state = global_state
+          state.pop
           nil
         end
 
+        # State change operators.
+
         parser.for :set_text_leading do |data|
-          state[:leading] = data
+          state.last[:leading] = data
           nil
         end
 
         parser.for :set_text_rise do |data|
-          state[:rise] = data
+          state.last[:rise] = data
           nil
         end
 
         parser.for :set_character_spacing do |data|
-          state[:char_spacing] = data
+          state.last[:char_spacing] = data
           nil
         end
 
         parser.for :set_word_spacing do |data|
-          state[:word_spacing] = data
+          state.last[:word_spacing] = data
           nil
         end
 
         parser.for :set_horizontal_text_scaling do |data|
-          state[:horizontal_scale] = (data.to_f / 100) + 1
+          state.last[:horizontal_scale] = data
           nil
         end
+
+        # Position change operators.
+
+        parser.for :move_text_position do |data|
+          state.last[:x] += data[0]
+          state.last[:y] += data[1]
+          nil
+        end
+
+        parser.for :move_text_position_and_set_leading do |data|
+          state.last[:x] += data[0]
+          state.last[:y] += data[1]
+          state.last[:leading] = data[1]
+          nil
+        end
+
+        # Font change operators.
+
+        parser.for :set_text_font_and_size do |data|
+          # TODO set state.last[:font] to font object.
+          state.last[:height] = data[1]
+          nil
+        end
+
+        # Text matrix change operators.
 
         parser.for :set_text_matrix_and_text_line_matrix do |data|
           # --     --
@@ -85,110 +151,62 @@ module PdfExtract
           # | c d 0 |
           # | e f 1 |
           # --     --
-          #
-          # Other operators modify this matrix to create a text-space
-          # to device-space matrix (once muled with the CTM - current
-          # transformation matrix).
-          # 
-          
-          state[:a] = data[0]
-          state[:b] = data[1]
-          state[:c] = data[2]
-          state[:d] = data[3]
-          state[:e] = data[4]
-          state[:f] = data[5]
+          state.last[:a] = data[0]
+          state.last[:b] = data[1]
+          state.last[:c] = data[2]
+          state.last[:d] = data[3]
+          state.last[:e] = data[4]
+          state.last[:f] = data[5]
           nil
         end
 
-        parser.for :set_text_font_and_size do |data|
-          # TODO Examine font ref, in data[0], for width
-          # (combine with word spacing, char spacing callback data).
+        # New line operators.
 
-          # TODO Font is defined with height of 1 unit, which is
-          # mul by data[1] to get height. However, UserUnit may
-          # be specified in the page dictionary, which again should
-          # be muled with height, possibly also width.
-
-          # handle writing mode for composite fonts - select
-          # one of two sets of font metrics.
-
-          # If glyph displacement vectors are available, 
-          # glyph displacement vector needs to be used in conjuction with
-          # font height and glyph bounding box / glyph width to determine
-          # extent of the run.
-          
-          # for all but type 3 font, divide all glyph metrics by 1000, for
-          # type 3 apply the fontmatrix.
-
-          # Handle type 3 font operators.
-
-          state[:height] = data[1]
+        parser.for :move_to_start_of_next_line do |data|
+          state.last[:y] += state.last[:leading]
           nil
+        end
+
+        # Show text operators.
+
+        parser.for :set_spacing_next_line_show_text do |data|
+          state.last[:word_spacing] = data[0]
+          state.last[:char_spacing] = data[1]
+          state.last[:y] += state.last[:leading]
+
+          make_text_runs data[2], state
+        end
+
+        parser.for :move_to_next_line_and_show_text do |data|
+          state.last[:y] += state.last[:leading]
+
+          make_text_runs data.first, state
         end
 
         parser.for :show_text do |data|
-          so = SpatialObject.new
-          so[:x] = compute_x state
-          so[:y] = compute_y state
-          so[:width] = 0 # TODO sum_char_widths state, data
-          so[:height] = state[:height]
-          so[:content] = data.first
-          so
+          make_text_runs data.first, state
         end
         
         parser.for :show_text_with_positioning do |data|
           data = data.first # TODO Handle elsewhere.
-          
-          offset = 0.0
           runs = []
+          state.push state.last.dup # Record :tj
           
-          data.each do |text_or_offset|
-            #puts text_or_offset.class
-            case text_or_offset.class.to_s
-            when "Fixnum"
-              offset -= text_or_offset / 1000.0
+          data.each do |item|
+            case item.class.to_s
+            when "Fixnum", "Float"
+              state.last[:tj] = item
             when "String"
-              so = SpatialObject.new
-              so[:x] = compute_x(state) + offset
-              so[:y] = compute_y state
-              so[:width] = 0 # TODO sum_char_widths state, data
-              so[:height] = state[:height]
-              so[:content] = text_or_offset
-              runs << so
+              runs << make_text_runs(item, state)
             end
           end
 
-          runs
+          state.pop # Restore :tj
+          runs.flatten
         end
-
-        parser.for :move_text_position do |data|
-          state[:x] += data[0]
-          state[:y] += data[1]
-          nil
-        end
-
-        parser.for :move_text_position_and_set_leading do |data|
-          state[:x] += data[0]
-          state[:y] += data[1]
-          state[:leading] = data[2]
-          nil
-        end
-
-        # TODO According to pdf-reader example, need to handle:
-        # :show_text_with_positioning
-        # :show_text
-        # :super_show_text
-        # :move_to_next_line_and_show_text
-        # :set_spacing_next_line_show_text
         
-        # TODO Add state modifiers for other text positioning
-        # callbacks.
       end
     end
-
-    private
-
-    
 
   end
 

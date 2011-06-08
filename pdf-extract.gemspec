@@ -12,5 +12,6 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'pdf-reader', '>= 0.9.2'
   s.add_dependency 'nokogiri', '>= 1.4.4'
+  s.add_dependency 'rmagick'
 end
 

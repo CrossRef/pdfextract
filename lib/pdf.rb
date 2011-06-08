@@ -1,5 +1,6 @@
 require 'pdf-reader'
 require 'nokogiri'
+require 'RMagick'
 
 require_relative 'util'
 require_relative 'text_runs'
@@ -177,17 +178,24 @@ module PdfExtract
       builder.to_xml
       
     when :html
-      builder = Nokogiri::XML::Builder.new do |doc|
-        doc.html {
-          doc.body {
-          }
-        }
-      end
+      # TODO Write out html with nokogiri.
+      raise "Not yet implemented"
+
     when :text
-      ""
+      # TODO Write out :content of spatial objects.
+      raise "Not yet implemented"
 
     when :png
-      nil
+      img = Magick::Image.new(800, 1000) { self.background_color = "white" }
+      gc = Magick::Draw.new
+      gc.fill "black"
+      pdf.spatial_objects.each_pair do |type, objs|
+        objs.each do |obj|
+          gc.rectangle(obj[:x], obj[:y], obj[:x] + obj[:width],
+                       obj[:y] + obj[:height])
+        end
+      end
+      img
       
     end
   end

@@ -22,7 +22,6 @@ module PdfExtract
     end
 
     def self.make_text_runs text, state, graphics_state
-      # TODO Apply CTM
       # TODO Ignore chars outside the page :MediaBox?
       # TODO Mul UserUnit if specified by page.
       # TODO Include writing mode, so that runs can be joined either

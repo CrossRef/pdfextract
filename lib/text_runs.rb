@@ -21,7 +21,7 @@ module PdfExtract
       [0, 0]
     end
 
-    def self.make_text_runs text, state
+    def self.make_text_runs text, state, graphics_state
       # TODO Apply CTM
       # TODO Ignore chars outside the page :MediaBox?
       # TODO Mul UserUnit if specified by page.
@@ -39,7 +39,7 @@ module PdfExtract
         trm = Matrix[ [s[:font_size] * s[:h_scale], 0, 0],
                       [0, s[:font_size], 0],
                       [0, s[:rise], 1] ]
-        trm = trm * s[:tm] # TODO * CTM
+        trm = trm * s[:tm] * graphics_state.last[:ctm]
         
         so = SpatialObject.new
         so[:x] = trm.row(2)[0]
@@ -68,6 +68,7 @@ module PdfExtract
 
       pdf.spatials :text_runs do |parser|
         state = []
+        graphics_state = []
         page = nil
 
         parser.for :begin_page do |data|
@@ -83,8 +84,34 @@ module PdfExtract
             :tj => 0,
             :font_size => 0
           }
+          graphics_state << {
+            :ctm => Matrix.identity(3)
+          }
           nil
         end
+
+        # Graphics state operators.
+
+        # TODO Handle gs graphics state operation.
+
+        parser.for :save_graphics_state do |data|
+          graphics_state.push graphics_state.last.dup
+          nil
+        end
+
+        parser.for :restore_graphics_state do |data|
+          graphics_state.pop
+          nil
+        end
+
+        parser.for :concatenate_matrix do |data|
+          a, b, c, d, e, f = data
+          ctm = graphics_state.last[:ctm]
+          graphics_state.last[:ctm] = ctm * Matrix[ [a, b, 0], [c, d, 0], [e, f, 1] ]
+          nil
+        end
+
+        # Start/end text object operators.
 
         parser.for :begin_text_object do |data|
           state.push state.last.dup
@@ -177,7 +204,7 @@ module PdfExtract
           state.last[:char_spacing] = data[1]
           state.last[:y] += state.last[:leading]
 
-          make_text_runs data[2], state
+          make_text_runs data[2], state, graphics_state
         end
 
         parser.for :move_to_next_line_and_show_text do |data|
@@ -187,7 +214,7 @@ module PdfExtract
         end
 
         parser.for :show_text do |data|
-          make_text_runs data.first, state
+          make_text_runs data.first, state, graphics_state
         end
         
         parser.for :show_text_with_positioning do |data|
@@ -200,7 +227,7 @@ module PdfExtract
             when "Fixnum", "Float"
               state.last[:tj] = item
             when "String"
-              runs << make_text_runs(item, state)
+              runs << make_text_runs(item, state, graphics_state)
             end
           end
 

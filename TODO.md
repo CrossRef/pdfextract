@@ -34,7 +34,7 @@
 * !! Handle type 3 font operators. These may not be supported by 
   pdf-reader!
 * Add spatials parser.post { }, use in text_runs to sort and merge
-  adjacent runs.
+  adjacent runs. Or split text_runs into characters and text_runs.
 * Implement PNG output. Should be able to specify opacity of each
   spatial object type, so that text runs can be seen even though
   groups and section are overlayed. Or, low opacity for all, auto
@@ -47,3 +47,5 @@
   is generic. Move into Parser methods. E.g. Handling global /
   object-specific state.
 
+
+# Thus, need access to :FontDescriptor, :Widths, :FirstChar, :LastChar

@@ -223,5 +223,5 @@ end
 
 puts xml
 
-png.write 'tmp.png'
+#png.write 'tmp.png'
 

@@ -4,25 +4,54 @@ module PdfExtract
 
   module TextRuns
 
+    # TODO Implement for Type3 fonts (They may have :WMode 0 or 1),
+    # and :FontMatrix.
+
+    def self.glyph_descent c, state
+      # For non-Type3, use :Descent from the font descriptor.
+      if state.last[:font].nil? or state.last[:font].descent.nil?
+        0
+      else
+        state.last[:font].descent / 1000.0
+      end
+    end
+
+    def self.glyph_ascent c, state
+      # For non-Type3, use :Ascent from the font descriptor.
+      if state.last[:font].nil? or state.last[:font].ascent.nil?
+        0
+      else
+        state.last[:font].ascent / 1000.0
+      end
+    end
+    
     def self.glyph_width c, state
-      # TODO Find glyph width in font.
-      # TODO Honour font operators that have changed state
-      0
+      # For non-Type3 fonts, :Widths may be used to determine glyph width.
+      # This is the same as vertical displacemnt.
+      glyph_displacement(c, state)[0]
     end
 
     def self.glyph_height c, state
-      # TODO
-      0
+      # For non-Type3 fonts, :Ascent and :Descent from the :FontDescriptor
+      # can be used to determine maximum glyph height.
+      glyph_ascent(c, state) - glyph_descent(c, state)
     end
 
     def self.glyph_displacement c, state
-      # TODO Determine writing mode
-      # TODO Pick correct displacement values
-      [0, 0]
+      # For non-Type3 fonts, vertical displacement is the glyph width,
+      # horizontal displacement is always 0. Note glyph width is given
+      # in 1000ths of text units.
+      if state.last[:font].nil?
+        # XXX Why are some font resources not reported via resource_font?
+        # Bug in pdf-reader?
+        [ 0, 0 ]
+      else
+        [ state.last[:font].glyph_width(c) / 1000.0, 0 ]
+      end
     end
 
     def self.make_text_runs text, state, graphics_state
-      # TODO Ignore chars outside the page :MediaBox?
+      # TODO Ignore chars outside the page :MediaBox.
       # TODO Mul UserUnit if specified by page.
       # TODO Include writing mode, so that runs can be joined either
       #      virtically or horizontally in the join stage.
@@ -42,7 +71,7 @@ module PdfExtract
         
         so = SpatialObject.new
         so[:x] = trm.row(2)[0]
-        so[:y] = trm.row(2)[1]
+        so[:y] = trm.row(2)[1] + (glyph_descent(c, state) * s[:font_size])
         so[:width] = glyph_width(c, state) * h_scale_mod * s[:font_size]
         so[:height] = glyph_height(c, state) * s[:font_size]
         so[:content] = c
@@ -69,6 +98,12 @@ module PdfExtract
         state = []
         graphics_state = []
         page = nil
+        fonts = {}
+
+        parser.for :resource_font do |data|
+          fonts[data[0]] = data[1]
+          nil
+        end
 
         parser.for :begin_page do |data|
           page = data
@@ -154,8 +189,6 @@ module PdfExtract
         # Position change operators.
 
         parser.for :move_text_position do |data|
-          # TODO Should this actually set text state of :x and
-          # :y, which then have the Trm applied to them?
           state.last[:tm] = state.last[:tm] * Matrix[
             [1, 0, 0], [0, 1, 0], [data[0], data[1], 1]
           ]
@@ -173,7 +206,7 @@ module PdfExtract
         # Font change operators.
 
         parser.for :set_text_font_and_size do |data|
-          # TODO set state.last[:font] to font object.
+          state.last[:font] = fonts[data[0]]
           state.last[:font_size] = data[1]
           nil
         end

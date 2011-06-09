@@ -39,10 +39,16 @@ module PdfExtract
     def initialize pdf
       @pdf = pdf
       @listeners = {}
+      @object_listeners = {}
     end
 
     def for callback_name, &block
       @listeners[callback_name] = {:type => @pdf.operating_type, :fn => block}
+    end
+
+    def objects type_name, &block
+      @object_listeners[type_name] ||= []
+      @object_listeners[type_name] << block
     end
 
     def expand_listeners_to_callback_methods
@@ -65,6 +71,24 @@ module PdfExtract
         
         self.class.send :define_method, callback_name, p
       end
+    end
+
+    def call_object_listeners spatial_objects
+      @object_listeners.each_pair do |type, fns|
+        fns.each do |fn|
+          spatial_objects[type].each do |obj|
+            fn.call obj
+          end
+        end
+      end
+    end
+
+    def for_calls?
+      @listeners.size > 0
+    end
+
+    def object_calls?
+      @object_listeners.size > 0
     end
 
   end
@@ -144,13 +168,17 @@ module PdfExtract
     
     yield pdf
     
-    receiver = Receiver.new pdf
     pdf.spatial_calls.each do |spatial_call|
+      receiver = Receiver.new pdf
       pdf.spatial_builders[spatial_call[:name]].call receiver
+      if receiver.object_calls?
+        receiver.call_object_listeners pdf.spatial_objects
+      end
+      if receiver.for_calls?
+        receiver.expand_listeners_to_callback_methods
+        PDF::Reader.file filename, receiver
+      end
     end
-    receiver.expand_listeners_to_callback_methods
-
-    PDF::Reader.file filename, receiver
     
     pdf
   end
@@ -187,14 +215,17 @@ module PdfExtract
 
     when :png
       img = Magick::Image.new(800, 1000) { self.background_color = "white" }
-      gc = Magick::Draw.new
-      gc.fill "black"
+      
       pdf.spatial_objects.each_pair do |type, objs|
         objs.each do |obj|
+          gc = Magick::Draw.new
+          gc.fill "black"
           gc.rectangle(obj[:x], obj[:y], obj[:x] + obj[:width],
                        obj[:y] + obj[:height])
+          gc.draw img
         end
       end
+      
       img
       
     end
@@ -205,14 +236,7 @@ end
 # Usage
 
 png = PdfExtract::view "/Users/karl/some.pdf", :as => :png do |pdf|
-  pdf.text_runs do |run|
-    double_height = {
-      :height => {:grow_by_percent => 1},
-      :y => {:shrink_by => run[:height] / 2}
-    }
-    run.alter double_height
-  end
-
+  pdf.text_runs
   pdf.sections
 end
 
@@ -221,7 +245,7 @@ xml = PdfExtract::view "/Users/karl/some.pdf", :as => :xml do |pdf|
   pdf.sections
 end
 
-puts xml
+#puts xml
 
-#png.write 'tmp.png'
+png.write 'tmp.png'
 

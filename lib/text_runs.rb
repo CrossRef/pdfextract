@@ -35,7 +35,7 @@ module PdfExtract
       text.split(//).each do |c|
         s = state.last
         
-        trm = Matrix[ [s[:font_size] * s[:h_scale], 0, 0],
+        trm = Matrix[ [s[:font_size] * h_scale_mod, 0, 0],
                       [0, s[:font_size], 0],
                       [0, s[:rise], 1] ]
         trm = trm * s[:tm] * graphics_state.last[:ctm]
@@ -43,15 +43,15 @@ module PdfExtract
         so = SpatialObject.new
         so[:x] = trm.row(2)[0]
         so[:y] = trm.row(2)[1]
-        so[:width] = glyph_width(c, state) * h_scale_mod
-        so[:height] = glyph_height(c, state)
+        so[:width] = glyph_width(c, state) * h_scale_mod * s[:font_size]
+        so[:height] = glyph_height(c, state) * s[:font_size]
         so[:content] = c
         objs << so
         
         disp_x, disp_y = glyph_displacement(c, state)
         spacing = s[:char_spacing] if c != ' '
         spacing = s[:word_spacing] if c == ' '
-        tx = ((disp_x - (s[:tj] / 1000.0)) * s[:font_size] + spacing) * s[:h_scale]
+        tx = ((disp_x - (s[:tj] / 1000.0)) * s[:font_size] + spacing) * h_scale_mod
         ty = (disp_y - (s[:tj] / 1000.0)) * s[:font_size] + spacing
               
         s[:tm] = s[:tm] * Matrix[ [1, 0, 0], [0, 1, 0], [tx, 0, 1] ]
@@ -74,7 +74,7 @@ module PdfExtract
           page = data
           state << {
             :tm => Matrix.identity(3),
-            :h_scale => 100,
+            :h_scale => 0,
             :char_spacing => 0,
             :word_spacing => 0,
             :leading => 0,
@@ -154,6 +154,8 @@ module PdfExtract
         # Position change operators.
 
         parser.for :move_text_position do |data|
+          # TODO Should this actually set text state of :x and
+          # :y, which then have the Trm applied to them?
           state.last[:tm] = state.last[:tm] * Matrix[
             [1, 0, 0], [0, 1, 0], [data[0], data[1], 1]
           ]
@@ -164,7 +166,7 @@ module PdfExtract
           state.last[:tm] = state.last[:tm] * Matrix[
             [1, 0, 0], [0, 1, 0], [data[0], data[1], 1]
           ]
-          state.last[:leading] = data[1]
+          state.last[:leading] = -data[1]
           nil
         end
 
@@ -192,7 +194,9 @@ module PdfExtract
         # New line operators.
 
         parser.for :move_to_start_of_next_line do |data|
-          state.last[:y] += state.last[:leading]
+          state.last[:tm] = state.last[:tm] * Matrix[
+            [1, 0, 0], [0, 1, 0], [0, -state.last[:leading], 1]
+          ]
           nil
         end
 
@@ -201,13 +205,18 @@ module PdfExtract
         parser.for :set_spacing_next_line_show_text do |data|
           state.last[:word_spacing] = data[0]
           state.last[:char_spacing] = data[1]
-          state.last[:y] += state.last[:leading]
+          
+          state.last[:tm] = state.last[:tm] * Matrix[
+            [1, 0, 0], [0, 1, 0], [0, -state.last[:leading], 1]
+          ]
 
           make_text_runs data[2], state, graphics_state
         end
 
         parser.for :move_to_next_line_and_show_text do |data|
-          state.last[:y] += state.last[:leading]
+          state.last[:tm] = state.last[:tm] * Matrix[
+            [1, 0, 0], [0, 1, 0], [0, -state.last[:leading], 1]
+          ]
 
           make_text_runs data.first, state
         end

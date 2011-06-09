@@ -35,9 +35,15 @@
   pdf-reader!
 * Add spatials parser.post { }, use in text_runs to sort and merge
   adjacent runs.
+* Implement PNG output. Should be able to specify opacity of each
+  spatial object type, so that text runs can be seen even though
+  groups and section are overlayed. Or, low opacity for all, auto
+  select a different colour for each type.
+* 
 
 ## Long tasks, greater than 3 hours
 
 * Examine text_runs spatial definition and determine processing that
   is generic. Move into Parser methods. E.g. Handling global /
   object-specific state.
+

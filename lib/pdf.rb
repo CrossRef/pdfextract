@@ -204,7 +204,7 @@ end
 
 # Usage
 
-PdfExtract::view "/Users/karl/some.pdf", :as => :png do |pdf|
+png = PdfExtract::view "/Users/karl/some.pdf", :as => :png do |pdf|
   pdf.text_runs do |run|
     double_height = {
       :height => {:grow_by_percent => 1},
@@ -222,4 +222,6 @@ xml = PdfExtract::view "/Users/karl/some.pdf", :as => :xml do |pdf|
 end
 
 puts xml
+
+png.write 'tmp.png'
 

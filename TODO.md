@@ -4,7 +4,7 @@
 
 * DONE Pass receiver through to spatials calls, or construct receiver
   from method calls in spatials calls.
-* Write methods to create spatial objects.
+* DONE Write methods to create spatial objects.
 * DONE Use show_text_with_positioning to construct text runs.
 * DONE Record spatial objects that result from spatials method calls.
 * DONE Complete the covert method - write spatial hashs out to xml.
@@ -14,7 +14,7 @@
 
 * DONE Improve inclusion of spatial object modules. Shouldn't need to 
   call, for example, include_text_runs.
-* Pass set of previously constructed spatial objects to sptials calls,
+* DONE Pass set of previously constructed spatial objects to sptials calls,
   via a new method in parser - parser.previous :text_runs { ... }.
   Spatial objects such as margins depend on the positions of text
   runs.
@@ -33,13 +33,12 @@
 * Some way of splitting SpatialObjects by page.
 * !! Handle type 3 font operators. These may not be supported by 
   pdf-reader!
-* Add spatials parser.post { }, use in text_runs to sort and merge
+* DONE Add spatials parser.post { }, use in text_runs to sort and merge
   adjacent runs. Or split text_runs into characters and text_runs.
 * Implement PNG output. Should be able to specify opacity of each
   spatial object type, so that text runs can be seen even though
   groups and section are overlayed. Or, low opacity for all, auto
   select a different colour for each type.
-* 
 
 ## Long tasks, greater than 3 hours
 

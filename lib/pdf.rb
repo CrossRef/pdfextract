@@ -220,11 +220,13 @@ module PdfExtract
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.pdf {
           pdf.spatial_objects.each_pair do |type, objs|
-            objs.each do |obj|
-              attribs = obj.reject {|key, value| key == :content }
-              xml.send PdfExtract::Util::singular_name(type.to_s), attribs do
-                if obj.key? :content
-                  xml.text obj[:content].to_s
+            if explicit_call? type, pdf
+              objs.each do |obj|
+                attribs = obj.reject {|key, value| key == :content }
+                xml.send PdfExtract::Util::singular_name(type.to_s), attribs do
+                  if obj.key? :content
+                    xml.text obj[:content].to_s
+                  end
                 end
               end
             end
@@ -256,8 +258,17 @@ module PdfExtract
       end
       
       img
-      
+
+    else
+      # return a ruby data structure.
+      pdf.spatial_objects
     end
+  end
+
+  private
+
+  def self.explicit_call? name, pdf
+    pdf.spatial_calls.count { |obj| obj[:name] == name and obj[:explicit] } > 0
   end
 
 end
@@ -265,6 +276,7 @@ end
 # Usage
 
 png = PdfExtract::view "/Users/karl/some.pdf", :as => :png do |pdf|
+  pdf.characters
   pdf.text_chunks
 end
 
@@ -272,7 +284,28 @@ xml = PdfExtract::view "/Users/karl/some.pdf", :as => :xml do |pdf|
   pdf.text_chunks
 end
 
-#puts xml
+# objs = PdfExtract::view "/Users/karl/some.pdf" do |pdf|
+#   pdf.text_chunks
+#   pdf.text_regions
+# end
+
+# objs[:text_regions].each do |region|
+#   if region[:content] =~ /References/
+#     puts "Maybe refs"
+#   end
+# end
+
+# png = PdfExtract::view "/Users/karl/some.pdf", :as => :png do |pdf|
+#   pdf.text_regions do |region|
+#     if region[:content] =~ /References/
+#       region[:color] = "blue"
+#     else
+#       region[:color] = "green"
+#     end
+#   end
+# end
+
+puts xml
 
 # png.write 'tmp.png'
 

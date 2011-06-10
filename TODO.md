@@ -46,6 +46,3 @@
 * Examine text_runs spatial definition and determine processing that
   is generic. Move into Parser methods. E.g. Handling global /
   object-specific state.
-
-
-# Thus, need access to :FontDescriptor, :Widths, :FirstChar, :LastChar

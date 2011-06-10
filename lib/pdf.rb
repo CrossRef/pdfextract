@@ -3,7 +3,9 @@ require 'nokogiri'
 require 'RMagick'
 
 require_relative 'util'
-require_relative 'text_runs'
+require_relative 'characters'
+require_relative 'text_chunks'
+require_relative 'text_regions'
 
 # A DSL that aids in developing an understanding of the spatial
 # construction of PDF pages.
@@ -40,6 +42,7 @@ module PdfExtract
       @pdf = pdf
       @listeners = {}
       @object_listeners = {}
+      @posts = []
     end
 
     def for callback_name, &block
@@ -49,6 +52,10 @@ module PdfExtract
     def objects type_name, &block
       @object_listeners[type_name] ||= []
       @object_listeners[type_name] << block
+    end
+
+    def post &block
+      @posts << block
     end
 
     def expand_listeners_to_callback_methods
@@ -83,6 +90,12 @@ module PdfExtract
       end
     end
 
+    def call_posts
+      @posts.each do |post|
+        post.call
+      end
+    end
+
     def for_calls?
       @listeners.size > 0
     end
@@ -109,17 +122,18 @@ module PdfExtract
       @spatial_builders = {}
       @spatial_calls = []
       @spatial_objects = {}
+      @spatial_options = {}
 
       self.spatials :images do
         parser.for :begin_inline_image_data do |data|
         end
       end
       
-      self.spatials :v_margins, :depends_on => [:text_runs] do
+      self.spatials :v_margins, :depends_on => [:text_chunks] do
         # Mark off ranges of the x axis. AxisMask class?
       end
       
-      self.spatials :h_margins, :depends_on => [:text_runs] do
+      self.spatials :h_margins, :depends_on => [:text_chunks] do
       end
       
       self.spatials :rows, :depends_on => [:h_margins] do
@@ -128,14 +142,23 @@ module PdfExtract
       self.spatials :columns, :depends_on => [:v_margins, :rows] do
       end
       
-      self.spatials :regions, :depends_on => [:text_runs] do
-      end
-      
-      self.spatials :sections, :depends_on => [:groups, :columns] do
+      self.spatials :sections, :depends_on => [:text_regions, :columns] do
       end
     end
 
     private
+
+    def append_deps deps_list
+      deps_list.each do |dep|
+        append_deps @spatial_options[dep].fetch(:depends_on, [])
+        if @spatial_calls.collect { |obj| obj[:name] == dep }.empty?
+          @spatial_calls << {
+            :name => dep,
+            :explicit => false
+          }
+        end
+      end
+    end
     
     def add_spatials_method name, options={}, &block
       @spatial_objects[name] = []
@@ -143,9 +166,11 @@ module PdfExtract
         @operating_type = name
         block.call receiver
       }
+      @spatial_options[name] = options
 
       p = Proc.new do
-        # TODO Check for missing depends_on in the spatials_calls stack.
+        append_deps options[:depends_on] if options[:depends_on]
+        
         @spatial_calls << {
           :name => name,
           :explicit => true
@@ -164,7 +189,9 @@ module PdfExtract
   def self.parse filename, &block
     pdf = Pdf.new
 
-    PdfExtract::TextRuns.include_in pdf
+    PdfExtract::Characters.include_in pdf
+    PdfExtract::TextChunks.include_in pdf
+    PdfExtract::TextRegions.include_in pdf
     
     yield pdf
     
@@ -177,7 +204,9 @@ module PdfExtract
       if receiver.for_calls?
         receiver.expand_listeners_to_callback_methods
         PDF::Reader.file filename, receiver
+        pdf.spatial_objects[spatial_call[:name]].compact!
       end
+      receiver.call_posts
     end
     
     pdf
@@ -236,16 +265,14 @@ end
 # Usage
 
 png = PdfExtract::view "/Users/karl/some.pdf", :as => :png do |pdf|
-  pdf.text_runs
-  pdf.sections
+  pdf.text_chunks
 end
 
 xml = PdfExtract::view "/Users/karl/some.pdf", :as => :xml do |pdf|
-  pdf.text_runs
-  pdf.sections
+  pdf.text_chunks
 end
 
 #puts xml
 
-png.write 'tmp.png'
+# png.write 'tmp.png'
 

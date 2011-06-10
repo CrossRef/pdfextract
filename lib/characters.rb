@@ -2,7 +2,7 @@ require 'matrix'
 
 module PdfExtract
 
-  module TextRuns
+  module Characters
 
     # TODO Implement for Type3 fonts (They may have :WMode 0 or 1),
     # and :FontMatrix.
@@ -94,7 +94,7 @@ module PdfExtract
 
     def self.include_in pdf
 
-      pdf.spatials :text_runs do |parser|
+      pdf.spatials :characters do |parser|
         state = []
         graphics_state = []
         page = nil

@@ -61,10 +61,20 @@ module PdfExtract
       
       objs = []
       h_scale_mod = (1 + (state.last[:h_scale] / 100.0))
+      s = state.last
+      
+      disp_x, disp_y = [0, 0]
+      spacing = 0
+      tx = ((disp_x - (s[:tj] / 1000.0)) * s[:font_size] + spacing) * h_scale_mod
+      ty = (disp_y - (s[:tj] / 1000.0)) * s[:font_size] + spacing
+
+      # TODO Should use either tx or ty depending on writing mode.
+      s[:tm] = Matrix[ [1, 0, 0], [0, 1, 0], [tx, 0, 1] ] * s[:tm]
+
+      # :tj applies only to the first char of the Tj op.
+      state.last[:tj] = 0
       
       text.split(//).each do |c|
-        s = state.last
-        
         trm = Matrix[ [s[:font_size] * h_scale_mod, 0, 0],
                       [0, s[:font_size], 0],
                       [0, s[:rise], 1] ]
@@ -89,12 +99,9 @@ module PdfExtract
         spacing = s[:word_spacing] if c == ' '
         tx = ((disp_x - (s[:tj] / 1000.0)) * s[:font_size] + spacing) * h_scale_mod
         ty = (disp_y - (s[:tj] / 1000.0)) * s[:font_size] + spacing
-              
-        s[:tm] = Matrix[ [1, 0, 0], [0, 1, 0], [tx, 0, 1] ] * s[:tm]
-        # TODO Above should use either tx or ty depending on writing mode.
 
-        # :tj applies only to the first char of the Tj op.
-        state.last[:tj] = 0
+        # TODO Should use either tx or ty depending on writing mode.
+        s[:tm] = Matrix[ [1, 0, 0], [0, 1, 0], [tx, 0, 1] ] * s[:tm]
       end
 
       objs
@@ -108,11 +115,6 @@ module PdfExtract
         page = nil
         fonts = {}
         page_n = 0
-
-        parser.for :end_page do |data|
-          page_n = page_n.next
-          nil
-        end
 
         parser.for :resource_font do |data|
           fonts[data[0]] = data[1]
@@ -138,24 +140,31 @@ module PdfExtract
           nil
         end
 
+        parser.for :end_page do |data|
+          page_n = page_n.next
+          nil
+        end
+
         # Graphics state operators.
 
         # TODO Handle gs graphics state operation.
 
         parser.for :save_graphics_state do |data|
           graphics_state.push graphics_state.last.dup
+          state.push state.last.dup
           nil
         end
 
         parser.for :restore_graphics_state do |data|
           graphics_state.pop
+          state.pop
           nil
         end
 
         parser.for :concatenate_matrix do |data|
           a, b, c, d, e, f = data
           ctm = graphics_state.last[:ctm]
-          graphics_state.last[:ctm] = ctm * Matrix[ [a, b, 0], [c, d, 0], [e, f, 1] ]
+          graphics_state.last[:ctm] = Matrix[ [a, b, 0], [c, d, 0], [e, f, 1] ] * ctm
           nil
         end
 
@@ -275,7 +284,7 @@ module PdfExtract
         parser.for :show_text_with_positioning do |data|
           data = data.first # TODO Handle elsewhere.
           runs = []
-          state.push state.last.dup # Record :tj
+          state.push state.last.dup
           
           data.each do |item|
             case item.class.to_s
@@ -286,7 +295,7 @@ module PdfExtract
             end
           end
 
-          state.pop # Restore :tj
+          state.pop
           runs.flatten
         end
         

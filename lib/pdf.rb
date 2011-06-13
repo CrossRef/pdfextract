@@ -269,8 +269,10 @@ module PdfExtract
       Prawn::Document.new :template => filename do |doc|
         doc.fill_color "ff0000"
         pdf.spatial_objects.each_pair do |type, objs|
-          objs.each do |obj|   
-            doc.rectangle [obj[:x], obj[:y]], obj[:width], obj[:height]
+          if pdf.explicit_call? type
+            objs.each do |obj|   
+              doc.rectangle [obj[:x], obj[:y]], obj[:width], obj[:height]
+            end
           end
         end
       end
@@ -293,7 +295,7 @@ xml = PdfExtract::view "/Users/karl/some.pdf", :as => :xml do |pdf|
 end
 
 pdf = PdfExtract::view "/Users/karl/some.pdf", :as => :pdf do |pdf|
-  pdf.text_chunks
+  pdf.characters
 end
 
 # objs = PdfExtract::view "/Users/karl/some.pdf" do |pdf|

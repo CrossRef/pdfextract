@@ -26,14 +26,15 @@ module PdfExtract
             y_sorted_text = y_sorted_text.drop_while { |obj| obj[:y] == y }
             row.sort_by! { |obj| obj[:x] }
 
+            char_width = row.first[:width]
+            
             while row.length > 1
               left = row.first
               right = row[1]
 
-              # XXX Rewrite to apply char_slop to last char width, not width
-              # of text chunk!
-              if (left[:x] + left[:width] + (left[:width] * char_slop)) >= right[:x]
+              if (left[:x] + left[:width] + (char_width * char_slop)) >= right[:x]
                 # join as adjacent chars
+                char_width = right[:width]
                 so = SpatialObject.new
                 so[:content] = left[:content] + right[:content]
                 so[:x] = left[:x]
@@ -42,8 +43,9 @@ module PdfExtract
                 so[:height] = [left[:height], right[:height]].max
                 row[0] = so
                 row.delete_at 1
-              elsif (left[:x] + left[:width] + (left[:width] * word_slop)) >= right[:x]
+              elsif (left[:x] + left[:width] + (char_width * word_slop)) >= right[:x]
                 # join with a ' ' in the middle.
+                char_width = right[:width]
                 so = SpatialObject.new
                 so[:content] = left[:content] + ' ' + right[:content]
                 so[:x] = left[:x]
@@ -56,6 +58,7 @@ module PdfExtract
                 # leave 'em be.
                 text_chunks << left
                 row.delete_at 0
+                char_width = row.first[:width]
               end
             end
           end

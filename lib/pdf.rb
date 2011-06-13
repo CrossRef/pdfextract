@@ -1,6 +1,7 @@
 require 'pdf-reader'
 require 'nokogiri'
 require 'RMagick'
+require 'prawn'
 
 require_relative 'util'
 require_relative 'characters'
@@ -264,6 +265,15 @@ module PdfExtract
       
       img
 
+    when :pdf
+      Prawn::Document.new :template => filename do |doc|
+        doc.fill_color "ff0000"
+        pdf.spatial_objects.each_pair do |type, objs|
+          objs.each do |obj|   
+            doc.rectangle [obj[:x], obj[:y]], obj[:width], obj[:height]
+          end
+        end
+      end
     else
       # return a ruby data structure.
       pdf.spatial_objects
@@ -275,11 +285,14 @@ end
 # Usage
 
 #png = PdfExtract::view "/Users/karl/some.pdf", :as => :png do |pdf|
-#  pdf.characters
+#   pdf.text_chunks
+#end
+
+# xml = PdfExtract::view "/Users/karl/some.pdf", :as => :xml do |pdf|
 #  pdf.text_chunks
 #end
 
-xml = PdfExtract::view "/Users/karl/some.pdf", :as => :xml do |pdf|
+pdf = PdfExtract::view "/Users/karl/some.pdf", :as => :pdf do |pdf|
   pdf.text_chunks
 end
 
@@ -304,7 +317,9 @@ end
 #   end
 # end
 
- puts xml
+#puts xml
 
-# png.write 'tmp.png'
+#png.write 'tmp.png'
+
+pdf.render_file "tmp.pdf"
 

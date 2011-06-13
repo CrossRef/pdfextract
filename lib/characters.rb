@@ -55,6 +55,9 @@ module PdfExtract
       # TODO Mul UserUnit if specified by page.
       # TODO Include writing mode, so that runs can be joined either
       #      virtically or horizontally in the join stage.
+
+      # XXX
+      return if page_number != 0
       
       objs = []
       h_scale_mod = (1 + (state.last[:h_scale] / 100.0))
@@ -66,12 +69,17 @@ module PdfExtract
                       [0, s[:font_size], 0],
                       [0, s[:rise], 1] ]
         trm = trm * s[:tm] * graphics_state.last[:ctm]
-        
+
+        #sizes = Matrix.rows([ [glyph_width(c, state), glyph_height(c, state), 1] ])
+        #sizes = sizes * trm
+       
         so = SpatialObject.new
         so[:x] = trm.row(2)[0]
         so[:y] = trm.row(2)[1] + (glyph_descent(c, state) * s[:font_size])
         so[:width] = glyph_width(c, state) * h_scale_mod * s[:font_size]
         so[:height] = glyph_height(c, state) * s[:font_size]
+        #so[:width] = sizes.row(0)[0] - so[:x]
+        #so[:height] = sizes.row(0)[1] - so[:y] XXX Produces different height
         so[:content] = c
         so[:page] = page_number
         objs << so

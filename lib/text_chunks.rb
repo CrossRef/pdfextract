@@ -5,7 +5,7 @@ module PdfExtract
     # TODO Look for obj[:writing_mode] == :vertical or :horizontal
 
     def self.include_in pdf
-      char_slop = 0.2
+      char_slop = 0.3
       word_slop = 1.0
       
       pdf.spatials :text_chunks, :depends_on => [:characters] do |parser|

@@ -50,7 +50,7 @@ module PdfExtract
       end
     end
 
-    def self.make_text_runs text, state, graphics_state
+    def self.make_text_runs text, state, graphics_state, page_number
       # TODO Ignore chars outside the page :MediaBox.
       # TODO Mul UserUnit if specified by page.
       # TODO Include writing mode, so that runs can be joined either
@@ -75,6 +75,7 @@ module PdfExtract
         so[:width] = glyph_width(c, state) * h_scale_mod * s[:font_size]
         so[:height] = glyph_height(c, state) * s[:font_size]
         so[:content] = c
+        so[:page] = page_number
         objs << so
         
         disp_x, disp_y = glyph_displacement(c, state)
@@ -99,6 +100,12 @@ module PdfExtract
         graphics_state = []
         page = nil
         fonts = {}
+        page_n = 0
+
+        parser.for :end_page do |data|
+          page_n = page_n.next
+          nil
+        end
 
         parser.for :resource_font do |data|
           fonts[data[0]] = data[1]
@@ -243,7 +250,7 @@ module PdfExtract
             [1, 0, 0], [0, 1, 0], [0, -state.last[:leading], 1]
           ]
 
-          make_text_runs data[2], state, graphics_state
+          make_text_runs data[2], state, graphics_state, page_n
         end
 
         parser.for :move_to_next_line_and_show_text do |data|
@@ -255,7 +262,7 @@ module PdfExtract
         end
 
         parser.for :show_text do |data|
-          make_text_runs data.first, state, graphics_state
+          make_text_runs data.first, state, graphics_state, page_n
         end
         
         parser.for :show_text_with_positioning do |data|
@@ -268,7 +275,7 @@ module PdfExtract
             when "Fixnum", "Float"
               state.last[:tj] = item
             when "String"
-              runs << make_text_runs(item, state, graphics_state)
+              runs << make_text_runs(item, state, graphics_state, page_n)
             end
           end
 

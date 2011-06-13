@@ -55,7 +55,7 @@ module PdfExtract
     end
 
     def post &block
-      @posts << block
+      @posts << {:type => @pdf.operating_type, :fn => block}
     end
 
     def expand_listeners_to_callback_methods
@@ -63,17 +63,7 @@ module PdfExtract
       @listeners.each_pair do |callback_name, callback_handler|
         p = proc do |*args|
           spatial_objects = callback_handler[:fn].call args
-          
-          if not spatial_objects.nil?
-            if spatial_objects.class != Array
-              spatial_objects = [spatial_objects]
-            end
-            
-            spatial_objects.each do |obj|
-              @pdf.spatial_objects[callback_handler[:type]] << obj
-            end
-          end
-          
+          self.add_spatial_objects callback_handler[:type], spatial_objects
         end
         
         self.class.send :define_method, callback_name, p
@@ -92,7 +82,8 @@ module PdfExtract
 
     def call_posts
       @posts.each do |post|
-        post.call
+        spatial_objects = post[:fn].call
+        self.add_spatial_objects post[:type], spatial_objects
       end
     end
 
@@ -102,6 +93,17 @@ module PdfExtract
 
     def object_calls?
       @object_listeners.size > 0
+    end
+
+    def add_spatial_objects type, spatial_objects
+      if not spatial_objects.nil?
+        if spatial_objects.class != Array
+          spatial_objects = [spatial_objects]
+        end
+        spatial_objects.each do |obj|
+          @pdf.spatial_objects[type] << obj
+        end
+      end
     end
 
   end
@@ -146,6 +148,10 @@ module PdfExtract
       end
     end
 
+    def explicit_call? name
+      @spatial_calls.count { |obj| obj[:name] == name and obj[:explicit] } > 0
+    end
+
     private
 
     def append_deps deps_list
@@ -183,7 +189,6 @@ module PdfExtract
 
       self.class.send :define_method, name, p
     end
-    
   end
 
   def self.parse filename, &block
@@ -220,7 +225,7 @@ module PdfExtract
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.pdf {
           pdf.spatial_objects.each_pair do |type, objs|
-            if explicit_call? type, pdf
+            if pdf.explicit_call? type
               objs.each do |obj|
                 attribs = obj.reject {|key, value| key == :content }
                 xml.send PdfExtract::Util::singular_name(type.to_s), attribs do
@@ -264,21 +269,15 @@ module PdfExtract
       pdf.spatial_objects
     end
   end
-
-  private
-
-  def self.explicit_call? name, pdf
-    pdf.spatial_calls.count { |obj| obj[:name] == name and obj[:explicit] } > 0
-  end
-
+  
 end
 
 # Usage
 
-png = PdfExtract::view "/Users/karl/some.pdf", :as => :png do |pdf|
-  pdf.characters
-  pdf.text_chunks
-end
+#png = PdfExtract::view "/Users/karl/some.pdf", :as => :png do |pdf|
+#  pdf.characters
+#  pdf.text_chunks
+#end
 
 xml = PdfExtract::view "/Users/karl/some.pdf", :as => :xml do |pdf|
   pdf.text_chunks

@@ -14,6 +14,10 @@ module PdfExtract
           y_sorted_text << chars.dup
         end
         parser.post do
+
+          # TODO Handle pages.
+          y_sorted_text.reject! { |obj| obj[:page] != 2 }
+          
           text_chunks = []
           y_sorted_text.sort_by! { |obj| obj[:y] }
           while y_sorted_text.length > 0
@@ -26,6 +30,8 @@ module PdfExtract
               left = row.first
               right = row[1]
 
+              # XXX Rewrite to apply char_slop to last char width, not width
+              # of text chunk!
               if (left[:x] + left[:width] + (left[:width] * char_slop)) >= right[:x]
                 # join as adjacent chars
                 so = SpatialObject.new
@@ -53,6 +59,7 @@ module PdfExtract
               end
             end
           end
+          text_chunks
         end 
       end
     end

@@ -92,6 +92,9 @@ module PdfExtract
               
         s[:tm] = Matrix[ [1, 0, 0], [0, 1, 0], [tx, 0, 1] ] * s[:tm]
         # TODO Above should use either tx or ty depending on writing mode.
+
+        # :tj applies only to the first char of the Tj op.
+        state.last[:tj] = 0
       end
 
       objs

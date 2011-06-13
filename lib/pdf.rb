@@ -288,9 +288,9 @@ end
 #   pdf.text_chunks
 #end
 
-# xml = PdfExtract::view "/Users/karl/some.pdf", :as => :xml do |pdf|
-#  pdf.text_chunks
-#end
+xml = PdfExtract::view "/Users/karl/some.pdf", :as => :xml do |pdf|
+  pdf.text_chunks
+end
 
 pdf = PdfExtract::view "/Users/karl/some.pdf", :as => :pdf do |pdf|
   pdf.text_chunks
@@ -317,7 +317,7 @@ end
 #   end
 # end
 
-#puts xml
+puts xml
 
 #png.write 'tmp.png'
 

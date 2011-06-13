@@ -55,8 +55,6 @@ module PdfExtract
       # TODO Mul UserUnit if specified by page.
       # TODO Include writing mode, so that runs can be joined either
       #      virtically or horizontally in the join stage.
-
-      state.push state.last.dup # Record :tm
       
       objs = []
       h_scale_mod = (1 + (state.last[:h_scale] / 100.0))
@@ -84,11 +82,9 @@ module PdfExtract
         tx = ((disp_x - (s[:tj] / 1000.0)) * s[:font_size] + spacing) * h_scale_mod
         ty = (disp_y - (s[:tj] / 1000.0)) * s[:font_size] + spacing
               
-        s[:tm] = s[:tm] * Matrix[ [1, 0, 0], [0, 1, 0], [tx, 0, 1] ]
+        s[:tm] = Matrix[ [1, 0, 0], [0, 1, 0], [tx, 0, 1] ] * s[:tm]
         # TODO Above should use either tx or ty depending on writing mode.
       end
-      
-      state.pop # Restore :tm
 
       objs
     end

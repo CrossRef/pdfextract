@@ -304,7 +304,7 @@ end
 #   end
 # end
 
-puts xml
+ puts xml
 
 # png.write 'tmp.png'
 

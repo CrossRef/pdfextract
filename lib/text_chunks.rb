@@ -14,9 +14,8 @@ module PdfExtract
           y_sorted_text << chars.dup
         end
         parser.post do
-
           # TODO Handle pages.
-          y_sorted_text.reject! { |obj| obj[:page] != 2 }
+          y_sorted_text.reject! { |obj| obj[:page] != 0 }
           
           text_chunks = []
           y_sorted_text.sort_by! { |obj| obj[:y] }
@@ -25,7 +24,6 @@ module PdfExtract
             row = y_sorted_text.take_while { |obj| obj[:y] == y }
             y_sorted_text = y_sorted_text.drop_while { |obj| obj[:y] == y }
             row.sort_by! { |obj| obj[:x] }
-
             char_width = row.first[:width]
             
             while row.length > 1
@@ -34,7 +32,6 @@ module PdfExtract
 
               if (left[:x] + left[:width] + (char_width * char_slop)) >= right[:x]
                 # join as adjacent chars
-                char_width = right[:width]
                 so = SpatialObject.new
                 so[:content] = left[:content] + right[:content]
                 so[:x] = left[:x]
@@ -43,9 +40,9 @@ module PdfExtract
                 so[:height] = [left[:height], right[:height]].max
                 row[0] = so
                 row.delete_at 1
+                char_width = right[:width]
               elsif (left[:x] + left[:width] + (char_width * word_slop)) >= right[:x]
                 # join with a ' ' in the middle.
-                char_width = right[:width]
                 so = SpatialObject.new
                 so[:content] = left[:content] + ' ' + right[:content]
                 so[:x] = left[:x]
@@ -54,6 +51,7 @@ module PdfExtract
                 so[:height] = [left[:height], right[:height]].max
                 row[0] = so
                 row.delete_at 1
+                char_width = right[:width]
               else
                 # leave 'em be.
                 text_chunks << left

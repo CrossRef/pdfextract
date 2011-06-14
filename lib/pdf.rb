@@ -158,7 +158,7 @@ module PdfExtract
     def append_deps deps_list
       deps_list.each do |dep|
         append_deps @spatial_options[dep].fetch(:depends_on, [])
-        if @spatial_calls.collect { |obj| obj[:name] == dep }.empty?
+        if @spatial_calls.count { |obj| obj[:name] == dep } == 0
           @spatial_calls << {
             :name => dep,
             :explicit => false
@@ -267,11 +267,10 @@ module PdfExtract
 
     when :pdf
       Prawn::Document.new :template => filename do |doc|
-        doc.fill_color "ff0000"
         pdf.spatial_objects.each_pair do |type, objs|
           if pdf.explicit_call? type
-            objs.each do |obj|   
-              doc.rectangle [obj[:x], obj[:y]], obj[:width], obj[:height]
+            objs.each do |obj|
+              doc.rectangle [obj[:x], obj[:y] + obj[:height]], obj[:width], obj[:height]
             end
           end
         end
@@ -291,11 +290,11 @@ end
 #end
 
 xml = PdfExtract::view "/Users/karl/some.pdf", :as => :xml do |pdf|
-  pdf.text_chunks
+  pdf.text_regions
 end
 
 pdf = PdfExtract::view "/Users/karl/some.pdf", :as => :pdf do |pdf|
-  pdf.text_chunks
+  pdf.text_regions
 end
 
 # objs = PdfExtract::view "/Users/karl/some.pdf" do |pdf|
@@ -319,7 +318,7 @@ end
 #   end
 # end
 
-puts xml
+# puts xml
 
 #png.write 'tmp.png'
 

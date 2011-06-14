@@ -19,9 +19,9 @@ module PdfExtract
 
             idx = rows[y].index { |obj| chars[:x] <= obj[:x] }
             if idx.nil?
-              rows[y] << chars
+              rows[y] << chars.dup
             else
-              rows[y].insert idx, chars
+              rows[y].insert idx, chars.dup
             end
             
           end

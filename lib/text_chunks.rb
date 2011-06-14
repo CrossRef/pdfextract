@@ -9,21 +9,28 @@ module PdfExtract
       word_slop = 1.5
       
       pdf.spatials :text_chunks, :depends_on => [:characters] do |parser|
-        y_sorted_text = []
+        rows = {}
         parser.objects :characters do |chars|
-          y_sorted_text << chars.dup
-        end
-        parser.post do
           # TODO Handle pages.
-          y_sorted_text.reject! { |obj| obj[:page] != 0 }
-          
+          if chars[:page] == 0
+            
+            y = chars[:y].floor
+            rows[y] = [] if rows[y].nil?
+
+            idx = rows[y].index { |obj| chars[:x] <= obj[:x] }
+            if idx.nil?
+              rows[y] << chars
+            else
+              rows[y].insert idx, chars
+            end
+            
+          end
+        end
+
+        parser.post do
           text_chunks = []
-          y_sorted_text.sort_by! { |obj| obj[:y] }
-          while y_sorted_text.length > 0
-            y = y_sorted_text.first[:y]
-            row = y_sorted_text.take_while { |obj| obj[:y] == y }
-            y_sorted_text = y_sorted_text.drop_while { |obj| obj[:y] == y }
-            row.sort_by! { |obj| obj[:x] }
+
+          rows.each_pair do |y, row|
             char_width = row.first[:width]
             
             while row.length > 1
@@ -59,7 +66,10 @@ module PdfExtract
                 char_width = row.first[:width]
               end
             end
+
+            text_chunks << row.first
           end
+          
           text_chunks
         end 
       end

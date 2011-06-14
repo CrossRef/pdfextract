@@ -23,7 +23,9 @@
 * DONE Reset global text state at the end of each page.
 * Position coords appear a bit above and to the right of where they
   should. Graphics state or page translation?
-* DONE Spaces appear one character before where they should in text_chunks.
+* DONE Spaces appear one character before where they should in
+  text_chunks.
+* Apostrophes cause a chunk break.
 
 ## Tasks, up to 3 hours
 

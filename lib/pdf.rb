@@ -295,7 +295,7 @@ xml = PdfExtract::view "/Users/karl/some.pdf", :as => :xml do |pdf|
 end
 
 pdf = PdfExtract::view "/Users/karl/some.pdf", :as => :pdf do |pdf|
-  pdf.characters
+  pdf.text_chunks
 end
 
 # objs = PdfExtract::view "/Users/karl/some.pdf" do |pdf|

@@ -15,6 +15,14 @@ module PdfExtract
 
       lr.include? rx1 or lr.include? rx2 or rr.include? lx1 or rr.include? lx2
     end
+
+    def self.concat_lines top, bottom
+      if top =~ /\-\Z/
+        top + bottom
+      else
+        top + ' ' + bottom
+      end
+    end
     
     def self.include_in pdf
       line_slop = 0.7
@@ -47,7 +55,7 @@ module PdfExtract
               so[:y] = b[:y]
               so[:width] = [b[:width], t[:width]].max
               so[:height] = b[:height] + t[:height]
-              so[:content] = t[:content] + "\n" + b[:content]
+              so[:content] = concat_lines t[:content], b[:content]
               chunks[0] = so
               chunks.delete_at 1
             else

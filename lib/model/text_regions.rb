@@ -18,7 +18,7 @@ module PdfExtract
 
     def self.concat_lines top, bottom
       if top =~ /\-\Z/
-        top + bottom
+        top[0..-2] + bottom
       else
         top + ' ' + bottom
       end

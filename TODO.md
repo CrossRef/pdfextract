@@ -26,6 +26,9 @@
 * DONE Spaces appear one character before where they should in
   text_chunks.
 * Apostrophes cause a chunk break.
+* DONE Split views into View, PdfView, PngView. Pass only explicit
+  spatials in an easier form for Views. Move into lib/view.
+* DONE Move analysis modules into lib/analysis.
 
 ## Tasks, up to 3 hours
 

@@ -3,10 +3,12 @@ require 'nokogiri'
 require 'RMagick'
 require 'prawn'
 
-require_relative 'util'
-require_relative 'characters'
-require_relative 'text_chunks'
-require_relative 'text_regions'
+require_relative 'model/characters'
+require_relative 'model/text_chunks'
+require_relative 'model/text_regions'
+require_relative 'view/png_view'
+require_relative 'view/pdf_view'
+require_relative 'view/xml_view'
 
 # A DSL that aids in developing an understanding of the spatial
 # construction of PDF pages.
@@ -220,65 +222,12 @@ module PdfExtract
 
   def self.view filename, options = {}, &block
     pdf = parse filename, &block
-
-    case options[:as]
-    when :xml
-      builder = Nokogiri::XML::Builder.new do |xml|
-        xml.pdf {
-          pdf.spatial_objects.each_pair do |type, objs|
-            if pdf.explicit_call? type
-              objs.each do |obj|
-                attribs = obj.reject {|key, value| key == :content }
-                xml.send PdfExtract::Util::singular_name(type.to_s), attribs do
-                  if obj.key? :content
-                    xml.text obj[:content].to_s
-                  end
-                end
-              end
+    clazz = case options[:as]
+            when :xml then PdfExtract::XmlView
+            when :png then PdfExtract::PngView
+            when :pdf then PdfExtract::PdfView
             end
-          end
-        }
-      end
-
-      builder.to_xml
-      
-    when :html
-      # TODO Write out html with nokogiri.
-      raise "Not yet implemented"
-
-    when :text
-      # TODO Write out :content of spatial objects.
-      raise "Not yet implemented"
-
-    when :png
-      img = Magick::Image.new(800, 1000) { self.background_color = "white" }
-      
-      pdf.spatial_objects.each_pair do |type, objs|
-        objs.each do |obj|
-          gc = Magick::Draw.new
-          gc.fill "black"
-          gc.rectangle(obj[:x], obj[:y], obj[:x] + obj[:width],
-                       obj[:y] + obj[:height])
-          gc.draw img
-        end
-      end
-      
-      img
-
-    when :pdf
-      Prawn::Document.new :template => filename do |doc|
-        pdf.spatial_objects.each_pair do |type, objs|
-          if pdf.explicit_call? type
-            objs.each do |obj|
-              doc.rectangle [obj[:x], obj[:y] + obj[:height]], obj[:width], obj[:height]
-            end
-          end
-        end
-      end
-    else
-      # return a ruby data structure.
-      pdf.spatial_objects
-    end
+    clazz.new(pdf, filename).render
   end
   
 end
@@ -318,7 +267,7 @@ end
 #   end
 # end
 
-# puts xml
+puts xml
 
 #png.write 'tmp.png'
 

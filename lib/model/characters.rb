@@ -80,16 +80,14 @@ module PdfExtract
                       [0, s[:rise], 1] ]
         trm = trm * s[:tm] * graphics_state.last[:ctm]
 
-        #sizes = Matrix.rows([ [glyph_width(c, state), glyph_height(c, state), 1] ])
-        #sizes = sizes * trm
+        sizes = Matrix.rows([ [glyph_width(c, state), glyph_height(c, state), 1] ])
+        sizes = sizes * trm
        
         so = SpatialObject.new
         so[:x] = trm.row(2)[0]
         so[:y] = trm.row(2)[1] + (glyph_descent(c, state) * s[:font_size])
-        so[:width] = glyph_width(c, state) * h_scale_mod * s[:font_size]
-        so[:height] = glyph_height(c, state) * s[:font_size]
-        #so[:width] = sizes.row(0)[0] - so[:x]
-        #so[:height] = sizes.row(0)[1] - so[:y] XXX Produces different height
+        so[:width] = sizes.row(0)[0] - so[:x]
+        so[:height] = sizes.row(0)[1] - so[:y]
         so[:content] = c
         so[:page] = page_number
         objs << so

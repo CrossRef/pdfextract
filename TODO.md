@@ -47,8 +47,10 @@
   spatial object type, so that text runs can be seen even though
   groups and section are overlayed. Or, low opacity for all, auto
   select a different colour for each type.
-* For some PDFs, character width and height not detected correctly.
-* Prawn doesn't render over some PDFs.
+* DONE For some PDFs, character width and height not detected correctly.
+* For some PDFS, ascent and descent info is not available. Use bouding
+  box instead.
+* DONE Prawn doesn't render over some PDFs.
 
 ## Long tasks, greater than 3 hours
 

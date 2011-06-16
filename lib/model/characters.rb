@@ -73,7 +73,7 @@ module PdfExtract
       # :tj applies only to the first char of the Tj op.
       state.last[:tj] = 0
       
-      text.split(//).each do |c|
+      text.each_char do |c|
         trm = Matrix[ [s[:font_size] * h_scale_mod, 0, 0],
                       [0, s[:font_size], 0],
                       [0, s[:rise], 1] ]

@@ -29,8 +29,9 @@
 * DONE Split views into View, PdfView, PngView. Pass only explicit
   spatials in an easier form for Views. Move into lib/view.
 * DONE Move analysis modules into lib/analysis.
-* Sometimes get characters out of order (when non-ascii char, or when
-  width is not in font's glyph width dictionary?)
+* Non-ascii chars that are transliterated are appearing in output one
+  place before they should. Transliterated chars also cause a word
+  break. Not getting their width correct in glyph width dict?
 
 ## Tasks, up to 3 hours
 

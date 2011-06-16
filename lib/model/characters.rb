@@ -1,7 +1,6 @@
 require 'matrix'
 
 module PdfExtract
-
   module Characters
 
     # TODO Implement for Type3 fonts (They may have :WMode 0 or 1),
@@ -73,10 +72,6 @@ module PdfExtract
 
       # :tj applies only to the first char of the Tj op.
       state.last[:tj] = 0
-
-      # TODO Move this somewhere more appropriate. May need other
-      # transliterations depending on language.
-      text = text.gsub "\ufb01", "fi"
       
       text.split(//).each do |c|
         trm = Matrix[ [s[:font_size] * h_scale_mod, 0, 0],
@@ -305,5 +300,4 @@ module PdfExtract
     end
 
   end
-
 end

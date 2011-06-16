@@ -1,13 +1,19 @@
 require_relative 'pdf'
+require_relative 'model/characters'
+require_relative 'model/text_chunks'
+require_relative 'model/text_regions'
+require_relative 'view/png_view'
+require_relative 'view/pdf_view'
+require_relative 'view/xml_view'
 
 module PdfExtract
   
   def self.parse filename, &block
     pdf = Pdf.new
 
-    PdfExtract::Characters.include_in pdf
-    PdfExtract::TextChunks.include_in pdf
-    PdfExtract::TextRegions.include_in pdf
+    Characters.include_in pdf
+    TextChunks.include_in pdf
+    TextRegions.include_in pdf
     
     yield pdf
     

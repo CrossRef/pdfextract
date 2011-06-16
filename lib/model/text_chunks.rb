@@ -12,18 +12,14 @@ module PdfExtract
         rows = {}
         parser.objects :characters do |chars|
           # TODO Handle pages.
-          if chars[:page] == 0
-            
-            y = chars[:y].floor
-            rows[y] = [] if rows[y].nil?
+          y = chars[:y].floor
+          rows[y] = [] if rows[y].nil?
 
-            idx = rows[y].index { |obj| chars[:x] <= obj[:x] }
-            if idx.nil?
-              rows[y] << chars.dup
-            else
-              rows[y].insert idx, chars.dup
-            end
-            
+          idx = rows[y].index { |obj| chars[:x] <= obj[:x] }
+          if idx.nil?
+            rows[y] << chars.dup
+          else
+            rows[y].insert idx, chars.dup
           end
         end
 

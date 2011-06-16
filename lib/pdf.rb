@@ -1,12 +1,5 @@
 require 'pdf-reader'
 
-require_relative 'model/characters'
-require_relative 'model/text_chunks'
-require_relative 'model/text_regions'
-require_relative 'view/png_view'
-require_relative 'view/pdf_view'
-require_relative 'view/xml_view'
-
 # A DSL that aids in developing an understanding of the spatial
 # construction of PDF pages.
 

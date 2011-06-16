@@ -1,6 +1,7 @@
 require 'nokogiri'
 
 require_relative 'abstract_view'
+require_relative '../language'
 
 module PdfExtract
   class XmlView < AbstractView
@@ -13,7 +14,7 @@ module PdfExtract
               attribs = obj.reject {|key, value| key == :content }
               xml.send singular_name(type.to_s), attribs do
                 if obj.key? :content
-                  xml.text obj[:content].to_s
+                  xml.text Language::transliterate(obj[:content].to_s)
                 end
               end
             end

@@ -29,6 +29,8 @@
 * DONE Split views into View, PdfView, PngView. Pass only explicit
   spatials in an easier form for Views. Move into lib/view.
 * DONE Move analysis modules into lib/analysis.
+* Sometimes get characters out of order (when non-ascii char, or when
+  width is not in font's glyph width dictionary?)
 
 ## Tasks, up to 3 hours
 

@@ -25,7 +25,7 @@ module PdfExtract
     end
     
     def self.include_in pdf
-      line_slop = 0.3
+      line_slop_factor = 0.3
 
       pdf.spatials :text_regions, :depends_on => [:text_chunks] do |parser|
         chunks = []
@@ -48,8 +48,10 @@ module PdfExtract
           while chunks.count > 1
             b = chunks.first
             t = chunks[1]
+
+            line_slop = [line_height, t[:height]].min * line_slop_factor
             
-            if ((b[:y] + b[:height] + (line_height * line_slop)) >= t[:y]) and incident(t, b)
+            if ((b[:y] + b[:height] + line_slop) >= t[:y]) and incident(t, b)
               so = SpatialObject.new
               so[:x] = [b[:x], t[:x]].min
               so[:y] = b[:y]

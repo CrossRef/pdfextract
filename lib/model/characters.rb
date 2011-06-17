@@ -250,9 +250,9 @@ module PdfExtract
         # New line operators.
 
         parser.for :move_to_start_of_next_line do |data|
-          state.last[:tm] = state.last[:tm] * Matrix[
+          state.last[:tm] = Matrix[
             [1, 0, 0], [0, 1, 0], [0, -state.last[:leading], 1]
-          ]
+          ] * state.last[:tm]
           nil
         end
 
@@ -262,23 +262,32 @@ module PdfExtract
           state.last[:word_spacing] = data[0]
           state.last[:char_spacing] = data[1]
           
-          state.last[:tm] = state.last[:tm] * Matrix[
+          state.last[:tm] = Matrix[
             [1, 0, 0], [0, 1, 0], [0, -state.last[:leading], 1]
-          ]
+          ] * state.last[:tm]
 
-          make_text_runs data[2], state, graphics_state, page_n
+          state.push state.last.dup
+          tr = make_text_runs data[2], state, graphics_state, page_n
+          state.pop
+          tr
         end
 
         parser.for :move_to_next_line_and_show_text do |data|
-          state.last[:tm] = state.last[:tm] * Matrix[
+          state.last[:tm] = Matrix[
             [1, 0, 0], [0, 1, 0], [0, -state.last[:leading], 1]
-          ]
+          ] * state.last[:tm]
 
-          make_text_runs data.first, state
+          state.push state.last.dup
+          tr = make_text_runs data.first, state
+          state.pop
+          tr
         end
 
         parser.for :show_text do |data|
-          make_text_runs data.first, state, graphics_state, page_n
+          state.push state.last.dup
+          tr = make_text_runs data.first, state, graphics_state, page_n
+          state.pop
+          tr
         end
         
         parser.for :show_text_with_positioning do |data|

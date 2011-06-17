@@ -40,6 +40,7 @@
 * DONE Handle new line operators, and all show text operators.
 * DONE Handle font metrics correctly, including glyph widths, displacement
   vectors and bounding boxes.
+* Handle text matrix when it is applying a rotation.
 * Handle type 3 font font matrices.
 * Handle writing mode selection for composite fonts (type 0)
   (different font metrics). 

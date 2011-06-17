@@ -7,7 +7,7 @@ module PdfExtract
     def self.include_in pdf
       char_slop = 0.2
       word_slop = 1.5
-      vertical_overlap_factor = 0.9
+      overlap_slop = 0.9
       
       pdf.spatials :text_chunks, :depends_on => [:characters] do |parser|
         rows = {}
@@ -80,7 +80,8 @@ module PdfExtract
             overlap = [left[:height], right[:height]].min - (left[:y] - right[:y]).abs
             overlap = overlap / [left[:height], right[:height]].min
 
-            if overlap >= vertical_overlap_factor
+            if overlap >= overlap_slop
+              # TODO follow char / word slop rules.
               # join
               so = SpatialObject.new
               so[:x] = left[:x]

@@ -32,6 +32,8 @@
 * Non-ascii chars that are transliterated are appearing in output one
   place before they should. Transliterated chars also cause a word
   break. Not getting their width correct in glyph width dict?
+  ! Looks like this occurs for chars whose codes are in the font's
+  @differences map.
 
 ## Tasks, up to 3 hours
 
@@ -51,7 +53,9 @@
   groups and section are overlayed. Or, low opacity for all, auto
   select a different colour for each type.
 * DONE For some PDFs, character width and height not detected correctly.
-* In some PDFs, ascent, descent and bbox info for fonts is not available.
+* DONE In some PDFs, ascent, descent and bbox info for fonts is not
+  available. Seems to be those fonts whose base font is one of the
+  base 14.
 * DONE Prawn doesn't render over some PDFs.
 
 ## Long tasks, greater than 3 hours

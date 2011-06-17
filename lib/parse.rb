@@ -52,11 +52,11 @@ end
 #   pdf.text_chunks
 #end
 
-xml = PdfExtract::view "/Users/karl/some.pdf", :as => :xml do |pdf|
+xml = PdfExtract::view "/Users/karl/some2.pdf", :as => :xml do |pdf|
   pdf.text_regions
 end
 
-pdf = PdfExtract::view "/Users/karl/some.pdf", :as => :pdf do |pdf|
+pdf = PdfExtract::view "/Users/karl/some2.pdf", :as => :pdf do |pdf|
   pdf.text_regions
 end
 
@@ -81,7 +81,7 @@ end
 #   end
 # end
 
-puts xml
+# puts xml
 
 #png.write 'tmp.png'
 

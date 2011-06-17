@@ -1,38 +1,37 @@
 require 'matrix'
 
+require_relative '../font_metrics'
+
 module PdfExtract
   module Characters
 
-    # TODO Implement for Type3 fonts (They may have :WMode 0 or 1),
-    # and :FontMatrix.
+    # TODO Implement writing mode and :FontMatrix.
 
     def self.glyph_descent c, state
-      # For non-Type3, use :Descent from the font descriptor.
-      if state.last[:font].nil? or state.last[:font].descent.nil?
+      if state.last[:font_metrics].nil? || state.last[:font_metrics].descent.nil?
         0
       else
-        state.last[:font].descent / 1000.0
+        state.last[:font_metrics].descent / 1000.0
       end
     end
 
     def self.glyph_ascent c, state
-      # For non-Type3, use :Ascent from the font descriptor.
-      if state.last[:font].nil? or state.last[:font].ascent.nil?
+      if state.last[:font_metrics].nil? || state.last[:font_metrics].ascent.nil?
         0
       else
-        state.last[:font].ascent / 1000.0
+        state.last[:font_metrics].ascent / 1000.0
       end
     end
     
     def self.glyph_width c, state
-      # For non-Type3 fonts, :Widths may be used to determine glyph width.
-      # This is the same as vertical displacemnt.
+      # :Widths may be used to determine glyph width. This is the same as
+      # horizontal displacemnt.
       glyph_displacement(c, state)[0]
     end
 
     def self.glyph_height c, state
-      # For non-Type3 fonts, :Ascent and :Descent from the :FontDescriptor
-      # can be used to determine maximum glyph height.
+      # :Ascent and :Descent from the :FontDescriptor can be used to determine
+      # maximum glyph height.
       glyph_ascent(c, state) - glyph_descent(c, state)
     end
 
@@ -40,12 +39,12 @@ module PdfExtract
       # For non-Type3 fonts, vertical displacement is the glyph width,
       # horizontal displacement is always 0. Note glyph width is given
       # in 1000ths of text units.
-      if state.last[:font].nil?
+      if state.last[:font_metrics].nil?
         # XXX Why are some font resources not reported via resource_font?
         # Bug in pdf-reader?
         [ 0, 0 ]
       else
-        [ state.last[:font].glyph_width(c) / 1000.0, 0 ]
+        [ state.last[:font_metrics].glyph_width(c) / 1000.0, 0 ]
       end
     end
 
@@ -100,7 +99,7 @@ module PdfExtract
         # TODO Should use either tx or ty depending on writing mode.
         s[:tm] = Matrix[ [1, 0, 0], [0, 1, 0], [tx, 0, 1] ] * s[:tm]
       end
-
+      
       objs
     end
 
@@ -111,10 +110,12 @@ module PdfExtract
         graphics_state = []
         page = nil
         fonts = {}
+        font_metrics = {}
         page_n = 0
 
         parser.for :resource_font do |data|
           fonts[data[0]] = data[1]
+          font_metrics[data[0]] = FontMetrics.new data[1]
           nil
         end
 
@@ -128,6 +129,7 @@ module PdfExtract
             :leading => 0,
             :rise => 0,
             :font => nil,
+            :font_metrics => nil,
             :tj => 0,
             :font_size => 0
           }
@@ -227,6 +229,7 @@ module PdfExtract
 
         parser.for :set_text_font_and_size do |data|
           state.last[:font] = fonts[data[0]]
+          state.last[:font_metrics] = font_metrics[data[0]]
           state.last[:font_size] = data[1]
           nil
         end

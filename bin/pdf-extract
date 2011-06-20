@@ -1,54 +1,49 @@
 #!/usr/bin/env ruby
 
 require 'commander/import'
-require_relative 'lib/pdf'
+require_relative '../lib/pdf-extract'
 
-program :name, 'pdfextract'
+program :name, 'pdf-extract'
 program :version, '0.0.1'
-program :description, 'Content extraction toolkit for PDFs'
+program :description, 'PDF content extraction toolkit'
 
-global_option '-p', '--password STRING', 'Decrypt the input PDF with password' do |pw|
-  $password = pw
-end
+objects = ['characters', 'text_chunks', 'text_regions']
+views = [:xml, :pdf, :png]
 
-command :text do |c|
-  c.syntax 'pdfextract text filename [options]'
-  c.description 'Extract runs of text to an XML file'
+chosen_objects = []
 
-  c.action do |args, options|
-    args.each do |filename|
-      xml = PdfExtract::view filename, :as => :xml do |pdf| pdf.text_runs end
-      say xml
-    end
+objects.each do |o|
+  global_option "--#{o}" do |_|
+    chosen_objects << o
   end
 end
 
-command :mask do |c|
-  c.syntax 'pdfextract mask filename pagenumber [options]'
-  c.description 'Create a mask image of text bounding boxes'
-  c.option '--output-dir STRING', String, 'Output directory'
+views.each do |view|
+  command view.to_sym do |c|
 
-  c.action do |args, options|
-    args.each do |filename|
-      image = PdfExtract::view filename, :as => :png do |pdf|
-        pdf.text_runs
-        pdf.regions
-        pdf.sections
+    c.syntax = "pdf-extract #{view} [objects] filename"
+    c.description = "Output selected objects as #{view.upcase}."
+
+    c.action do |args, options|
+      # Default to XML output.
+      chosen_objects << :xml if chosen_objects.empty?
+      
+      args.each do |filename|
+
+        out = PdfExtract::view filename, :as => view.to_sym do |pdf|
+          chosen_objects.each do |name|
+            pdf.send name.to_sym
+          end
+        end
+
+        case view
+        when :xml then say out
+        when :png then out.write "tmp.#{view}"
+        when :pdf then out.render_file "tmp.#{view}"
+        end
+        
       end
-      # TODO Write image.
     end
+
   end
 end
-
-command :sections do |c|
-  c.syntax 'pdfextract sections filename [options]'
-  c.description 'Analyze PDF as a report, output text in sections to an XML file'
-
-  c.action do |args, options|
-    args.each do |filename|
-      xml = PdfExtract::view filename, :as => :xml do |pdf| pdf.sections end
-      say xml
-    end
-  end
-end
-

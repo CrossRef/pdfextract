@@ -204,7 +204,6 @@ module PdfExtract
         end
 
         parser.for :set_horizontal_text_scaling do |data|
-          puts "setting h scale to #{data.first}"
           state.last[:h_scale] = data.first
           nil
         end

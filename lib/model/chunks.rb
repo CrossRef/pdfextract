@@ -1,6 +1,6 @@
 
 module PdfExtract
-  module TextChunks
+  module Chunks
 
     # TODO Look for obj[:writing_mode] == :vertical or :horizontal
 
@@ -9,7 +9,7 @@ module PdfExtract
       word_slop = 1.5
       overlap_slop = 0.9
       
-      pdf.spatials :text_chunks, :depends_on => [:characters] do |parser|
+      pdf.spatials :chunks, :depends_on => [:characters] do |parser|
         rows = {}
         parser.objects :characters do |chars|
           # TODO Handle pages.

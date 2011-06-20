@@ -6,27 +6,6 @@ require 'pdf-reader'
 module PdfExtract
 
   class SpatialObject < Hash
-
-    def operations
-      @operations ||= {
-        :grow_by => lambda { |original, modifier| original + modifier },
-        :grow_by_percent => lambda { |original, pcnt| original * (1 + pcnt) },
-        :shrink_by => lambda { |original, modifier| original - modifier },
-        :shrink_by_percent => lambda { |original, pcnt| original * (1 - pcnt) },
-        :set_to => lambda { |original, new| new },
-        :set_to_percent => lambda { |original, pcnt| original * pcnt },
-        :with => lambda { |original, p| p.call(original) }
-      }
-    end
-    
-    def alter op_schema
-      op_schema.each_pair do |param, operations|
-        operations.each_pair do |operation, value|
-          self[param] = self.operations[operation].call(self[param], value)
-        end
-      end
-    end
-    
   end
 
   class Receiver

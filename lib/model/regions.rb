@@ -1,6 +1,6 @@
 
 module PdfExtract
-  module TextRegions
+  module Regions
 
     # TODO Handle :writing_mode once present in characters and text_chunks.
 
@@ -27,11 +27,11 @@ module PdfExtract
     def self.include_in pdf
       line_slop_factor = 0.3
 
-      pdf.spatials :text_regions, :depends_on => [:text_chunks] do |parser|
+      pdf.spatials :regions, :depends_on => [:chunks] do |parser|
         chunks = []
         regions = []
         
-        parser.objects :text_chunks do |text_chunk|
+        parser.objects :chunks do |text_chunk|
           y = text_chunk[:y].floor
 
           idx = chunks.index { |obj| text_chunk[:y] <= obj[:y] }

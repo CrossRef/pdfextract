@@ -7,7 +7,7 @@ program :name, 'pdf-extract'
 program :version, '0.0.1'
 program :description, 'PDF content extraction toolkit'
 
-objects = ['characters', 'text_chunks', 'text_regions']
+objects = ['characters', 'chunks', 'regions']
 views = [:xml, :pdf, :png]
 
 chosen_objects = []
@@ -25,9 +25,6 @@ views.each do |view|
     c.description = "Output selected objects as #{view.upcase}."
 
     c.action do |args, options|
-      # Default to XML output.
-      chosen_objects << :xml if chosen_objects.empty?
-      
       args.each do |filename|
 
         out = PdfExtract::view filename, :as => view.to_sym do |pdf|
@@ -36,11 +33,11 @@ views.each do |view|
           end
         end
 
-        base_name = filename.gsub /\.[a-zA-Z0-9]+\Z/, ""
+        base_name = File::basename(filename.gsub /\.[a-zA-Z0-9]+\Z/, "")
         case view
         when :xml then say out
-        when :png then out.write "#{base_name}.#{view}"
-        when :pdf then out.render_file "#{base_name}.#{view}"
+        when :png then out.write "#{base_name}_mask.#{view}"
+        when :pdf then out.render_file "#{base_name}_mask.#{view}"
         end
         
       end

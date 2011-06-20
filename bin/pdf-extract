@@ -33,7 +33,7 @@ views.each do |view|
           end
         end
 
-        base_name = File::basename(filename.gsub /\.[a-zA-Z0-9]+\Z/, "")
+        base_name = File::basename(filename.sub /\.[a-zA-Z0-9]+\Z/, "")
         case view
         when :xml then say out
         when :png then out.write "#{base_name}_mask.#{view}"

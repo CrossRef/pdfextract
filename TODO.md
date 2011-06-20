@@ -60,6 +60,7 @@
 * DONE Prawn doesn't render over some PDFs.
 * Assign colour, font, font size to character objects. Pass on to
   text chunks and regions.
+* DONE Characters appear too wide in some3.pdf test PDF.
 
 ## Long tasks, greater than 3 hours
 

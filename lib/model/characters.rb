@@ -58,7 +58,7 @@ module PdfExtract
       return if page_number != 0
       
       objs = []
-      h_scale_mod = (1 + (state.last[:h_scale] / 100.0))
+      h_scale_mod = (state.last[:h_scale] / 100.0)
       s = state.last
       
       disp_x, disp_y = [0, 0]
@@ -123,7 +123,7 @@ module PdfExtract
           page = data
           state << {
             :tm => Matrix.identity(3),
-            :h_scale => 0,
+            :h_scale => 100,
             :char_spacing => 0,
             :word_spacing => 0,
             :leading => 0,
@@ -204,6 +204,7 @@ module PdfExtract
         end
 
         parser.for :set_horizontal_text_scaling do |data|
+          puts "setting h scale to #{data.first}"
           state.last[:h_scale] = data.first
           nil
         end
@@ -221,7 +222,7 @@ module PdfExtract
           state.last[:tm] = Matrix[
             [1, 0, 0], [0, 1, 0], [data[0], data[1], 1]
           ] * state.last[:tm]
-          state.last[:leading] = -data[1]
+          state.last[:leading] = data[1]
           nil
         end
 

@@ -73,7 +73,17 @@ module PdfExtract
             end
           end
           regions << chunks.first
-          regions
+          
+          regions.map do |region|
+            # Single-line regions don't get assigned a line height in code
+            # above.
+            if not region.key? :line_height
+              region.merge({:line_height => region[:height]})
+            else
+              region
+            end
+          end
+            
         end
       end
     end

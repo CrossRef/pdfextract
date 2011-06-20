@@ -211,16 +211,16 @@ module PdfExtract
         # Position change operators.
 
         parser.for :move_text_position do |data|
-          state.last[:tm] = state.last[:tm] * Matrix[
+          state.last[:tm] = Matrix[
             [1, 0, 0], [0, 1, 0], [data[0], data[1], 1]
-          ]
+          ] * state.last[:tm]
           nil
         end
 
         parser.for :move_text_position_and_set_leading do |data|
-          state.last[:tm] = state.last[:tm] * Matrix[
+          state.last[:tm] = Matrix[
             [1, 0, 0], [0, 1, 0], [data[0], data[1], 1]
-          ]
+          ] * state.last[:tm]
           state.last[:leading] = -data[1]
           nil
         end

@@ -36,10 +36,11 @@ views.each do |view|
           end
         end
 
+        base_name = filename.gsub /\.[a-zA-Z0-9]+\Z/, ""
         case view
         when :xml then say out
-        when :png then out.write "tmp.#{view}"
-        when :pdf then out.render_file "tmp.#{view}"
+        when :png then out.write "#{base_name}.#{view}"
+        when :pdf then out.render_file "#{base_name}.#{view}"
         end
         
       end

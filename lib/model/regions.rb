@@ -31,27 +31,28 @@ module PdfExtract
         chunks = []
         regions = []
         
-        parser.objects :chunks do |text_chunk|
-          y = text_chunk[:y].floor
+        parser.objects :chunks do |chunk|
+          y = chunk[:y].floor
 
-          idx = chunks.index { |obj| text_chunk[:y] <= obj[:y] }
+          idx = chunks.index { |obj| chunk[:y] <= obj[:y] }
           if idx.nil?
-            chunks << text_chunk.dup
+            chunks << chunk.dup
           else
-            chunks.insert idx, text_chunk.dup
+            chunks.insert idx, chunk.dup
           end
         end
 
-        # TODO Wouldn't handle multiple columns - would leave as lines.
         parser.post do
+          compare_index = 1
           while chunks.count > 1
             b = chunks.first
-            t = chunks[1]
+            t = chunks[compare_index]
 
             line_height = b[:line_height] || b[:height]
             line_slop = [line_height, t[:height]].min * line_slop_factor
+            incident_y = (b[:y] + b[:height] + line_slop) >= t[:y]
             
-            if ((b[:y] + b[:height] + line_slop) >= t[:y]) && incident(t, b)
+            if incident_y && incident(t, b)
               so = SpatialObject.new
               so[:x] = [b[:x], t[:x]].min
               so[:y] = b[:y]
@@ -60,11 +61,15 @@ module PdfExtract
               so[:content] = concat_lines t[:content], b[:content]
               so[:line_height] = line_height
               chunks[0] = so
-              chunks.delete_at 1
+              chunks.delete_at compare_index
+            elsif incident_y
+              # Could be more chunks within range on y axis.
+              compare_index = compare_index.next
             else
               # Finished region.
               regions << chunks.first
               chunks.delete_at 0
+              compare_index = 1
             end
           end
           regions << chunks.first

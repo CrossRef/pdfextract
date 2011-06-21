@@ -20,7 +20,9 @@ module PdfExtract
           top_font = font_frequencies.to_a.sort_by { |f| f[1] }.reverse.first
           font, size = top_font[0].split "_"
           regions.each do |region|
-            if region[:font].to_s == font && region[:line_height].floor.to_s == size
+            if region[:font].to_s == font &&
+                region[:line_height].floor.to_s == size &&
+                region[:height] > region[:line_height]
               bodies << region.dup
             end
           end

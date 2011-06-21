@@ -7,7 +7,8 @@ program :name, 'pdf-extract'
 program :version, '0.0.1'
 program :description, 'PDF content extraction toolkit'
 
-objects = ['characters', 'chunks', 'regions', 'bodies']
+objects = ['characters', 'chunks', 'regions', 'bodies', 'titles']
+semantic = ['bodies', 'titles']
 views = [:xml, :pdf, :png]
 
 chosen_objects = []
@@ -16,6 +17,10 @@ objects.each do |o|
   global_option "--#{o}" do |_|
     chosen_objects << o
   end
+end
+
+global_option "--semantic" do |_|
+  semantic.each { |s| chosen_objects << s }
 end
 
 views.each do |view|

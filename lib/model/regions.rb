@@ -47,6 +47,7 @@ module PdfExtract
             
             if incident_y && incident(t, b)
               chunks[0] = Spatial.merge t, b, :lines => true
+              chunks[0][:line_height] = line_height
               chunks.delete_at compare_index
             elsif incident_y
               # Could be more chunks within range on y axis.
@@ -63,7 +64,7 @@ module PdfExtract
           regions.map do |region|
             # Single-line regions don't get assigned a line height in code
             # above.
-            if not region.key? :line_height
+            if region[:line_height].nil?
               region.merge({:line_height => region[:height]})
             else
               region

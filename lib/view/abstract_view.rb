@@ -23,7 +23,8 @@ module PdfExtract
     end
 
     def singular_name name
-      name.sub /s$/, ''
+      name = name.sub /ies$/, 'y'
+      name = name.sub /s$/, ''
     end
     
   end

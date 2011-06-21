@@ -2,6 +2,7 @@ require_relative 'pdf'
 require_relative 'model/characters'
 require_relative 'model/chunks'
 require_relative 'model/regions'
+require_relative 'analysis/bodies'
 require_relative 'view/png_view'
 require_relative 'view/pdf_view'
 require_relative 'view/xml_view'
@@ -14,6 +15,7 @@ module PdfExtract
     Characters.include_in pdf
     Chunks.include_in pdf
     Regions.include_in pdf
+    Bodies.include_in pdf
     
     yield pdf
     

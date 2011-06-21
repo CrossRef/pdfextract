@@ -1,3 +1,4 @@
+require_relative '../spatial'
 
 module PdfExtract
   module Regions
@@ -14,14 +15,6 @@ module PdfExtract
       rr = (rx1..rx2)
 
       lr.include? rx1 or lr.include? rx2 or rr.include? lx1 or rr.include? lx2
-    end
-
-    def self.concat_lines top, bottom
-      if top =~ /\-\Z/
-        top[0..-2] + bottom
-      else
-        top + ' ' + bottom
-      end
     end
     
     def self.include_in pdf
@@ -53,14 +46,7 @@ module PdfExtract
             incident_y = (b[:y] + b[:height] + line_slop) >= t[:y]
             
             if incident_y && incident(t, b)
-              so = SpatialObject.new
-              so[:x] = [b[:x], t[:x]].min
-              so[:y] = b[:y]
-              so[:width] = [b[:width], t[:width]].max
-              so[:height] = (t[:y] - b[:y]) + t[:height]
-              so[:content] = concat_lines t[:content], b[:content]
-              so[:line_height] = line_height
-              chunks[0] = so
+              chunks[0] = Spatial.merge t, b, :lines => true
               chunks.delete_at compare_index
             elsif incident_y
               # Could be more chunks within range on y axis.

@@ -1,3 +1,4 @@
+require_relative '../spatial'
 
 module PdfExtract
   module Chunks
@@ -36,24 +37,12 @@ module PdfExtract
 
               if (left[:x] + left[:width] + (char_width * char_slop)) >= right[:x]
                 # join as adjacent chars
-                so = SpatialObject.new
-                so[:content] = left[:content] + right[:content]
-                so[:x] = left[:x]
-                so[:y] = left[:y]
-                so[:width] = (right[:x] - left[:x]) + right[:width]
-                so[:height] = [left[:height], right[:height]].max
-                row[0] = so
+                row[0] = Spatial.merge left, right
                 row.delete_at 1
                 char_width = right[:width] unless right[:content].strip =~ /[^A-Za-z0-9]/
               elsif (left[:x] + left[:width] + (char_width * word_slop)) >= right[:x]
                 # join with a ' ' in the middle.
-                so = SpatialObject.new
-                so[:content] = left[:content] + ' ' + right[:content]
-                so[:x] = left[:x]
-                so[:y] = left[:y]
-                so[:width] = (right[:x] - left[:x]) + right[:width]
-                so[:height] = [left[:height], right[:height]].max
-                row[0] = so
+                row[0] = Spatial.merge left, right, :separator => ' '
                 row.delete_at 1
                 char_width = right[:width] unless right[:content].strip =~ /[^A-Za-z0-9]/
               else
@@ -83,14 +72,7 @@ module PdfExtract
             if overlap >= overlap_slop
               # TODO follow char / word slop rules.
               # join
-              so = SpatialObject.new
-              so[:x] = left[:x]
-              so[:y] = left[:y]
-              so[:width] = (right[:x] - left[:x]) + right[:width]
-              so[:height] = [left[:height], right[:height]].max
-              so[:content] = left[:content] + right[:content]
-
-              text_chunks[0] = so
+              text_chunks[0] = Spatial.merge left, right
               text_chunks.delete_at 1
             else
               # no join

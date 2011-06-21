@@ -5,9 +5,6 @@ require 'pdf-reader'
 
 module PdfExtract
 
-  class SpatialObject < Hash
-  end
-
   class Receiver
 
     def initialize pdf

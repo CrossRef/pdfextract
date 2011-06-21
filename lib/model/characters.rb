@@ -80,15 +80,19 @@ module PdfExtract
 
         sizes = Matrix.rows([ [glyph_width(c, state), glyph_height(c, state), 1] ])
         sizes = sizes * trm
-       
-        so = SpatialObject.new
-        so[:x] = trm.row(2)[0]
-        so[:y] = trm.row(2)[1] + (glyph_descent(c, state) * s[:font_size])
-        so[:width] = sizes.row(0)[0] - so[:x]
-        so[:height] = sizes.row(0)[1] - so[:y]
-        so[:content] = c
-        so[:page] = page_number
-        objs << so
+
+        px = trm.row(2)[0]
+        py = trm.row(2)[1] + (glyph_descent(c, state) * s[:font_size])
+
+        objs << {
+          :x => px,
+          :y => py,
+          :width => sizes.row(0)[0] - px,
+          :height => sizes.row(0)[1] - py,
+          :content => c,
+          :page => page_number,
+          :font => state.last[:font].basefont
+        }
         
         disp_x, disp_y = glyph_displacement(c, state)
         spacing = s[:char_spacing] if c != ' '

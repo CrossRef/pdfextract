@@ -48,7 +48,7 @@ module PdfExtract
       end
     end
 
-    def self.make_text_runs text, state, graphics_state, page_number
+    def self.make_text_runs text, state, graphics_state, page, page_number
       # TODO Ignore chars outside the page :MediaBox.
       # TODO Mul UserUnit if specified by page.
       # TODO Include writing mode, so that runs can be joined either
@@ -84,6 +84,9 @@ module PdfExtract
         px = trm.row(2)[0]
         py = trm.row(2)[1] + (glyph_descent(c, state) * s[:font_size])
 
+        px -= page[:MediaBox][0]
+        py -= page[:MediaBox][1]
+        
         objs << {
           :x => px,
           :y => py,
@@ -91,7 +94,9 @@ module PdfExtract
           :height => sizes.row(0)[1] - py,
           :content => c,
           :page => page_number,
-          :font => state.last[:font].basefont
+          :font => state.last[:font].basefont,
+          :page_width => page[:MediaBox][2] - page[:MediaBox][0],
+          :page_height => page[:MediaBox][3] - page[:MediaBox][1]
         }
         
         disp_x, disp_y = glyph_displacement(c, state)
@@ -124,7 +129,7 @@ module PdfExtract
         end
 
         parser.for :begin_page do |data|
-          page = data
+          page = data[0]
           state << {
             :tm => Matrix.identity(3),
             :h_scale => 100,
@@ -271,7 +276,7 @@ module PdfExtract
           ] * state.last[:tm]
 
           state.push state.last.dup
-          tr = make_text_runs data[2], state, graphics_state, page_n
+          tr = make_text_runs data[2], state, graphics_state, page, page_n
           state.pop
           tr
         end
@@ -282,14 +287,14 @@ module PdfExtract
           ] * state.last[:tm]
 
           state.push state.last.dup
-          tr = make_text_runs data.first, state
+          tr = make_text_runs data.first, state, graphics_state, page, page_n
           state.pop
           tr
         end
 
         parser.for :show_text do |data|
           state.push state.last.dup
-          tr = make_text_runs data.first, state, graphics_state, page_n
+          tr = make_text_runs data.first, state, graphics_state, page, page_n
           state.pop
           tr
         end
@@ -304,7 +309,7 @@ module PdfExtract
             when "Fixnum", "Float"
               state.last[:tj] = item
             when "String"
-              runs << make_text_runs(item, state, graphics_state, page_n)
+              runs << make_text_runs(item, state, graphics_state, page, page_n)
             end
           end
 

@@ -4,17 +4,36 @@ module PdfExtract
 
     def self.include_in pdf
       pdf.spatials :titles, :depends_on => [:regions] do |parser|
-        # TODO Not only highest, but earliest page.
-        title = {:line_height => 0, :y => 0}
+        titles = []
+        title_slop_factor = 0.2
+        
         parser.objects :regions do |region|
-          if region[:line_height] > title[:line_height] && region[:y] > title[:y]
-            title = region
-          end
+          titles << region
         end
 
         parser.post do
-          title.dup unless title[:content].nil?
-          nil if title[:content].nil?
+          # A title should:
+          #   be longer than one letter,
+          titles.reject! { |r| r[:content].strip.length < 2 }
+
+          #   be in the top half of a page,
+          titles.reject! { |r| r[:y] < (r[:page_height] / 2.0) }
+
+          #   be no less tall than a factor of the tallest text,
+          titles.sort_by! { |r| -r[:line_height] }
+          tallest_line = titles.first[:line_height]
+          title_slop = tallest_line - (tallest_line * title_slop_factor)
+          titles.reject! { |r| r[:line_height] < title_slop }
+          
+          #   be on the earliest page with text,
+          titles.sort_by! { |r| r[:page] }
+          first_page = titles.first[:page]
+          titles.reject! { |r| r[:page] != first_page }
+
+          #   be the highest of the above.
+          titles.sort_by! { |r| -r[:y] }
+
+          titles.take 1
         end
       end
     end

@@ -12,7 +12,8 @@ module PdfExtract
           doc.fill_color color
           
           objs.each do |obj|
-            pos = [obj[:x], obj[:y] + obj[:height]]
+            # XXX Works, but why?
+            pos = [obj[:x] - 36, obj[:y] + obj[:height] - 36]
             width = obj[:width]
             height = obj[:height]
             

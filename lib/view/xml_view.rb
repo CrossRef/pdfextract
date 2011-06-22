@@ -50,5 +50,11 @@ module PdfExtract
       builder.to_xml
     end
 
+    def self.write render, filename
+      File.open filename, "w" do |file|
+        file.write render
+      end
+    end
+    
   end
 end

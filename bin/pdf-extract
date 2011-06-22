@@ -10,41 +10,47 @@ program :description, 'PDF content extraction toolkit'
 objects = ['characters', 'chunks', 'regions', 'bodies', 'titles']
 semantic = ['bodies', 'titles']
 views = [:xml, :pdf, :png]
+outputs = {
+  :xml => proc { :stdout },
+  :pdf => proc { |f| File::basename(f.sub /\.[a-zA-Z0-9]+\Z/, "") + ".mask.pdf" },
+  :png => proc { |f| File::basename(f.sub /\.[a-zA-Z0-9]+\Z/, "") + ".mask.png" }
+}
 
-chosen_objects = []
+$chosen_objects = []
 
 objects.each do |o|
   global_option "--#{o}" do |_|
-    chosen_objects << o
+    $chosen_objects << o
   end
 end
 
 global_option "--semantic" do |_|
-  semantic.each { |s| chosen_objects << s }
+  semantic.each { |s| $chosen_objects << s }
+end
+
+global_option "--output=FILE" do |filename|
+  $output = filename
 end
 
 views.each do |view|
   command view.to_sym do |c|
-
     c.syntax = "pdf-extract #{view} [objects] filename"
     c.description = "Output selected objects as #{view.upcase}."
 
     c.action do |args, options|
       args.each do |filename|
-
-        out = PdfExtract::view filename, :as => view.to_sym do |pdf|
-          chosen_objects.each do |name|
+        $output = outputs[view].call(filename) if $output.nil?
+        out = PdfExtract.view filename, :as => view.to_sym do |pdf|
+          $chosen_objects.each do |name|
             pdf.send name.to_sym
           end
         end
 
-        base_name = File::basename(filename.sub /\.[a-zA-Z0-9]+\Z/, "")
-        case view
-        when :xml then say out
-        when :png then out.write "#{base_name}_mask.#{view}"
-        when :pdf then out.render_file "#{base_name}_mask.#{view}"
+        if $output == :stdout
+          say out
+        else
+          PdfExtract.view_class(view).write(out, $output)
         end
-        
       end
     end
 

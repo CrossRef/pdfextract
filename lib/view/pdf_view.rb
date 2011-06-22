@@ -24,6 +24,10 @@ module PdfExtract
         end
       end
     end
+
+    def self.write render, filename
+      render.render_file filename
+    end
     
   end
 end

@@ -9,6 +9,12 @@ require_relative 'view/pdf_view'
 require_relative 'view/xml_view'
 
 module PdfExtract
+
+  @@view_dictionary = {
+    :xml => PdfExtract::XmlView,
+    :png => PdfExtract::PngView,
+    :pdf => PdfExtract::PdfView
+  }
   
   def self.parse filename, &block
     pdf = Pdf.new
@@ -37,15 +43,14 @@ module PdfExtract
     
     pdf
   end
+  
+  def self.view_class short_name
+    @@view_dictionary[short_name]
+  end
 
   def self.view filename, options = {}, &block
     pdf = parse filename, &block
-    clazz = case options[:as]
-            when :xml then PdfExtract::XmlView
-            when :png then PdfExtract::PngView
-            when :pdf then PdfExtract::PdfView
-            end
-    clazz.new(pdf, filename).render
+    view_class(options[:as]).new(pdf, filename).render
   end
 
 end

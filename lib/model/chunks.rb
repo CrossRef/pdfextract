@@ -10,8 +10,13 @@ module PdfExtract
       word_slop = 1.5
       overlap_slop = 0.9
       
-      pdf.spatials :chunks, :depends_on => [:characters] do |parser|
+      pdf.spatials :chunks, :paged => true, :depends_on => [:characters] do |parser|
         rows = {}
+
+        parser.pre do
+          rows = {}
+        end
+        
         parser.objects :characters do |chars|
           # TODO Handle pages.
           y = chars[:y]
@@ -80,7 +85,7 @@ module PdfExtract
               text_chunks.delete_at 0
             end
           end
-          
+
           merged_text_chunks << text_chunks.first
         end 
       end

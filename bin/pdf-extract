@@ -10,7 +10,7 @@ program :description, 'PDF content extraction toolkit'
 objects = ['characters', 'chunks', 'regions', 'bodies', 'titles']
 semantic = ['bodies', 'titles']
 views = [:xml, :pdf, :png]
-outputs = {
+default_outputs = {
   :xml => proc { :stdout },
   :pdf => proc { |f| File::basename(f.sub /\.[a-zA-Z0-9]+\Z/, "") + ".mask.pdf" },
   :png => proc { |f| File::basename(f.sub /\.[a-zA-Z0-9]+\Z/, "") + ".mask.png" }
@@ -39,7 +39,7 @@ views.each do |view|
 
     c.action do |args, options|
       args.each do |filename|
-        $output = outputs[view].call(filename) if $output.nil?
+        $output = default_outputs[view].call(filename) if $output.nil?
         out = PdfExtract.view filename, :as => view.to_sym do |pdf|
           $chosen_objects.each do |name|
             pdf.send name.to_sym

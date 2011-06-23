@@ -8,10 +8,16 @@ module PdfExtract
     def render
       Prawn::Document.new :template => @filename do |doc|
         objects.each_pair do |type, objs|
+          last_page = 1
           color = auto_color
           doc.fill_color color
           
           objs.each do |obj|
+            if obj[:page].next != last_page
+              doc.go_to_page obj[:page].next
+              doc.fill_color color
+            end
+              
             # XXX Works, but why?
             pos = [obj[:x] - 36, obj[:y] + obj[:height] - 36]
             width = obj[:width]

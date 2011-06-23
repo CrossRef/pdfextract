@@ -28,17 +28,10 @@ module PdfExtract
     yield pdf
     
     pdf.spatial_calls.each do |spatial_call|
+      name = spatial_call[:name]
       receiver = Receiver.new pdf
-      pdf.spatial_builders[spatial_call[:name]].call receiver
-      if receiver.object_calls?
-        receiver.call_object_listeners pdf.spatial_objects
-      end
-      if receiver.for_calls?
-        receiver.expand_listeners_to_callback_methods
-        PDF::Reader.file filename, receiver
-        pdf.spatial_objects[spatial_call[:name]].compact!
-      end
-      receiver.call_posts
+      pdf.spatial_builders[name].call receiver
+      receiver.invoke_calls name, filename, pdf.spatial_options[name]
     end
     
     pdf

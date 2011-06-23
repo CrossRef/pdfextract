@@ -12,15 +12,20 @@ module PdfExtract
       @listeners = {}
       @object_listeners = {}
       @posts = []
+      @pres = []
     end
 
     def for callback_name, &block
       @listeners[callback_name] = {:type => @pdf.operating_type, :fn => block}
     end
 
-    def objects type_name, &block
+    def objects type_name, options = {:paged => false}, &block
       @object_listeners[type_name] ||= []
       @object_listeners[type_name] << block
+    end
+
+    def pre &block
+      @pres << {:type => @pdf.operating_type, :fn => block}
     end
 
     def post &block
@@ -40,11 +45,9 @@ module PdfExtract
     end
 
     def call_object_listeners spatial_objects
-      @object_listeners.each_pair do |type, fns|
-        fns.each do |fn|
-          spatial_objects[type].each do |obj|
-            fn.call obj
-          end
+      @object_listeners.each_pair do |type, listeners|
+        listeners.each do |listener|
+            spatial_objects[type].each { |obj| listener.call obj }
         end
       end
     end
@@ -53,6 +56,12 @@ module PdfExtract
       @posts.each do |post|
         spatial_objects = post[:fn].call
         self.add_spatial_objects post[:type], spatial_objects
+      end
+    end
+
+    def call_pres
+      @pres.each do |pre|
+        pre[:fn].call
       end
     end
 
@@ -75,11 +84,52 @@ module PdfExtract
       end
     end
 
+    def invoke_calls type_name, filename, spatial_options
+      if spatial_options[:paged]
+
+        if self.object_calls?
+          # Invoke each object call with paged objects.
+          @object_listeners.each_pair do |type, listeners|
+            paged = @pdf.paged_objects type
+            paged.each_pair do |page, objs|
+              # Before all listeners for each page, call
+              # pre fns.
+              self.call_pres
+              
+              listeners.each do |listener|
+                objs.each { |obj| listener.call obj }
+              end
+
+              # After all listeners have been called for the
+              # page, call posts.
+              self.call_posts
+            end
+          end
+        end
+        
+      else
+
+        self.call_pres
+        if self.object_calls?
+          self.call_object_listeners @pdf.spatial_objects
+        end
+        self.call_posts
+
+      end
+      
+      if self.for_calls?
+        self.expand_listeners_to_callback_methods
+        PDF::Reader.file filename, self
+        @pdf.spatial_objects[type_name].compact!
+      end
+    end
+
   end
 
   class Pdf
     
     attr_accessor :operating_type, :spatial_calls, :spatial_builders, :spatial_objects
+    attr_accessor :spatial_options
     
     def method_missing name, *args
       throw StandardError.new "No such spatial type #{name}"
@@ -94,31 +144,23 @@ module PdfExtract
       @spatial_calls = []
       @spatial_objects = {}
       @spatial_options = {}
-
-      self.spatials :images do
-        parser.for :begin_inline_image_data do |data|
-        end
-      end
-      
-      self.spatials :v_margins, :depends_on => [:text_chunks] do
-        # Mark off ranges of the x axis. AxisMask class?
-      end
-      
-      self.spatials :h_margins, :depends_on => [:text_chunks] do
-      end
-      
-      self.spatials :rows, :depends_on => [:h_margins] do
-      end
-      
-      self.spatials :columns, :depends_on => [:v_margins, :rows] do
-      end
-      
-      self.spatials :sections, :depends_on => [:text_regions, :columns] do
-      end
     end
 
     def explicit_call? name
       @spatial_calls.count { |obj| obj[:name] == name and obj[:explicit] } > 0
+    end
+
+    def paged_objects type
+      paged_objs = {}
+      
+      if @spatial_objects[type]
+        @spatial_objects[type].each do |obj|
+          paged_objs[obj[:page]] ||= []
+          paged_objs[obj[:page]] << obj
+        end
+      end
+
+      paged_objs
     end
 
     private

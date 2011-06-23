@@ -53,9 +53,6 @@ module PdfExtract
       # TODO Mul UserUnit if specified by page.
       # TODO Include writing mode, so that runs can be joined either
       #      virtically or horizontally in the join stage.
-
-      # XXX
-      return if page_number != 0
       
       objs = []
       h_scale_mod = (state.last[:h_scale] / 100.0)
@@ -87,17 +84,19 @@ module PdfExtract
         px -= page[:MediaBox][0]
         py -= page[:MediaBox][1]
         
-        objs << {
+        o = {
           :x => px,
           :y => py,
           :width => sizes.row(0)[0] - px,
           :height => sizes.row(0)[1] - py,
           :content => c,
           :page => page_number,
-          :font => state.last[:font].basefont,
           :page_width => page[:MediaBox][2] - page[:MediaBox][0],
           :page_height => page[:MediaBox][3] - page[:MediaBox][1]
         }
+        # XXX Should font be excluded from state stack?
+        o[:font] = state.last[:font].basefont unless state.last[:font].nil?
+        objs << o
         
         disp_x, disp_y = glyph_displacement(c, state)
         spacing = s[:char_spacing] if c != ' '
@@ -179,14 +178,14 @@ module PdfExtract
         # Start/end text object operators.
 
         parser.for :begin_text_object do |data|
-          state.push state.last.dup
+          #state.push state.last.dup
           nil
         end
 
         parser.for :end_text_object do |data|
           # When not defining a text object, text operators alter a
           # global state.
-          state.pop
+          #state.pop
           nil
         end
 

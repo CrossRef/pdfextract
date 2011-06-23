@@ -20,9 +20,14 @@ module PdfExtract
     def self.include_in pdf
       line_slop_factor = 0.3
 
-      pdf.spatials :regions, :depends_on => [:chunks] do |parser|
+      pdf.spatials :regions, :paged => true, :depends_on => [:chunks] do |parser|
         chunks = []
         regions = []
+
+        parser.pre do
+          chunks = []
+          regions = []
+        end
         
         parser.objects :chunks do |chunk|
           y = chunk[:y].floor
@@ -37,7 +42,7 @@ module PdfExtract
 
         parser.post do
           compare_index = 1
-          while chunks.count > 1
+          while chunks.count > compare_index
             b = chunks.first
             t = chunks[compare_index]
 
@@ -70,7 +75,6 @@ module PdfExtract
               region
             end
           end
-            
         end
       end
     end

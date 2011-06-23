@@ -34,6 +34,7 @@
   break. Not getting their width correct in glyph width dict?
   ! Looks like this occurs for chars whose codes are in the font's
   @differences map.
+* pdf_view.rb shouldn't call doc.go_to_page more than once per page.
 
 ## Tasks, up to 3 hours
 
@@ -61,9 +62,13 @@
 * Assign colour, font, font size to character objects. Pass on to
   text chunks and regions.
 * DONE Characters appear too wide in some3.pdf test PDF.
+* Characters on pages with images are sometimes not detected. Graphics
+  state issue?
 
 ## Long tasks, greater than 3 hours
 
 * Examine text_runs spatial definition and determine processing that
   is generic. Move into Parser methods. E.g. Handling global /
   object-specific state.
+* Better organise pre/object/post call storage in pdf.rb . Perhaps
+  a pre and post per object type.

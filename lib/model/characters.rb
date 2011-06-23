@@ -84,19 +84,17 @@ module PdfExtract
         px -= page[:MediaBox][0]
         py -= page[:MediaBox][1]
         
-        o = {
+        objs << {
           :x => px,
           :y => py,
           :width => sizes.row(0)[0] - px,
           :height => sizes.row(0)[1] - py,
           :content => c,
           :page => page_number,
+          :font => state.last[:font].basefont,
           :page_width => page[:MediaBox][2] - page[:MediaBox][0],
           :page_height => page[:MediaBox][3] - page[:MediaBox][1]
         }
-        # XXX Should font be excluded from state stack?
-        o[:font] = state.last[:font].basefont unless state.last[:font].nil?
-        objs << o
         
         disp_x, disp_y = glyph_displacement(c, state)
         spacing = s[:char_spacing] if c != ' '
@@ -172,20 +170,6 @@ module PdfExtract
           a, b, c, d, e, f = data
           ctm = graphics_state.last[:ctm]
           graphics_state.last[:ctm] = Matrix[ [a, b, 0], [c, d, 0], [e, f, 1] ] * ctm
-          nil
-        end
-
-        # Start/end text object operators.
-
-        parser.for :begin_text_object do |data|
-          #state.push state.last.dup
-          nil
-        end
-
-        parser.for :end_text_object do |data|
-          # When not defining a text object, text operators alter a
-          # global state.
-          #state.pop
           nil
         end
 

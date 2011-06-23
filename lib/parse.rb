@@ -4,6 +4,7 @@ require_relative 'model/chunks'
 require_relative 'model/regions'
 require_relative 'analysis/bodies'
 require_relative 'analysis/titles'
+require_relative 'analysis/headers'
 require_relative 'view/png_view'
 require_relative 'view/pdf_view'
 require_relative 'view/xml_view'
@@ -24,6 +25,7 @@ module PdfExtract
     Regions.include_in pdf
     Bodies.include_in pdf
     Titles.include_in pdf
+    Headers.include_in pdf
     
     yield pdf
     

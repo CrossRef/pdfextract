@@ -1,10 +1,10 @@
 require_relative '../multi_range'
 
 module PdfExtract
-  module Headers
+  module Zones
 
-    def self.include_in pdf
-      pdf.spatials :headers, :paged => true, :depends_on => [:regions] do |parser|
+    def self.axis_spatials pdf, name
+      pdf.spatials name, :paged => true, :depends_on => [:regions] do |parser|
         y_mask = MultiRange.new
         page = -1
         page_width = 0
@@ -28,18 +28,33 @@ module PdfExtract
           if y_mask.count < 2
             nil
           else
-            {
-              :x => 0,
-              :y => y_mask.max_excluded,
-              :width => page_width,
-              :height => page_height - y_mask.max_excluded,
+            yield y_mask, {
               :page => page,
               :page_width => page_width,
               :page_height => page_height
             }
           end
         end
-        
+      end
+    end
+
+    def self.include_in pdf
+      axis_spatials pdf, :headers do |y_mask, obj|
+        obj.merge({
+          :x => 0,
+          :y => y_mask.max_excluded,
+          :width => obj[:page_width],
+          :height => obj[:page_height] - y_mask.max_excluded
+        })
+      end
+
+      axis_spatials pdf, :footers do |y_mask, obj|
+        obj.merge({
+          :x => 0,
+          :y => 0,
+          :width => obj[:page_width],
+          :height => y_mask.min_excluded
+        })
       end
     end
 

@@ -147,6 +147,8 @@ module PdfExtract
 
         parser.for :end_page do |data|
           page_n = page_n.next
+          state.pop
+          graphics_state.pop
           nil
         end
 

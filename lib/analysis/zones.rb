@@ -38,6 +38,10 @@ module PdfExtract
       end
     end
 
+    # TODO Headers/footers examine margins. Check header and footer
+    # distance from margins. Should be within a factor of the body
+    # area.
+
     def self.include_in pdf
       axis_spatials pdf, :headers do |y_mask, obj|
         obj.merge({
@@ -54,6 +58,33 @@ module PdfExtract
           :y => 0,
           :width => obj[:page_width],
           :height => y_mask.min_excluded
+        })
+      end
+
+      axis_spatials pdf, :middles do |y_mask, obj|
+        obj.merge({
+          :x => 0,
+          :y => y_mask.min_excluded,
+          :width => obj[:page_width],
+          :height => y_mask.max_excluded - y_mask.min_excluded
+        })
+      end
+
+      axis_spatials pdf, :top_margins do |y_mask, obj|
+        obj.merge({
+          :x => 0,
+          :y => y_mask.max,
+          :width => obj[:page_width],
+          :height => obj[:page_height] - y_mask.max
+        })
+      end
+
+      axis_spatials pdf, :bottom_margins do |y_mask, obj|
+        obj.merge({
+          :x => 0,
+          :y => 0,
+          :width => obj[:page_width],
+          :height => y_mask.min
         })
       end
     end

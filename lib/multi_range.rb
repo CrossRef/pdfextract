@@ -30,6 +30,14 @@ module PdfExtract
       @ranges.sort_by { |r| r.max}.first.max
     end
 
+    def max
+      @ranges.sort_by { |r| -r.max}.first.max
+    end
+
+    def min
+      @ranges.sort_by { |r| r.min}.first.min
+    end
+
     def count
       @ranges.count
     end

@@ -7,7 +7,9 @@ program :name, 'pdf-extract'
 program :version, '0.0.1'
 program :description, 'PDF content extraction toolkit'
 
-objects = ['characters', 'chunks', 'regions', 'bodies', 'titles', 'headers', 'footers']
+objects = ['characters', 'chunks', 'regions', 'bodies', 'titles',
+           'headers', 'footers', 'middles', 'top_margins',
+           'bottom_margins']
 semantic = ['bodies', 'titles']
 views = [:xml, :pdf, :png]
 default_outputs = {

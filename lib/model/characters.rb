@@ -223,7 +223,7 @@ module PdfExtract
         end
 
         parser.for :move_text_position_and_set_leading do |data|
-          state.last[:leading] = data[1]
+          state.last[:leading] = -data[1]
           render_state[:tm] = Matrix[
             [1, 0, 0], [0, 1, 0], [data[0], data[1], 1]
           ] * render_state[:tlm]

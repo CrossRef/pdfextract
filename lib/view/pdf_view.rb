@@ -13,8 +13,8 @@ module PdfExtract
           doc.fill_color color
           
           objs.each do |obj|
-            if obj[:page].next != last_page
-              doc.go_to_page obj[:page].next
+            if obj[:page] != last_page
+              doc.go_to_page obj[:page]
               doc.fill_color color
             end
               

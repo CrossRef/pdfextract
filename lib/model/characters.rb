@@ -41,14 +41,15 @@ module PdfExtract
       # in 1000ths of text units.
       if state.last[:font_metrics].nil?
         # XXX Why are some font resources not reported via resource_font?
-        # Bug in pdf-reader?
+        # Bug in pdf-reader? Possibly because of :Font entry in graphics
+        # state set.
         [ 0, 0 ]
       else
         [ state.last[:font_metrics].glyph_width(c) / 1000.0, 0 ]
       end
     end
 
-    def self.make_text_runs text, state, graphics_state, page, page_number
+    def self.make_text_runs text, tj, state, render_state, page, page_number
       # TODO Ignore chars outside the page :MediaBox.
       # TODO Mul UserUnit if specified by page.
       # TODO Include writing mode, so that runs can be joined either
@@ -60,20 +61,20 @@ module PdfExtract
       
       disp_x, disp_y = [0, 0]
       spacing = 0
-      tx = ((disp_x - (s[:tj] / 1000.0)) * s[:font_size] + spacing) * h_scale_mod
-      ty = (disp_y - (s[:tj] / 1000.0)) * s[:font_size] + spacing
+      tx = ((disp_x - (tj / 1000.0)) * s[:font_size] + spacing) * h_scale_mod
+      ty = (disp_y - (tj / 1000.0)) * s[:font_size] + spacing
 
       # TODO Should use either tx or ty depending on writing mode.
-      s[:tm] = Matrix[ [1, 0, 0], [0, 1, 0], [tx, 0, 1] ] * s[:tm]
+      render_state[:tm] = Matrix[ [1, 0, 0], [0, 1, 0], [tx, 0, 1] ] * render_state[:tm]
 
-      # :tj applies only to the first char of the Tj op.
-      state.last[:tj] = 0
+      # tj applies only to the first char of the Tj op.
+      tj = 0
       
       text.each_char do |c|
         trm = Matrix[ [s[:font_size] * h_scale_mod, 0, 0],
                       [0, s[:font_size], 0],
                       [0, s[:rise], 1] ]
-        trm = trm * s[:tm] * graphics_state.last[:ctm]
+        trm = trm * render_state[:tm] * state.last[:ctm]
 
         sizes = Matrix.rows([ [glyph_width(c, state), glyph_height(c, state), 1] ])
         sizes = sizes * trm
@@ -99,11 +100,11 @@ module PdfExtract
         disp_x, disp_y = glyph_displacement(c, state)
         spacing = s[:char_spacing] if c != ' '
         spacing = s[:word_spacing] if c == ' '
-        tx = ((disp_x - (s[:tj] / 1000.0)) * s[:font_size] + spacing) * h_scale_mod
-        ty = (disp_y - (s[:tj] / 1000.0)) * s[:font_size] + spacing
+        tx = ((disp_x - (tj / 1000.0)) * s[:font_size] + spacing) * h_scale_mod
+        ty = (disp_y - (tj / 1000.0)) * s[:font_size] + spacing
 
         # TODO Should use either tx or ty depending on writing mode.
-        s[:tm] = Matrix[ [1, 0, 0], [0, 1, 0], [tx, 0, 1] ] * s[:tm]
+        render_state[:tm] = Matrix[ [1, 0, 0], [0, 1, 0], [tx, 0, 1] ] * render_state[:tm]
       end
       
       objs
@@ -113,11 +114,14 @@ module PdfExtract
 
       pdf.spatials :characters do |parser|
         state = []
-        graphics_state = []
         page = nil
         fonts = {}
         font_metrics = {}
         page_n = 0
+        render_state = {
+          :tm => Matrix.identity(3),
+          :tlm => Matrix.identity(3)
+        }
 
         parser.for :resource_font do |data|
           fonts[data[0]] = data[1]
@@ -127,8 +131,8 @@ module PdfExtract
 
         parser.for :begin_page do |data|
           page = data[0]
+          page_n = page_n.next
           state << {
-            :tm => Matrix.identity(3),
             :h_scale => 100,
             :char_spacing => 0,
             :word_spacing => 0,
@@ -136,42 +140,48 @@ module PdfExtract
             :rise => 0,
             :font => nil,
             :font_metrics => nil,
-            :tj => 0,
-            :font_size => 0
-          }
-          graphics_state << {
+            :font_size => 0,
             :ctm => Matrix.identity(3)
           }
           nil
         end
 
         parser.for :end_page do |data|
-          page_n = page_n.next
           state.pop
-          graphics_state.pop
+          nil
+        end
+
+        parser.for :begin_text_object do |data|
+          render_state = {
+            :tm => Matrix.identity(3),
+            :tlm => Matrix.identity(3)
+          }
           nil
         end
 
         # Graphics state operators.
 
-        # TODO Handle gs graphics state operation.
+        parser.for :set_graphics_state_parameters do |data|
+          # TODO Handle gs graphics state dictionary set operation for
+          # :Font dictionary entries. Probably why font is sometimes nil.
+          # puts data
+          nil
+        end
 
         parser.for :save_graphics_state do |data|
-          graphics_state.push graphics_state.last.dup
           state.push state.last.dup
           nil
         end
 
         parser.for :restore_graphics_state do |data|
-          graphics_state.pop
           state.pop
           nil
         end
 
         parser.for :concatenate_matrix do |data|
           a, b, c, d, e, f = data
-          ctm = graphics_state.last[:ctm]
-          graphics_state.last[:ctm] = Matrix[ [a, b, 0], [c, d, 0], [e, f, 1] ] * ctm
+          ctm = state.last[:ctm]
+          state.last[:ctm] = Matrix[ [a, b, 0], [c, d, 0], [e, f, 1] ] * ctm
           nil
         end
 
@@ -205,17 +215,19 @@ module PdfExtract
         # Position change operators.
 
         parser.for :move_text_position do |data|
-          state.last[:tm] = Matrix[
+          render_state[:tm] = Matrix[
             [1, 0, 0], [0, 1, 0], [data[0], data[1], 1]
-          ] * state.last[:tm]
+          ] * render_state[:tlm]
+          render_state[:tlm] = render_state[:tm]
           nil
         end
 
         parser.for :move_text_position_and_set_leading do |data|
-          state.last[:tm] = Matrix[
-            [1, 0, 0], [0, 1, 0], [data[0], data[1], 1]
-          ] * state.last[:tm]
           state.last[:leading] = data[1]
+          render_state[:tm] = Matrix[
+            [1, 0, 0], [0, 1, 0], [data[0], data[1], 1]
+          ] * render_state[:tlm]
+          render_state[:tlm] = render_state[:tm]
           nil
         end
 
@@ -237,16 +249,18 @@ module PdfExtract
           # | e f 1 |
           # --     --
           a, b, c, d, e, f = data
-          state.last[:tm] = Matrix[ [a, b, 0], [c, d, 0], [e, f, 1] ]
+          render_state[:tm] = Matrix[ [a, b, 0], [c, d, 0], [e, f, 1] ]
+          render_state[:tlm] = Matrix[ [a, b, 0], [c, d, 0], [e, f, 1] ]
           nil
         end
 
         # New line operators.
 
         parser.for :move_to_start_of_next_line do |data|
-          state.last[:tm] = Matrix[
+          render_state[:tm] = Matrix[
             [1, 0, 0], [0, 1, 0], [0, -state.last[:leading], 1]
-          ] * state.last[:tm]
+          ] * render_state[:tlm]
+          render_state[:tlm] = render_state[:tm]
           nil
         end
 
@@ -256,49 +270,42 @@ module PdfExtract
           state.last[:word_spacing] = data[0]
           state.last[:char_spacing] = data[1]
           
-          state.last[:tm] = Matrix[
+          render_state[:tm] = Matrix[
             [1, 0, 0], [0, 1, 0], [0, -state.last[:leading], 1]
-          ] * state.last[:tm]
+          ] * render_state[:tlm]
+          render_state[:tlm] = render_state[:tm]
 
-          state.push state.last.dup
-          tr = make_text_runs data[2], state, graphics_state, page, page_n
-          state.pop
-          tr
+          make_text_runs data[2], 0, state, render_state, page, page_n
         end
 
         parser.for :move_to_next_line_and_show_text do |data|
-          state.last[:tm] = Matrix[
+          render_state[:tm] = Matrix[
             [1, 0, 0], [0, 1, 0], [0, -state.last[:leading], 1]
-          ] * state.last[:tm]
-
-          state.push state.last.dup
-          tr = make_text_runs data.first, state, graphics_state, page, page_n
-          state.pop
-          tr
+          ] * render_state[:tlm]
+          render_state[:tlm] = render_state[:tm]
+          
+          make_text_runs data.first, 0, state, render_state, page, page_n
         end
 
         parser.for :show_text do |data|
-          state.push state.last.dup
-          tr = make_text_runs data.first, state, graphics_state, page, page_n
-          state.pop
-          tr
+          make_text_runs data.first, 0, state, render_state, page, page_n
         end
         
         parser.for :show_text_with_positioning do |data|
-          data = data.first # TODO Handle elsewhere.
+          data = data.first
           runs = []
-          state.push state.last.dup
+          tj = 0
           
           data.each do |item|
             case item.class.to_s
             when "Fixnum", "Float"
-              state.last[:tj] = item
+              tj = item
             when "String"
-              runs << make_text_runs(item, state, graphics_state, page, page_n)
+              runs << make_text_runs(item, tj, state, render_state, page, page_n)
+              tj = 0
             end
           end
-
-          state.pop
+          
           runs.flatten
         end
         

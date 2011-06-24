@@ -35,6 +35,17 @@
   ! Looks like this occurs for chars whose codes are in the font's
   @differences map.
 * pdf_view.rb shouldn't call doc.go_to_page more than once per page.
+  Causes objects to be rendered on the wrong page.
+* pdf_view.rb should keep the same auto colour for object types on
+  different pages.
+* Some margins calculated with negative x or y. Because of characters
+  incorrectly calculated to be out of the mediabox?
+* Some characters don't get a correct width.
+* Should merge with region above from right to left (or, in the
+  opposite direction to writing direction). Causes last two lines of
+  paragraphs to merge incorrectly.
+* DONE Figure out which state, and when (text object start/end, page
+  start/end, text show ops) should be pushed/popped.
 
 ## Tasks, up to 3 hours
 

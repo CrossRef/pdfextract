@@ -40,6 +40,9 @@ module PdfExtract
           end
         end
 
+        # TODO Should merge with region above from right to left (or,
+        # in the opposite direction to writing direction).
+
         parser.post do
           compare_index = 1
           while chunks.count > compare_index

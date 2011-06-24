@@ -3,15 +3,18 @@ require_relative '../multi_range'
 module PdfExtract
   module Zones
 
-    def self.axis_spatials pdf, name
+    def self.axis_spatials pdf, name, axis
       pdf.spatials name, :paged => true, :depends_on => [:regions] do |parser|
-        y_mask = MultiRange.new
+        axis_mask = MultiRange.new
         page = -1
         page_width = 0
         page_height = 0
 
+        dimension = :width if axis == :x
+        dimension = :height if axis == :y
+
         parser.pre do
-          y_mask = MultiRange.new
+          axis_mask = MultiRange.new
           page = -1
         end
 
@@ -21,14 +24,18 @@ module PdfExtract
             page_width = region[:page_width]
             page_height = region[:page_height]
           end
-          y_mask.append region[:y]..(region[:y]+region[:height])
+          
+          # XXX Some characters are generated with a negative width.
+          unless region[dimension] <= 0
+            axis_mask.append region[axis]..(region[axis]+region[dimension])
+          end
         end
 
         parser.post do
-          if y_mask.count < 2
+          if axis_mask.count.zero?
             nil
           else
-            yield y_mask, {
+            yield axis_mask, {
               :page => page,
               :page_width => page_width,
               :page_height => page_height
@@ -43,7 +50,7 @@ module PdfExtract
     # area.
 
     def self.include_in pdf
-      axis_spatials pdf, :headers do |y_mask, obj|
+      axis_spatials pdf, :headers, :y do |y_mask, obj|
         obj.merge({
           :x => 0,
           :y => y_mask.max_excluded,
@@ -52,7 +59,7 @@ module PdfExtract
         })
       end
 
-      axis_spatials pdf, :footers do |y_mask, obj|
+      axis_spatials pdf, :footers, :y do |y_mask, obj|
         obj.merge({
           :x => 0,
           :y => 0,
@@ -61,16 +68,7 @@ module PdfExtract
         })
       end
 
-      axis_spatials pdf, :middles do |y_mask, obj|
-        obj.merge({
-          :x => 0,
-          :y => y_mask.min_excluded,
-          :width => obj[:page_width],
-          :height => y_mask.max_excluded - y_mask.min_excluded
-        })
-      end
-
-      axis_spatials pdf, :top_margins do |y_mask, obj|
+      axis_spatials pdf, :top_margins, :y do |y_mask, obj|
         obj.merge({
           :x => 0,
           :y => y_mask.max,
@@ -79,12 +77,30 @@ module PdfExtract
         })
       end
 
-      axis_spatials pdf, :bottom_margins do |y_mask, obj|
+      axis_spatials pdf, :bottom_margins, :y do |y_mask, obj|
         obj.merge({
           :x => 0,
           :y => 0,
           :width => obj[:page_width],
           :height => y_mask.min
+        })
+      end
+
+      axis_spatials pdf, :left_margins, :x do |x_mask, obj|
+        obj.merge({
+          :x => 0,
+          :y => 0,
+          :width => x_mask.min,
+          :height => obj[:page_height]
+        })
+      end
+
+      axis_spatials pdf, :right_margins, :x do |x_mask, obj|
+        obj.merge({
+          :x => x_mask.max,
+          :y => 0,
+          :width => obj[:page_width] - x_mask.max,
+          :height => obj[:page_height]
         })
       end
     end

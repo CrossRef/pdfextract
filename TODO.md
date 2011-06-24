@@ -59,7 +59,7 @@
   available. Seems to be those fonts whose base font is one of the
   base 14.
 * DONE Prawn doesn't render over some PDFs.
-* Assign colour, font, font size to character objects. Pass on to
+* DONE Assign colour, font, font size to character objects. Pass on to
   text chunks and regions.
 * DONE Characters appear too wide in some3.pdf test PDF.
 * Characters on pages with images are sometimes not detected. Graphics

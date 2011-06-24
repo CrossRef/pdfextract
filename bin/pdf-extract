@@ -8,9 +8,10 @@ program :version, '0.0.1'
 program :description, 'PDF content extraction toolkit'
 
 objects = ['characters', 'chunks', 'regions', 'bodies', 'titles',
-           'headers', 'footers', 'middles', 'top_margins',
-           'bottom_margins']
+           'headers', 'footers', 'top_margins', 'bottom_margins',
+           'left_margins', 'right_margins']
 semantic = ['bodies', 'titles']
+margins = ['top_margins', 'bottom_margins', 'left_margins', 'right_margins']
 views = [:xml, :pdf, :png]
 default_outputs = {
   :xml => proc { :stdout },
@@ -28,6 +29,10 @@ end
 
 global_option "--semantic" do |_|
   semantic.each { |s| $chosen_objects << s }
+end
+
+global_option "--margins" do |_|
+  margins.each { |m| $chosen_objects << m }
 end
 
 global_option "--output=FILE" do |filename|

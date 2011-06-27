@@ -13,7 +13,7 @@ module PdfExtract
         dimension = :width if axis == :x
         dimension = :height if axis == :y
 
-        parser.pre do
+        parser.before do
           axis_mask = MultiRange.new
           page = -1
         end
@@ -28,7 +28,7 @@ module PdfExtract
           axis_mask.append region[axis]..(region[axis]+region[dimension])
         end
 
-        parser.post do
+        parser.after do
           if axis_mask.count.zero?
             nil
           else

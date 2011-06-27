@@ -1,35 +1,30 @@
 require 'pdf-reader'
 
-# A DSL that aids in developing an understanding of the spatial
-# construction of PDF pages.
-
 module PdfExtract
-
+  
   class Receiver
 
     def initialize pdf
       @pdf = pdf
       @listeners = {}
       @object_listeners = {}
-      @posts = []
-      @pres = []
     end
 
     def for callback_name, &block
       @listeners[callback_name] = {:type => @pdf.operating_type, :fn => block}
     end
 
-    def objects type_name, options = {:paged => false}, &block
+    def objects type_name, &block
       @object_listeners[type_name] ||= []
       @object_listeners[type_name] << block
     end
 
-    def pre &block
-      @pres << {:type => @pdf.operating_type, :fn => block}
+    def before &block
+      @before = block
     end
 
-    def post &block
-      @posts << {:type => @pdf.operating_type, :fn => block}
+    def after &block
+      @after = {:type => @pdf.operating_type, :fn => block}
     end
 
     def expand_listeners_to_callback_methods
@@ -52,17 +47,12 @@ module PdfExtract
       end
     end
 
-    def call_posts
-      @posts.each do |post|
-        spatial_objects = post[:fn].call
-        self.add_spatial_objects post[:type], spatial_objects
-      end
+    def call_after
+      self.add_spatial_objects @after[:type], @after[:fn].call unless @after.nil?
     end
 
-    def call_pres
-      @pres.each do |pre|
-        pre[:fn].call
-      end
+    def call_before
+      @before.call unless @before.nil?
     end
 
     def for_calls?
@@ -73,18 +63,20 @@ module PdfExtract
       @object_listeners.size > 0
     end
 
-    def add_spatial_objects type, spatial_objects
-      if not spatial_objects.nil?
-        if spatial_objects.class != Array
-          spatial_objects = [spatial_objects]
-        end
-        spatial_objects.each do |obj|
-          @pdf.spatial_objects[type] << obj
-        end
+    def add_spatial_objects default_type, objs
+      if objs.class != Array
+        objs = [objs] unless objs.nil?
+        objs = [] if objs.nil?
+      end
+
+      objs.each do |obj|
+        type = obj.delete(:group) || default_type
+        @pdf.spatial_objects[type] ||= []
+        @pdf.spatial_objects[type] << obj
       end
     end
 
-    def invoke_calls type_name, filename, spatial_options
+    def invoke_calls filename, spatial_options
       if spatial_options[:paged]
           
         paged_objs = {}
@@ -96,33 +88,35 @@ module PdfExtract
         end
         
         paged_objs.each_pair do |page, objs|
-          self.call_pres
+          self.call_before
 
           if self.object_calls?
             @object_listeners.each_pair do |type, listeners|
               listeners.each do |listener|
+                if objs[type].nil?
+                  raise "#{@pdf.operating_type} is missing a dependency on #{type}"
+                end
                 objs[type].each { |obj| listener.call obj }
               end
             end
           end
           
-          self.call_posts
+          self.call_after
         end
         
       else
 
-        self.call_pres
+        self.call_before
         if self.object_calls?
           self.call_object_listeners @pdf.spatial_objects
         end
-        self.call_posts
+        self.call_after
 
       end
       
       if self.for_calls?
         self.expand_listeners_to_callback_methods
         PDF::Reader.file filename, self
-        @pdf.spatial_objects[type_name].compact!
       end
     end
 
@@ -134,7 +128,7 @@ module PdfExtract
     attr_accessor :spatial_options
     
     def method_missing name, *args
-      throw StandardError.new "No such spatial type #{name}"
+      raise "No such spatial type #{name}"
     end
 
     def spatials name, options = {}, &block
@@ -168,9 +162,10 @@ module PdfExtract
     private
 
     def append_deps deps_list
+      # TODO if explicit is true, overwrite non-explicit deps.
       deps_list.each do |dep|
         append_deps @spatial_options[dep].fetch(:depends_on, [])
-        if @spatial_calls.count { |obj| obj[:name] == dep } == 0
+        if @spatial_calls.count { |obj| obj[:name] == dep }.zero?
           @spatial_calls << {
             :name => dep,
             :explicit => false
@@ -180,16 +175,18 @@ module PdfExtract
     end
     
     def add_spatials_method name, options={}, &block
+      options = {:depends_on => [], :defined_by => []}.merge options
+      
       @spatial_objects[name] = []
       @spatial_builders[name] = proc { |receiver|
         @operating_type = name
-        block.call receiver
+        block.call receiver unless block.nil?
       }
       @spatial_options[name] = options
 
       p = Proc.new do
-        append_deps options[:depends_on] if options[:depends_on]
-        
+        append_deps options[:depends_on]
+
         @spatial_calls << {
           :name => name,
           :explicit => true

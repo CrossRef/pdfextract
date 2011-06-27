@@ -11,7 +11,7 @@ module PdfExtract
           titles << region
         end
 
-        parser.post do
+        parser.after do
           # A title should:
           #   be longer than one letter,
           titles.reject! { |r| r[:content].strip.length < 2 }

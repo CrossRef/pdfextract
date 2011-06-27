@@ -2,7 +2,6 @@ require_relative 'pdf'
 require_relative 'model/characters'
 require_relative 'model/chunks'
 require_relative 'model/regions'
-require_relative 'analysis/bodies'
 require_relative 'analysis/titles'
 require_relative 'analysis/margins'
 require_relative 'analysis/zones'
@@ -18,7 +17,7 @@ module PdfExtract
     :pdf => PdfView
   }
 
-  @@parsers = [Characters, Chunks, Regions, Bodies, Titles, Margins, Zones]
+  @@parsers = [Characters, Chunks, Regions, Titles, Margins, Zones]
   
   def self.parse filename, &block
     pdf = Pdf.new
@@ -33,7 +32,7 @@ module PdfExtract
       name = spatial_call[:name]
       receiver = Receiver.new pdf
       pdf.spatial_builders[name].call receiver
-      receiver.invoke_calls name, filename, pdf.spatial_options[name]
+      receiver.invoke_calls filename, pdf.spatial_options[name]
     end
     
     pdf

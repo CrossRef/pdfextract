@@ -13,7 +13,7 @@ module PdfExtract
       pdf.spatials :chunks, :paged => true, :depends_on => [:characters] do |parser|
         rows = {}
 
-        parser.pre do
+        parser.before do
           rows = {}
         end
         
@@ -30,7 +30,7 @@ module PdfExtract
           end
         end
 
-        parser.post do
+        parser.after do
           text_chunks = []
 
           rows.each_pair do |y, row|

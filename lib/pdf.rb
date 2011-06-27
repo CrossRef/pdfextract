@@ -86,25 +86,27 @@ module PdfExtract
 
     def invoke_calls type_name, filename, spatial_options
       if spatial_options[:paged]
+          
+        paged_objs = {}
+        @object_listeners.each_pair do |type, _|
+          @pdf.paged_objects(type).each_pair do |page, objs|
+              paged_objs[page] ||= {}
+            paged_objs[page][type] = objs
+          end
+        end
+        
+        paged_objs.each_pair do |page, objs|
+          self.call_pres
 
-        if self.object_calls?
-          # Invoke each object call with paged objects.
-          @object_listeners.each_pair do |type, listeners|
-            paged = @pdf.paged_objects type
-            paged.each_pair do |page, objs|
-              # Before all listeners for each page, call
-              # pre fns.
-              self.call_pres
-              
+          if self.object_calls?
+            @object_listeners.each_pair do |type, listeners|
               listeners.each do |listener|
-                objs.each { |obj| listener.call obj }
+                objs[type].each { |obj| listener.call obj }
               end
-
-              # After all listeners have been called for the
-              # page, call posts.
-              self.call_posts
             end
           end
+          
+          self.call_posts
         end
         
       else

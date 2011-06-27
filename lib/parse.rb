@@ -4,6 +4,7 @@ require_relative 'model/chunks'
 require_relative 'model/regions'
 require_relative 'analysis/bodies'
 require_relative 'analysis/titles'
+require_relative 'analysis/margins'
 require_relative 'analysis/zones'
 require_relative 'view/png_view'
 require_relative 'view/pdf_view'
@@ -11,21 +12,20 @@ require_relative 'view/xml_view'
 
 module PdfExtract
 
-  @@view_dictionary = {
-    :xml => PdfExtract::XmlView,
-    :png => PdfExtract::PngView,
-    :pdf => PdfExtract::PdfView
+  @@views = {
+    :xml => XmlView,
+    :png => PngView,
+    :pdf => PdfView
   }
+
+  @@parsers = [Characters, Chunks, Regions, Bodies, Titles, Margins, Zones]
   
   def self.parse filename, &block
     pdf = Pdf.new
 
-    Characters.include_in pdf
-    Chunks.include_in pdf
-    Regions.include_in pdf
-    Bodies.include_in pdf
-    Titles.include_in pdf
-    Zones.include_in pdf
+    @@parsers.each do |p|
+      p.include_in pdf
+    end
     
     yield pdf
     
@@ -40,7 +40,7 @@ module PdfExtract
   end
   
   def self.view_class short_name
-    @@view_dictionary[short_name]
+    @@views[short_name]
   end
 
   def self.view filename, options = {}, &block

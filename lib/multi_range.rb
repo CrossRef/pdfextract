@@ -7,6 +7,8 @@ module PdfExtract
     end
 
     def append range
+      return if range.max.nil? || range.min.nil?
+      
       merged = false
       @ranges.map! do |r|
         if r.include?(range.min) || r.include?(range.max)
@@ -29,6 +31,7 @@ module PdfExtract
         @max_excluded = @ranges.first.max if count == 1
         @max_excluded = @ranges.sort_by { |r| -r.min }.first.min unless count == 1
       end
+      @max_excluded
     end
 
     def min_excluded
@@ -36,6 +39,7 @@ module PdfExtract
         @min_excluded = @ranges.first.min if count == 1
         @min_excluded = @ranges.sort_by { |r| r.max }.first.max unless count == 1
       end
+      @min_excluded
     end
 
     def max

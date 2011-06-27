@@ -2,7 +2,9 @@ module PdfExtract
 
   class AbstractView
 
-    @@auto_colors = ["ff0000", "00ff00", "0000ff", "ffff00", "ff7f00", "ffc0cb"]
+    @@auto_colors = ["ff0000", "00ff00", "0000ff", "ffff00",
+                     "ff7f00", "ffc0cb", "800080", "f0e68c",
+                     "a52a2a"]
 
     def initialize pdf, filename
       @pdf = pdf

@@ -21,7 +21,7 @@
 * DONE Determine units of and apply correctly :rise and :leading.
 * Handle UserUnit transformations.
 * DONE Reset global text state at the end of each page.
-* Position coords appear a bit above and to the right of where they
+* DONE Position coords appear a bit above and to the right of where they
   should. Graphics state or page translation?
 * DONE Spaces appear one character before where they should in
   text_chunks.
@@ -38,7 +38,7 @@
   Causes objects to be rendered on the wrong page.
 * DONE pdf_view.rb should keep the same auto colour for object types on
   different pages.
-* Some margins calculated with negative x or y. Because of characters
+* DONE Some margins calculated with negative x or y. Because of characters
   incorrectly calculated to be out of the mediabox?
 * Some characters don't get a correct width.
 * Should merge with region above from right to left (or, in the
@@ -73,7 +73,7 @@
 * DONE Assign colour, font, font size to character objects. Pass on to
   text chunks and regions.
 * DONE Characters appear too wide in some3.pdf test PDF.
-* Characters on pages with images are sometimes not detected. Graphics
+* DONE Characters on pages with images are sometimes not detected. Graphics
   state issue?
 
 ## Long tasks, greater than 3 hours
@@ -81,5 +81,5 @@
 * Examine text_runs spatial definition and determine processing that
   is generic. Move into Parser methods. E.g. Handling global /
   object-specific state.
-* Better organise pre/object/post call storage in pdf.rb . Perhaps
+* DONE Better organise pre/object/post call storage in pdf.rb . Perhaps
   a pre and post per object type.

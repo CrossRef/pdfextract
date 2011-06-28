@@ -10,11 +10,13 @@ module PdfExtract
         objects.each_pair do |type, objs|
           last_page = 1
           color = auto_color
+          doc.go_to_page last_page
           doc.fill_color color
           
           objs.each do |obj|
             if obj[:page] != last_page
-              doc.go_to_page obj[:page]
+              last_page = obj[:page]
+              doc.go_to_page last_page
               doc.fill_color color
             end
               

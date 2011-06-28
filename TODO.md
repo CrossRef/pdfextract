@@ -34,9 +34,9 @@
   break. Not getting their width correct in glyph width dict?
   ! Looks like this occurs for chars whose codes are in the font's
   @differences map.
-* pdf_view.rb shouldn't call doc.go_to_page more than once per page.
+* DONE pdf_view.rb shouldn't call doc.go_to_page more than once per page.
   Causes objects to be rendered on the wrong page.
-* pdf_view.rb should keep the same auto colour for object types on
+* DONE pdf_view.rb should keep the same auto colour for object types on
   different pages.
 * Some margins calculated with negative x or y. Because of characters
   incorrectly calculated to be out of the mediabox?

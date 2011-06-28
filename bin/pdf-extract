@@ -10,7 +10,7 @@ program :description, 'PDF content extraction toolkit'
 semantic = ['titles']
 margins = ['top_margins', 'bottom_margins', 'left_margins', 'right_margins']
 zones = ['headers', 'footers', 'bodies']
-objects = ['characters', 'chunks' 'regions'] + semantic + margins + zones
+objects = ['characters', 'chunks', 'regions'] + semantic + margins + zones
 
 views = [:xml, :pdf, :png]
 default_outputs = {

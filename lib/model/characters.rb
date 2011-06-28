@@ -90,6 +90,7 @@ module PdfExtract
           :y => py,
           :width => sizes.row(0)[0] - px,
           :height => sizes.row(0)[1] - py,
+          :line_height => sizes.row(0)[1] - py,
           :content => c,
           :page => page_number,
           :font => state.last[:font].basefont,

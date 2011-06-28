@@ -2,6 +2,12 @@
 module PdfExtract
   module Spatial
 
+    @@default_options = {
+      :separator => '',
+      :lines => false,
+      :write_mode => :left_to_right
+    }
+
     def self.concat_lines top, bottom
       if top =~ /\-\Z/
         top[0..-2] + bottom
@@ -10,7 +16,9 @@ module PdfExtract
       end
     end
 
-    def self.merge left, right, options={:separator => '', :lines => false}
+    def self.merge left, right, options={}
+      options = @@default_options.merge options
+
       bottom_left = [ [left[:x], right[:x]].min, [left[:y], right[:y]].min ]
       top_right = [ [left[:x] + left[:width], right[:x] + right[:width]].max,
                     [left[:y] + left[:height], right[:y] + right[:height]].max ]
@@ -39,5 +47,26 @@ module PdfExtract
       so
     end
 
+    # Collapse a list of objects into one. Will merge objects in the
+    # correct write order, specified by write_mode.
+    def self.collapse objs, options={}
+      options = @@default_options.merge options
+      
+      sorted = case write_mode
+               when :left_to_right
+                 objs.sort_by { |obj| -(obj[:y].floor * 100) + (obj[:x] / 100.0) }
+               end
+      
+      if sorted.count == 1
+        sorted.first.dup
+      else
+        o = sorted.delete_at(0).dup
+        while not sorted.count.zero?
+          merge o, sorted.delete_at(0)
+        end
+        o
+      end
+    end
+    
   end
 end

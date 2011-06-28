@@ -12,8 +12,7 @@ margins = ['top_margins', 'bottom_margins', 'left_margins', 'right_margins']
 zones = ['headers', 'footers', 'bodies']
 objects = ['characters', 'chunks', 'regions'] + semantic + margins + zones
 
-views = [:xml, :pdf, :png]
-default_outputs = {
+outputs = {
   :xml => proc { :stdout },
   :pdf => proc { |f| File::basename(f.sub /\.[a-zA-Z0-9]+\Z/, "") + ".mask.pdf" },
   :png => proc { |f| File::basename(f.sub /\.[a-zA-Z0-9]+\Z/, "") + ".mask.png" }
@@ -35,14 +34,14 @@ global_option "--output=FILE" do |filename|
   $output = filename
 end
 
-views.each do |view|
+outputs.each_key do |view|
   command view.to_sym do |c|
     c.syntax = "pdf-extract #{view} [objects] filename"
     c.description = "Output selected objects as #{view.upcase}."
 
     c.action do |args, options|
       args.each do |filename|
-        $output = default_outputs[view].call(filename) if $output.nil?
+        $output = outputs[view].call(filename) if $output.nil?
         out = PdfExtract.view filename, :as => view.to_sym do |pdf|
           $chosen_objects.each do |name|
             pdf.send name.to_sym

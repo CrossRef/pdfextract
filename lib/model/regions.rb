@@ -40,23 +40,25 @@ module PdfExtract
           end
         end
 
+        # TODO Rewrite to use Spatial.collapse so that text is in proper
+        # order.
+        
         # TODO Should merge with region above from right to left (or,
         # in the opposite direction to writing direction).
-
         parser.after do
           compare_index = 1
           while chunks.count > compare_index
             b = chunks.first
             t = chunks[compare_index]
 
-            line_height = b[:line_height] || b[:height]
+            line_height = b[:line_height]
             line_slop = [line_height, t[:height]].min * line_slop_factor
             incident_y = (b[:y] + b[:height] + line_slop) >= t[:y]
             
             if incident_y && incident(t, b)
               chunks[0] = Spatial.merge t, b, :lines => true
-              chunks[0][:line_height] = line_height
               chunks.delete_at compare_index
+              compare_index = 1
             elsif incident_y
               # Could be more chunks within range on y axis.
               compare_index = compare_index.next
@@ -68,16 +70,6 @@ module PdfExtract
             end
           end
           regions << chunks.first
-          
-          regions.map do |region|
-            # Single-line regions don't get assigned a line height in code
-            # above.
-            if region[:line_height].nil?
-              region.merge({:line_height => region[:height]})
-            else
-              region
-            end
-          end
         end
       end
     end

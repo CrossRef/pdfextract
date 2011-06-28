@@ -40,11 +40,9 @@ module PdfExtract
           end
         end
 
-        # TODO Rewrite to use Spatial.collapse so that text is in proper
+        # TODO Rewrite to use Spatial::collapse so that text is in proper
         # order.
         
-        # TODO Should merge with region above from right to left (or,
-        # in the opposite direction to writing direction).
         parser.after do
           compare_index = 1
           while chunks.count > compare_index

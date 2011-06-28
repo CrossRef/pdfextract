@@ -8,17 +8,18 @@ module PdfExtract
 
     def append range
       return if range.max.nil? || range.min.nil?
-      
-      merged = false
-      @ranges.map! do |r|
-        if r.include?(range.min) || r.include?(range.max)
-          merged = true
-          [r.min, range.min].min .. [r.max, range.max].max
-        else
-          r
-        end
+
+      incident = @ranges.select do |r|
+        r.include?(range.min) || r.include?(range.max) ||
+          range.include?(r.min) || range.include?(r.max)
       end
-      @ranges << range unless merged
+      
+      incident << range
+
+      non_incident = @ranges - incident
+
+      non_incident << (incident.collect { |r| r.min }.min .. incident.collect { |r| r.max }.max)
+      @ranges = non_incident
 
       @max_excluded = nil
       @min_excluded = nil

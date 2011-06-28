@@ -16,14 +16,14 @@ module PdfExtract
       end
     end
 
-    def self.merge left, right, options={}
+    def self.merge a, b, options={}
       options = @@default_options.merge options
 
-      bottom_left = [ [left[:x], right[:x]].min, [left[:y], right[:y]].min ]
-      top_right = [ [left[:x] + left[:width], right[:x] + right[:width]].max,
-                    [left[:y] + left[:height], right[:y] + right[:height]].max ]
+      bottom_left = [ [a[:x], b[:x]].min, [a[:y], b[:y]].min ]
+      top_right = [ [a[:x] + a[:width], b[:x] + b[:width]].max,
+                    [a[:y] + a[:height], b[:y] + b[:height]].max ]
 
-      so = left.merge(right).merge({
+      so = a.merge(b).merge({
         :x => bottom_left[0],
         :y => bottom_left[1],
         :width => top_right[0] - bottom_left[0],
@@ -31,17 +31,17 @@ module PdfExtract
       })
 
       if options[:lines]
-        so[:content] = concat_lines left[:content], right[:content]
+        so[:content] = concat_lines a[:content], b[:content]
       else
-        so[:content] = left[:content] + options[:separator] + right[:content]
+        so[:content] = a[:content] + options[:separator] + b[:content]
       end
       
-      if left[:content].length > right[:content].length
-        so[:font] = left[:font]
-        so[:line_height] = left[:line_height]
+      if a[:content].length > b[:content].length
+        so[:font] = a[:font]
+        so[:line_height] = a[:line_height]
       else
-        so[:font] = right[:font]
-        so[:line_height] = right[:line_height]
+        so[:font] = b[:font]
+        so[:line_height] = b[:line_height]
       end
 
       so

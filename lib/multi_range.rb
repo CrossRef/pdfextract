@@ -57,6 +57,10 @@ module PdfExtract
       @ranges.reduce(0) { |sum, r| sum += (r.max - r.min) } / @ranges.count.to_f
     end
 
+    def covered
+      @ranges.reduce(0) { |total, r| total += (r.max - r.min) }
+    end
+
     def count
       @ranges.count
     end

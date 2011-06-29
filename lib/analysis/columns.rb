@@ -1,7 +1,8 @@
 module PdfExtract
   module Columns
 
-    @@column_sample_count = 3
+    @@column_sample_count = 8
+    @@body_width_factor = 0.75
 
     def self.columns_at y, body_regions
       x_mask = MultiRange.new
@@ -44,6 +45,10 @@ module PdfExtract
             y = body[:y] + (body[:height] * i * step)
             column_ranges << columns_at(y, body_regions)
           end
+
+          # Disard those whose columns represent less than @@body_width_factor
+          # of the body width.
+          column_ranges.reject! { |r| r.covered < (body[:width] * @@body_width_factor) }
           
           # Discard those with more than four columns. They've probably hit a table.
           column_ranges.reject! { |r| r.count > 4 }

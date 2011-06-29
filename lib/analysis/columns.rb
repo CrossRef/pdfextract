@@ -1,6 +1,8 @@
 module PdfExtract
   module Columns
 
+    @@column_sample_count = 3
+
     def self.columns_at y, body_regions
       x_mask = MultiRange.new
 
@@ -35,13 +37,19 @@ module PdfExtract
         end
 
         parser.after do
-          # TODO Rewrite to allow configurable number of check lines.
-          quarter = columns_at(body[:y] + (body[:height] * 0.25), body_regions)
-          half = columns_at(body[:y] + (body[:height] * 0.5), body_regions)
-          three_quarter = columns_at(body[:y] + (body[:height] * 0.75), body_regions)
+          step = 1.0 / (@@column_sample_count + 1)
+          column_ranges = []
 
+          (1 .. @@column_sample_count).each do |i|
+            y = body[:y] + (body[:height] * i * step)
+            column_ranges << columns_at(y, body_regions)
+          end
+          
+          # Discard those with more than four columns. They've probably hit a table.
+          column_ranges.reject! { |r| r.count > 4 }
+          
           # TODO Want highest count, then that with the widest column(s).
-          most = [quarter, half, three_quarter].max { |r| r.count }
+          most = column_ranges.max { |r| r.count }
 
           most.ranges.map do |range|
             body.merge({:x => range.min, :width => range.max - range.min })

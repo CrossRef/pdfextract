@@ -5,6 +5,7 @@ require_relative 'model/regions'
 require_relative 'analysis/titles'
 require_relative 'analysis/margins'
 require_relative 'analysis/zones'
+require_relative 'analysis/columns'
 require_relative 'view/png_view'
 require_relative 'view/pdf_view'
 require_relative 'view/xml_view'
@@ -17,7 +18,7 @@ module PdfExtract
     :pdf => PdfView
   }
 
-  @@parsers = [Characters, Chunks, Regions, Titles, Margins, Zones]
+  @@parsers = [Characters, Chunks, Regions, Titles, Margins, Zones, Columns]
   
   def self.parse filename, &block
     pdf = Pdf.new

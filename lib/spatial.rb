@@ -67,6 +67,20 @@ module PdfExtract
         o
       end
     end
+
+    def self.contains? a, b
+      a_x1 = a[:x]
+      a_x2 = a[:x] + a[:width]
+      a_y1 = a[:y]
+      a_y2 = a[:y] + a[:height]
+
+      b_x1 = b[:x]
+      b_x2 = b[:x] + b[:width]
+      b_y1 = b[:y]
+      b_y2 = b[:y] + b[:height]
+
+      b_x1 >= a_x1 && b_x2 <= a_x2 && b_y1 >= a_y1 && b_y2 <= a_y2 
+    end
     
   end
 end

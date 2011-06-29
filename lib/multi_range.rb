@@ -2,6 +2,8 @@
 module PdfExtract
   class MultiRange
 
+    attr_accessor :ranges
+
     def initialize
       @ranges = []
     end

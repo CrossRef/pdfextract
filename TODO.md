@@ -46,6 +46,7 @@
   paragraphs to merge incorrectly.
 * DONE Figure out which state, and when (text object start/end, page
   start/end, text show ops) should be pushed/popped.
+* Move parsing parameters to the Pdf class. Settable via pdf-extract.
 
 ## Tasks, up to 3 hours
 
@@ -75,11 +76,13 @@
 * DONE Characters appear too wide in some3.pdf test PDF.
 * DONE Characters on pages with images are sometimes not detected. Graphics
   state issue?
+* DONE When --margins and --zones specified duplicate margins appear in output.
 
 ## Long tasks, greater than 3 hours
 
-* Examine text_runs spatial definition and determine processing that
+* DONE Examine text_runs spatial definition and determine processing that
   is generic. Move into Parser methods. E.g. Handling global /
   object-specific state.
+* Rewrite pdf.rb.
 * DONE Better organise pre/object/post call storage in pdf.rb . Perhaps
   a pre and post per object type.

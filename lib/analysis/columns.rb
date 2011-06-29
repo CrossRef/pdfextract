@@ -48,10 +48,15 @@ module PdfExtract
           # Discard those with more than four columns. They've probably hit a table.
           column_ranges.reject! { |r| r.count > 4 }
           
-          # TODO Want highest count, then that with the widest column(s).
-          most = column_ranges.max { |r| r.count }
+          # Find the highest column count.
+          most = column_ranges.max_by { |r| r.count }.count
+          column_ranges.reject! { |r| r.count != most }
 
-          most.ranges.map do |range|
+          # Take the columns that are widest.
+          widest = column_ranges.map { |r| r.avg }.max
+          column_ranges.reject! { |r| r.avg < widest }
+
+          column_ranges.first.ranges.map do |range|
             body.merge({:x => range.min, :width => range.max - range.min })
           end
         end

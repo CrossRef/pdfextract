@@ -53,6 +53,10 @@ module PdfExtract
       @min ||= @ranges.sort_by { |r| r.min }.first.min
     end
 
+    def avg
+      @ranges.reduce(0) { |sum, r| sum += (r.max - r.min) } / @ranges.count.to_f
+    end
+
     def count
       @ranges.count
     end

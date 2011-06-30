@@ -62,9 +62,13 @@ module PdfExtract
                   
                   case non_sections.count
                   when 0
-                    sections.last.merge!({
-                      :content => sections.last[:content] + ' ' + region[:content]
-                    })
+                    if sections.count.zero?
+                      sections << {:content => region[:content]}
+                    else
+                      sections.last.merge!({
+                        :content => sections.last[:content] + ' ' + region[:content]
+                      })
+                    end
                   when 1
                     sections << {
                       :name => non_sections.last[:content],

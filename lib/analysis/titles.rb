@@ -36,9 +36,7 @@ module PdfExtract
           if titles.count.zero?
             []
           else
-            title = titles.take(1).dup
-            title.delete :page
-            title
+            {:content => titles.first[:content]}
           end
         end
       end

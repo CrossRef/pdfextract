@@ -6,6 +6,9 @@ module PdfExtract
       s = s.gsub "\ufb02", "fl"
       s = s.gsub "\u2018", "'"
       s = s.gsub "\u2019", "'"
+      s = s.gsub "\u2013", "-"
+      s = s.gsub "\u201c", "\""
+      s = s.gsub "\u201d", "\""
       s
     end
 

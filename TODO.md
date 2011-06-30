@@ -76,7 +76,7 @@
 * DONE Characters appear too wide in some3.pdf test PDF.
 * DONE Characters on pages with images are sometimes not detected. Graphics
   state issue?
-* DONE When --margins and --zones specified duplicate margins appear
+* When --margins and --zones specified duplicate margins appear
 * in output.
 * Header, footer, body detection should use most frequent page layout
   as layout for all pages.

@@ -33,7 +33,13 @@ module PdfExtract
           #   be the highest of the above.
           titles.sort_by! { |r| -r[:y] }
 
-          titles.take 1
+          if titles.count.zero?
+            []
+          else
+            title = titles.take(1).dup
+            title.delete :page
+            title
+          end
         end
       end
     end

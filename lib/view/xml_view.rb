@@ -6,41 +6,44 @@ require_relative '../language'
 module PdfExtract
   class XmlView < AbstractView
 
+    @@ignored_attributes = [:content, :page, :page_width, :page_height]
+
     def render
       pages = {}
       page_params = {}
-      ignored_attributes = [:content, :page, :page_width, :page_height]
+      pageless = {}
+      
       
       objects.each_pair do |type, objs|
         objs.each do |obj|
-          pages[obj[:page]] ||= {}
-          pages[obj[:page]][type] ||= []
-
-          pages[obj[:page]][type] << obj
-
-          page_params[obj[:page]] ||= {
-            :width => obj[:page_width],
-            :height => obj[:page_height],
-            :number => obj[:page]
-          }
+          if obj.key? :page
+            pages[obj[:page]] ||= {}
+            pages[obj[:page]][type] ||= []
+            
+            pages[obj[:page]][type] << obj
+            
+            page_params[obj[:page]] ||= {
+              :width => obj[:page_width],
+              :height => obj[:page_height],
+              :number => obj[:page]
+            }
+          else
+            pageless[type] ||= []
+            pageless[type] << obj
+          end
         end
       end
 
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.pdf {
+          pageless.each_pair do |type, objs|
+            objs.each do |obj| write_obj_to_xml obj, type, xml end
+          end
+          
           pages.each_pair do |page_number, obj_types|
             xml.page(page_params[page_number]) {
               obj_types.each_pair do |type, objs|
-                objs.each do |obj|
-
-                  attribs = obj.reject { |k, _| ignored_attributes.include? k }
-                  xml.send singular_name(type.to_s), attribs do
-                    if obj.key? :content
-                      xml.text Language::transliterate(obj[:content].to_s)
-                    end
-                  end
-                
-                end
+                objs.each do |obj| write_obj_to_xml obj, type, xml end
               end
             }
           end
@@ -48,6 +51,15 @@ module PdfExtract
       end
 
       builder.to_xml
+    end
+
+    def write_obj_to_xml obj, type, xml
+      attribs = obj.reject { |k, _| @@ignored_attributes.include? k }
+      xml.send singular_name(type.to_s), attribs do
+        if obj.key? :content
+          xml.text Language::transliterate(obj[:content].to_s)
+        end
+      end
     end
 
     def self.write render, filename

@@ -1,7 +1,7 @@
 module PdfExtract
   module Sections
 
-    @@width_ratio = 0.6
+    @@width_ratio = 0.8
 
     def self.include_in pdf
       pdf.spatials :sections, :depends_on => [:regions, :columns] do |parser|
@@ -57,27 +57,36 @@ module PdfExtract
               column = c[:column]
               c[:regions].each do |region|
 
-                # TODO Check font size?
                 if region[:width] >= (column[:width] * @@width_ratio)
                   
                   case non_sections.count
                   when 0
-                    if sections.count.zero?
-                      sections << {:content => region[:content]}
-                    else
+                    last = sections.last
+                    if !last.nil? && last[:font] == region[:font] &&
+                            last[:line_height].floor == region[:line_height].floor
                       sections.last.merge!({
                         :content => sections.last[:content] + ' ' + region[:content]
                       })
+                    else
+                      sections << {
+                        :content => region[:content],
+                        :font => region[:font],
+                        :line_height => region[:line_height]
+                      }
                     end
                   when 1
                     sections << {
                       :name => non_sections.last[:content],
-                      :content => region[:content]
+                      :content => region[:content],
+                      :font => region[:font],
+                      :line_height => region[:line_height]
                     }
                     non_sections = []
                   else
                     sections << {
-                      :content => region[:content]
+                      :content => region[:content],
+                      :font => region[:font],
+                      :line_height => region[:line_height]
                     }
                     non_sections = []
                   end

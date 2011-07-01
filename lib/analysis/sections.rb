@@ -59,6 +59,7 @@ module PdfExtract
               column = c[:column]
               c[:regions].each do |region|
 
+                # TODO Use line_height instead.
                 if region[:width] >= (column[:width] * @@width_ratio)
                   
                   case non_sections.count

@@ -10,8 +10,6 @@ module PdfExtract
     def self.split_refs s
       # Find sequential numbers and use them as partition points.
 
-      # TODO Doesn't pick up the last ref.
-
       # Determine the charcaters that are most likely part of numeric
       # delimiters.
       
@@ -38,16 +36,16 @@ module PdfExtract
       end
 
       b_s = "" if before.length.zero?
-      b_s = before.max[0] unless before.length.zero?
+      b_s = "\\" + before.max[0] unless before.length.zero?
       a_s = "" if after.length.zero?
-      a_s = after.max[0] unless after.length.zero?
+      a_s = "\\" + after.max[0] unless after.length.zero?
 
       # Split by the delimiters and record separate refs.
       
       last_n = -1
       current_ref = ""
       refs = []
-      parts = s.partition(Regexp.new "\\#{b_s}\\d+\\#{a_s}")
+      parts = s.partition(Regexp.new "#{b_s}\\d+#{a_s}")
 
       while not parts[1].length.zero?
         n = parts[1][/\d+/].to_i
@@ -65,8 +63,13 @@ module PdfExtract
           current_ref += parts[0] + parts[1]
         end
 
-        parts = parts[2].partition(Regexp.new "\\#{b_s}\\d+\\#{a_s}")
+        parts = parts[2].partition(Regexp.new "#{b_s}\\d+#{a_s}")
       end
+
+      refs << {
+        :content => current_ref + parts[0],
+        :order => last_n
+      }
 
       refs
     end

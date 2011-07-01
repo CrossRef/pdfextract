@@ -10,7 +10,7 @@ program :description, 'PDF content extraction toolkit'
 semantic = ['titles', 'sections']
 margins = ['top_margins', 'bottom_margins', 'left_margins', 'right_margins']
 zones = ['headers', 'footers', 'bodies']
-objects = ['characters', 'chunks', 'regions', 'columns'] + semantic + margins + zones
+objects = ['references', 'characters', 'chunks', 'regions', 'columns'] + semantic + margins + zones
 
 outputs = {
   :xml => proc { :stdout },
@@ -58,3 +58,19 @@ outputs.each_key do |view|
 
   end
 end
+
+command :dois do |c|
+  c.syntax = "pdf-extract refs filename"
+  c.description = "Resolve references in the PDF to DOIs."
+
+  c.action do |args, options|
+    args.each do |filename|
+      refs = PdfExtract.parse filename { |pdf| pdf.references }
+      refs.each do |ref|
+        # TODO
+        say find_doi ref[:content]
+      end
+    end
+  end
+end
+

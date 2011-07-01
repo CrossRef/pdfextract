@@ -1,3 +1,5 @@
+require_relative '../language'
+
 module PdfExtract
   module Sections
 
@@ -99,8 +101,11 @@ module PdfExtract
             end
           end
 
-          sections
-          
+          sections.map do |section|
+            section.merge({
+              :letter_ratio => Language.letter_ratio(section[:content])
+            })
+          end
         end
         
       end

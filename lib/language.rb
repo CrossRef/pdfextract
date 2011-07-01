@@ -12,5 +12,9 @@ module PdfExtract
       s
     end
 
+    def self.letter_ratio s
+      s.count("A-Z0-9\-[],.\"'()") / s.length.to_f
+    end
+
   end
 end

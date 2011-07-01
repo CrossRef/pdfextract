@@ -13,7 +13,6 @@ module PdfExtract
       page_params = {}
       pageless = {}
       
-      
       objects.each_pair do |type, objs|
         objs.each do |obj|
           if obj.key? :page

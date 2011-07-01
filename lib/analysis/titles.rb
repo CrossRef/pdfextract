@@ -36,7 +36,11 @@ module PdfExtract
           if titles.count.zero?
             []
           else
-            {:content => titles.first[:content]}
+            {
+              :content => titles.first[:content],
+              :line_height => titles.first[:line_height],
+              :font => titles.first[:font]
+            }
           end
         end
       end

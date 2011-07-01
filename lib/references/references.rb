@@ -1,22 +1,64 @@
 module PdfExtract
   module References
 
+    # TODO Line delimited citations.
+    # TODO Indent /outdent delimited citations.
+    
     @@min_letter_ratio = 0.2
     @@max_letter_ratio = 0.5
 
     def self.split_refs s
       # Find sequential numbers and use them as partition points.
 
-      s = s[s.index(/\d/)..-1]
+      # TODO Doesn't pick up the last ref.
+
+      # Determine the charcaters that are most likely part of numeric
+      # delimiters.
+      
+      before = {}
+      after = {}
+      last_n = -1
+      
+      s.scan /.?\d+.?/ do |m|
+        n = m[/\d+/].to_i
+        
+        if last_n == -1
+          before[m[0]] ||= 0
+          before[m[0]] = before[m[0]].next
+          after[m[-1]] ||= 0
+          after[m[-1]] = after[m[-1]].next
+          last_n = n
+        elsif n == last_n.next
+          before[m[0]] ||= 0
+          before[m[0]] = before[m[0]].next
+          after[m[-1]] ||= 0
+          after[m[-1]] = after[m[-1]].next
+          last_n = last_n.next
+        end
+      end
+
+      b_s = "" if before.length.zero?
+      b_s = before.max[0] unless before.length.zero?
+      a_s = "" if after.length.zero?
+      a_s = after.max[0] unless after.length.zero?
+
+      puts b_s
+      puts a_s
+
+      # Split by the delimiters and record separate refs.
+      
       last_n = -1
       current_ref = ""
       refs = []
-      parts = s.partition(/\d+/)
+      parts = s.partition(Regexp.new "\\#{b_s}\\d+\\#{a_s}")
 
       while not parts[1].length.zero?
+        puts parts[1]
+        n = parts[1][/\d+/].to_i
+        puts n
         if last_n == -1
-          last_n = parts[1].to_i
-        elsif last_n == -1 || parts[1].to_i == last_n.next
+          last_n = n
+        elsif n == last_n.next
           current_ref += parts[0]
           refs << {
             :content => current_ref,
@@ -28,7 +70,7 @@ module PdfExtract
           current_ref += parts[0] + parts[1]
         end
 
-        parts = parts[2].partition(/\d+/)
+        parts = parts[2].partition(Regexp.new "\\#{b_s}\\d+\\#{a_s}")
       end
 
       refs

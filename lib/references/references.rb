@@ -56,7 +56,7 @@ module PdfExtract
         elsif n == last_n.next
           current_ref += parts[0]
           refs << {
-            :content => current_ref,
+            :content => current_ref.strip,
             :order => last_n
           }
           current_ref = ""

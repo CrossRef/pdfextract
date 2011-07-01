@@ -42,9 +42,6 @@ module PdfExtract
       a_s = "" if after.length.zero?
       a_s = after.max[0] unless after.length.zero?
 
-      puts b_s
-      puts a_s
-
       # Split by the delimiters and record separate refs.
       
       last_n = -1
@@ -53,9 +50,7 @@ module PdfExtract
       parts = s.partition(Regexp.new "\\#{b_s}\\d+\\#{a_s}")
 
       while not parts[1].length.zero?
-        puts parts[1]
         n = parts[1][/\d+/].to_i
-        puts n
         if last_n == -1
           last_n = n
         elsif n == last_n.next

@@ -76,21 +76,24 @@ module PdfExtract
                       [0, s[:rise], 1] ]
         trm = trm * render_state[:tm] * state.last[:ctm]
 
-        sizes = Matrix.rows([ [glyph_width(c, state), glyph_height(c, state), 1] ])
-        sizes = sizes * trm
+        bl_pos = Matrix.rows( [ [0, glyph_descent(c, state), 1] ])
+        bl_pos = bl_pos * trm
 
-        px = trm.row(2)[0]
-        py = trm.row(2)[1] + (glyph_descent(c, state) * s[:font_size])
+        width = glyph_width(c, state)
+        height = glyph_descent(c, state) + glyph_height(c, state)
 
-        px -= page[:MediaBox][0]
-        py -= page[:MediaBox][1]
+        tr_pos = Matrix.rows([ [width, height, 1] ])
+        tr_pos = tr_pos * trm
+
+        px = bl_pos.row(0)[0]
+        py = bl_pos.row(0)[1]
         
         objs << {
           :x => px,
           :y => py,
-          :width => sizes.row(0)[0] - px,
-          :height => sizes.row(0)[1] - py,
-          :line_height => sizes.row(0)[1] - py,
+          :width => tr_pos.row(0)[0] - px,
+          :height => tr_pos.row(0)[1] - py,
+          :line_height => tr_pos.row(0)[1] - py,
           :content => c,
           :page => page_number,
           :font => state.last[:font].basefont,

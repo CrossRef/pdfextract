@@ -67,7 +67,7 @@ module PdfExtract
       end
 
       refs << {
-        :content => current_ref + parts[0],
+        :content => (current_ref + parts[0]).strip,
         :order => last_n
       }
 

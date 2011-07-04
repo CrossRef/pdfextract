@@ -14,19 +14,21 @@ module PdfExtract
           doc.fill_color color
           
           objs.each do |obj|
-            if obj[:page] != last_page
-              last_page = obj[:page]
-              doc.go_to_page last_page
-              doc.fill_color color
-            end
+            unless obj[:page].nil?
+              if obj[:page] != last_page
+                last_page = obj[:page]
+                doc.go_to_page last_page
+                doc.fill_color color
+              end
               
-            # XXX Works, but why?
-            pos = [obj[:x] - 36, obj[:y] + obj[:height] - 36]
-            width = obj[:width]
-            height = obj[:height]
-            
-            doc.transparent 0.2 do
-              doc.fill_rectangle pos, width, height
+              # XXX Works, but why?
+              pos = [obj[:x] - 36, obj[:y] + obj[:height] - 36]
+              width = obj[:width]
+              height = obj[:height]
+              
+              doc.transparent 0.2 do
+                doc.fill_rectangle pos, width, height
+              end
             end
           end
         end

@@ -8,6 +8,7 @@ require_relative 'analysis/zones'
 require_relative 'analysis/columns'
 require_relative 'analysis/sections'
 require_relative 'references/references'
+require_relative 'references/reverse_resolve'
 require_relative 'view/png_view'
 require_relative 'view/pdf_view'
 require_relative 'view/xml_view'
@@ -21,7 +22,7 @@ module PdfExtract
   }
 
   @@parsers = [Characters, Chunks, Regions, Titles,
-               Margins, Zones, Columns, Sections, References]
+               Margins, Zones, Columns, Sections, References, ResolvedReferences]
   
   def self.parse filename, &block
     pdf = Pdf.new

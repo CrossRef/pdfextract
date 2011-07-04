@@ -18,7 +18,7 @@ module PdfExtract
     end
     
     def self.include_in pdf
-      line_slop_factor = 0.3
+      line_slop_factor = 0.4
 
       pdf.spatials :regions, :paged => true, :depends_on => [:chunks] do |parser|
         chunks = []

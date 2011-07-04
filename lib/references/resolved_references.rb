@@ -1,6 +1,4 @@
-require 'cgi'
-require 'nokogiri'
-require 'open-uri'
+require_relative 'resolve'
 
 module PdfExtract
   module ResolvedReferences
@@ -11,7 +9,7 @@ module PdfExtract
         resolved_refs = []
         
         parser.objects :references do |ref|
-          resolved_refs << ref.merge({:doi => reverse_resolve(ref[:content])})
+          resolved_refs << ref.merge(Resolve.find ref[:content])
         end
 
         parser.after do
@@ -22,6 +20,7 @@ module PdfExtract
     end
 
     def self.reverse_resolve ref
+      
       url = "http://api.labs.crossref.org/search?q=#{CGI.escape(ref)}"
       doc = Nokogiri::HTML(open url)
 

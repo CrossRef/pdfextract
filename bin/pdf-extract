@@ -2,6 +2,7 @@
 
 require 'commander/import'
 require_relative '../lib/pdf-extract'
+require_relative '../lib/references/resolve'
 
 program :name, 'pdf-extract'
 program :version, '0.0.1'
@@ -12,6 +13,11 @@ margins = ['top_margins', 'bottom_margins', 'left_margins', 'right_margins']
 zones = ['headers', 'footers', 'bodies']
 objects = ['resolved_references', 'references', 'characters', 'chunks',
            'regions', 'columns'] + semantic + margins + zones
+
+resolvers = {
+  "sigg" => PdfExtract::Resolve::Sigg,
+  "freecite" => PdfExtract::Resolve::FreeCite
+}
 
 outputs = {
   :xml => proc { :stdout },
@@ -28,6 +34,12 @@ global_option "--zones" do |_| $chosen_objects += zones end
 objects.each do |o|
   global_option "--#{o}" do |_|
     $chosen_objects << o
+  end
+end
+
+resolvers.each_pair do |name, resolver|
+  global_option "--#{name}" do |_|
+    PdfExtract::Resolve.resolver = resolver
   end
 end
 

@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<pdf>
+  <resolved_reference order="1" doi="10.4324/9780203211526">Adamatzky A.
+Identicfiation of Cellular Automata (Taylor &amp; Francis, 1994). Chapter 4, Sect.
+4.7.2.</resolved_reference>
+  <resolved_reference order="2" doi="10.1002/chin.200019161">Adamatzky A. Physarum
+Machines: Making Computers from Slime Mould (World Scienticfi,
+2010).</resolved_reference>
+  <resolved_reference order="3" doi="10.1007/s00114-007-0276-5">Adamatzky A. Physarum
+machines: encapsulating reaction-diffusion to compute spanning tree.
+Naturwisseschaften 94 (2007) 9759-80.</resolved_reference>
+  <resolved_reference order="4" doi="10.1142/S0129626407003150">Adamatzky A. Physarum
+machine: implementation of a Kolmogorov-Uspensky machine on a biological substrate.
+Parallel Process Lett 17 (2007) 4554-67.</resolved_reference>
+  <resolved_reference order="5" doi="10.1016/j.physleta.2008.05.087">Adamatzky A.
+Slime mould logical gates: exploring ballistic approach (2010).</resolved_reference>
+  <resolved_reference order="6" doi="10.1038/222062b0">Adamatzky A. Are slime moulds
+in love with insects? (2011), submitted.</resolved_reference>
+  <resolved_reference order="7" doi="10.1016/0020-0190(78)90003-0">Akl S. G. and
+Toussaint G. T. A fast convex hull algorithm. Inform Process Lett 7 (1978)
+2192-22.</resolved_reference>
+  <resolved_reference order="8" doi="10.1109/ICAPP.1995.472195">Chen W., Nakano K.
+and Wada K. Parallel algorithms for convex hull problems and their paradigm IEICE
+Trans. Information and Syst. E83-D (2000) 5195-29.</resolved_reference>
+  <resolved_reference order="9" doi="10.1109/NSWCTC.2010.114">Clarridge A. G. and
+Salomaa K. An improved cellular automata based algorithm for the 45-convex hull
+problem. J of Cellular Automata 5 (2010) 1071-20. Concurrency
+Prac</resolved_reference>
+  <resolved_reference order="10"
+doi="10.1002/(SICI)1096-9128(199805)10:63.3.CO;2-6">Day A. M. and Tracey D. Parallel
+implementations for determining the 2D convex hull tice and Experience 10 (1998)
+4494-66.</resolved_reference>
+  <resolved_reference order="11" doi="10.2307/3620533">de Berg M., Cheong O., van
+Kreveld M., Overmars M. Computational Geometry: Algorithms and Applications.
+(Springer, 2008).</resolved_reference>
+  <resolved_reference order="12" doi="10.1007/BF01759069">Dehne F., Hassenklover
+A.L., Sack J.R. and Santoro N., Computation geometry algorithms for the systolic
+Algorithmica screen 6(1991) 7347-61.</resolved_reference>
+  <resolved_reference order="13" doi="10.1109/TIT.1983.1056714">Edelsbrunner H., D.
+Kirkpatrick, R. Seidel, On the shape of a set of points in the plane, IEEE Trans
+Inform Theor 29 (4) (1983) 551-559. &#xB4;</resolved_reference>
+  <resolved_reference order="14" doi="10.1145/174462.156635">Edelsbrunner H., Mu'ke
+E. P. Three-dimensional alpha shapes. ACM Trans on Graphics 13 (1994)
+437-2.</resolved_reference>
+  <resolved_reference order="15" doi="10.1016/0167-8191(85)90030-4">Evans D.J. and
+Mai S.-W. Two parallel algorithms for the convex hull problem in a two dimensional
+space Parallel Comput 2(1985) 3133-26.</resolved_reference>
+  <resolved_reference order="16" doi="10.1021/ja00814a003">Field R. J., Noyes R. M.
+Oscillations in chemical systems. J. Chem. Phys. 60 (1974)
+18771-884.</resolved_reference>
+  <resolved_reference order="17" doi="10.1016/0020-0190(73)90020-3">Jarvis R. On the
+identicfiation of the convex hull of a nfiite set of points in the plane. Inform
+Process Lett 2 (1973) 182-1.</resolved_reference>
+  <resolved_reference order="18" doi="10.1109/71.737693">Hayashi T., Nakano K. and
+Olariu S., Optimal parallel algorithms for nfiding proximate points, with
+applications. IEEE Trans. Parall Dist Syst 9 (1998) 11531-166.</resolved_reference>
+  <resolved_reference order="19" doi="10.1016/0020-0190(72)90045-2">Graham R. L. An
+efcfiient algorithm for determining the convex hull of a nfiite planar set. Inform
+Process Lett 1 (1972) 1321-33.</resolved_reference>
+  <resolved_reference order="20" doi="10.1126/science.92.2394.462">Kamiya, N.
+Protoplasmic streaming. Protoplasmatologia 8 (1959) 1-199. Cited by
+[31].</resolved_reference>
+  <resolved_reference order="21" doi="10.1016/0167-8191(87)90045-7">Kim C.E. and
+Stojmenovic I. Sequential and parallel approximate convex hull algorithms Computers
+and AI 14 (1995) 5976-10.</resolved_reference>
+  <resolved_reference order="22" doi="10.1016/S0301-4622(99)00099-X">Nakagaki T.,
+Yamada H., Ueda T. Modulation of cellular rhythm and photoavoidance by oscillatory
+irradiation in the Physarum plasmodium. Biophys Chem 82 (1999) 232-8.
+Physarum</resolved_reference>
+  <resolved_reference order="23" doi="10.1016/S0301-4622(00)00190-3">Nakagaki T.,
+Yamada H., Ueda T. Interaction between cell shape and contraction pattern in the
+plasmodium . Biophys Chemy 84 (2000) 1952-04.</resolved_reference>
+  <resolved_reference order="24" doi="10.1016/S0301-4622(01)00179-X">Nakagaki T.,
+Yamada H., and Toth A., Path nfiding by tube morphogenesis in an amoeboid organism.
+Biophysical Chemistry 92 (2001) 47-52.</resolved_reference>
+  <resolved_reference order="25" doi="10.1017/CBO9780511756320">OR'ourke J.
+Computational Geometry in C. (Cambridge University, 2001).</resolved_reference>
+  <resolved_reference order="26" doi="10.1145/359423.359430">Franco P. Preparata,
+S.J. Hong. Convex Hulls of Finite Sets of Points in Two and Three Dimensions, Commun.
+ACM 20 (1977) 87-93.</resolved_reference>
+  <resolved_reference order="27" doi="10.1002/bimj.4710290717">Preparata F. P. and
+Shamos M. I. Computational Geometry: An Introduction (Springer-Verlag New York Inc.,
+1985).</resolved_reference>
+  <resolved_reference order="28" doi="10.1109/SYNASC.2009.1">Schumann A. and
+Adamatzky A. Physarum spatial logic. In: Proc. 1th Int. Symp. on Symbolic and Numeric
+Algorithms for Scienticfi Computing (Timisoara, Romania, September 26-29,
+2009).</resolved_reference>
+  <resolved_reference order="29" doi="10.1142/S0218127409024682">Shirakawa T.,
+Adamatzky A., Gunji Y.-P., Miyake Y. On simultaneous construction of Voronoi diagram
+and Delaunay triangulation by Physarum polycephalum. Int. J. Bifurcation and Chaos 19
+(2009 31093-117.</resolved_reference>
+  <resolved_reference order="30" doi="10.1086/419301">Stephenson S. L. and Stempen H.
+Myxomycetes: A Handbook of Slime Molds. (Timber Press, 2000).</resolved_reference>
+  <resolved_reference order="31" doi="10.1016/j.jtbi.2006.07.015">Tero A., Kobayashi
+R., Nakagaki T. A mathematical model for adaptive transport network in path nfiding
+by true slime mold. J of Theor Biol 244 (2007) 553-564.</resolved_reference>
+  <resolved_reference order="32" doi="10.1016/0167-8191(85)90030-4">Torbey S. and Akl
+S.G., An exact and optimal local solution to the two-dimensional convex hull of
+arbitrary points problem, J of Cellular Automata (2008).</resolved_reference>
+  <resolved_reference order="33" doi="10.1016/j.biosystems.2003.08.001">Tsuda S.,
+Aono M., Gunji Y.-P. Robust and emergent Physarum logical-computing. Biosystems 73
+(2004) 455-5.</resolved_reference>
+  <resolved_reference order="34" doi="10.1063/1.440418">Tyson J. J., Fife P. C.
+Target patterns in a realistic model of the BelousovZhabotinskii reaction. J. Chem.
+Phys. 1980;73:22243-7.</resolved_reference>
+  <resolved_reference order="35" doi="10.1016/0014-4827(76)90157-9">Ueda T.,
+Muratsugu M., Kurihara K. and Kobatake Y. Chemotaxis in Physarum polycephalumnext
+term: Effects of chemicals on isometric tension of the plasmodial strand in relation
+to chemotactic movement. Experimental Cell Research 100 (1976)
+3373-44.</resolved_reference>
+</pdf>

@@ -27,20 +27,23 @@ outputs = {
 
 $chosen_objects = []
 
-global_option "--semantic" do |_| $chosen_objects += semantic end
-global_option "--margins" do |_| $chosen_objects += margins end
-global_option "--zones" do |_| $chosen_objects += zones end
-
 objects.each do |o|
   global_option "--#{o}" do |_|
     $chosen_objects << o
   end
 end
 
-resolvers.each_pair do |name, resolver|
-  global_option "--#{name}" do |_|
-    PdfExtract::Resolve.resolver = resolver
+global_option "--semantic" do |_| $chosen_objects += semantic end
+global_option "--margins" do |_| $chosen_objects += margins end
+global_option "--zones" do |_| $chosen_objects += zones end
+
+global_option "--resolvers=RESOLVERS" do |chosen_resolvers|
+  chosen_resolvers = chosen_resolvers.split ","
+  chosen_resolvers.each do |name|
+    fail "No such resolver #{resolver}" unless resolvers.key? name
   end
+  chosen_resolvers.map! { |name| resolvers[name] }
+  PdfExtract::Resolve.resolvers = chosen_resolvers
 end
 
 global_option "--output=FILE" do |filename|

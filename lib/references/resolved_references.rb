@@ -9,7 +9,7 @@ module PdfExtract
         resolved_refs = []
         
         parser.objects :references do |ref|
-          resolved_refs << ref.merge(Resolve.find ref[:content])
+          resolved_refs << ref.merge(Resolve.find(ref))
         end
 
         parser.after do

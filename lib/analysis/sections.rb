@@ -104,7 +104,8 @@ module PdfExtract
 
           sections.map do |section|
             section.merge({
-              :letter_ratio => Language.letter_ratio(section[:content])
+              :letter_ratio => Language.letter_ratio(section[:content]),
+              :word_count => Language.word_count(section[:content])           
             })
           end
         end

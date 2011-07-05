@@ -9,17 +9,23 @@ module PdfExtract::Resolve
 
     def self.find ref
       url = "http://api.labs.crossref.org/search?q=#{CGI.escape(ref)}"
-      doc = Nokogiri::HTML(open url)
+      resolved = {}
+      begin
+        doc = Nokogiri::HTML(open url)
       
-      result = doc.at_css "div.result"  
-      score = result.at_css("span.cr_score").content.to_s
-      if score.to_i >= 90
-        {:doi => result.at_css("span.doi").content.sub("http://dx.doi.org/", "")}
-      else
-        {}
+        result = doc.at_css "div.result"
+        unless result.nil?
+          score = result.at_css("span.cr_score").content.to_s
+          if score.to_i >= 90
+            doi = result.at_css "span.doi" 
+            resolved[:doi] = doi.content.sub "http://dx.doi.org/", ""
+          end
+        end
+      rescue
       end
+      resolved
     end
-
+    
   end
   
   class FreeCite

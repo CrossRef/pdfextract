@@ -16,5 +16,9 @@ module PdfExtract
       s.count("A-Z0-9\-[],.\"'()") / s.length.to_f
     end
 
+    def self.word_count s
+      s.split(/\s/).count
+    end
+
   end
 end

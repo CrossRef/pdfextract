@@ -6,6 +6,7 @@ module PdfExtract
     
     @@min_letter_ratio = 0.2
     @@max_letter_ratio = 0.5
+    @@min_word_count = 3
 
     def self.split_refs s
       # Find sequential numbers and use them as partition points.
@@ -81,7 +82,8 @@ module PdfExtract
 
         parser.objects :sections do |section|
           if section[:letter_ratio] >= @@min_letter_ratio &&
-              section[:letter_ratio] <= @@max_letter_ratio
+              section[:letter_ratio] <= @@max_letter_ratio &&
+              section[:word_count] >= @@min_word_count
             refs += split_refs section[:content]
           end
         end

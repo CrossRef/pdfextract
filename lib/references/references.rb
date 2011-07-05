@@ -36,9 +36,9 @@ module PdfExtract
       end
 
       b_s = "" if before.length.zero?
-      b_s = "\\" + before.max[0] unless before.length.zero?
+      b_s = "\\" + before.max_by { |_, v| v }[0] unless before.length.zero?
       a_s = "" if after.length.zero?
-      a_s = "\\" + after.max[0] unless after.length.zero?
+      a_s = "\\" + after.max_by { |_, v| v }[0] unless after.length.zero?
 
       # Split by the delimiters and record separate refs.
       

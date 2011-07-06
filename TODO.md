@@ -25,11 +25,11 @@
   should. Graphics state or page translation?
 * DONE Spaces appear one character before where they should in
   text_chunks.
-* Apostrophes cause a chunk break.
+* DONE Apostrophes cause a chunk break.
 * DONE Split views into View, PdfView, PngView. Pass only explicit
   spatials in an easier form for Views. Move into lib/view.
 * DONE Move analysis modules into lib/analysis.
-* Non-ascii chars that are transliterated are appearing in output one
+* DONE Non-ascii chars that are transliterated are appearing in output one
   place before they should. Transliterated chars also cause a word
   break. Not getting their width correct in glyph width dict?
   ! Looks like this occurs for chars whose codes are in the font's
@@ -80,6 +80,7 @@
 * in output.
 * Header, footer, body detection should use most frequent page layout
   as layout for all pages.
+* Pass chunk locations through to resolved references.
 
 ## Long tasks, greater than 3 hours
 

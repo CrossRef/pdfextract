@@ -16,7 +16,8 @@ objects = ['resolved_references', 'references', 'characters', 'chunks',
 
 resolvers = {
   "sigg" => PdfExtract::Resolve::Sigg,
-  "freecite" => PdfExtract::Resolve::FreeCite
+  "freecite" => PdfExtract::Resolve::FreeCite,
+  "stq" => PdfExtract::Resolve::SimpleTextQuery
 }
 
 outputs = {

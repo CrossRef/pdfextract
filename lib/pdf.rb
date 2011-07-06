@@ -116,7 +116,7 @@ module PdfExtract
       
       if self.for_calls?
         self.expand_listeners_to_callback_methods
-        PDF::Reader.file filename, self
+        PDF::Reader.file filename, self, :raw_text => true
       end
     end
 

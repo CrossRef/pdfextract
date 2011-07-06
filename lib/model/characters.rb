@@ -94,7 +94,7 @@ module PdfExtract
           :width => tr_pos.row(0)[0] - px,
           :height => tr_pos.row(0)[1] - py,
           :line_height => tr_pos.row(0)[1] - py,
-          :content => c,
+          :content => state.last[:font].to_utf8(c),
           :page => page_number,
           :font => state.last[:font].basefont,
           :page_width => page[:MediaBox][2] - page[:MediaBox][0],
@@ -122,6 +122,7 @@ module PdfExtract
         fonts = {}
         font_metrics = {}
         page_n = 0
+        raw_text = ""
         render_state = {
           :tm => Matrix.identity(3),
           :tlm => Matrix.identity(3)
@@ -268,9 +269,23 @@ module PdfExtract
           nil
         end
 
+        # Show raw text callbacks. Record the raw test for use in
+        # glyph width tables and so on.
+
+        # [:set_spacing_next_line_show_text_raw,
+        #  :move_to_next_line_and_show_text_raw,
+        #  :show_text_raw,
+        #  :show_text_with_positioning_raw].each do |cb|
+        #   parser.for cb do |data|
+        #     puts data
+        #     raw_text = data[0]
+        #     nil
+        #   end
+        # end
+
         # Show text operators.
 
-        parser.for :set_spacing_next_line_show_text do |data|
+        parser.for :set_spacing_next_line_show_text_raw do |data|
           state.last[:word_spacing] = data[0]
           state.last[:char_spacing] = data[1]
           
@@ -282,7 +297,7 @@ module PdfExtract
           make_text_runs data[2], 0, state, render_state, page, page_n
         end
 
-        parser.for :move_to_next_line_and_show_text do |data|
+        parser.for :move_to_next_line_and_show_text_raw do |data|
           render_state[:tm] = Matrix[
             [1, 0, 0], [0, 1, 0], [0, -state.last[:leading], 1]
           ] * render_state[:tlm]
@@ -291,11 +306,11 @@ module PdfExtract
           make_text_runs data.first, 0, state, render_state, page, page_n
         end
 
-        parser.for :show_text do |data|
+        parser.for :show_text_raw do |data|
           make_text_runs data.first, 0, state, render_state, page, page_n
         end
         
-        parser.for :show_text_with_positioning do |data|
+        parser.for :show_text_with_positioning_raw do |data|
           data = data.first
           runs = []
           tj = 0

@@ -41,9 +41,9 @@ module PdfExtract
       a_s = "" if after.length.zero?
       a_s = "\\" + after.max_by { |_, v| v }[0] unless after.length.zero?
 
-      if ["", "[", " "].include?(b_s) && ["", ".", "]", " "].include?(a_s)
+      if ["", "\\[", "\\ "].include?(b_s) && ["", "\\.", "\\]", "\\ "].include?(a_s)
 
-         # Split by the delimiters and record separate refs.
+        # Split by the delimiters and record separate refs.
       
         last_n = -1
         current_ref = ""

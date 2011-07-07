@@ -18,7 +18,7 @@ module PdfExtract
       after = {}
       last_n = -1
       
-      s.scan /.?\d+.?/ do |m|
+      s.scan /[^\d]?\d+[^\d]/ do |m|
         n = m[/\d+/].to_i
         
         if last_n == -1
@@ -41,38 +41,44 @@ module PdfExtract
       a_s = "" if after.length.zero?
       a_s = "\\" + after.max_by { |_, v| v }[0] unless after.length.zero?
 
-      # Split by the delimiters and record separate refs.
+      if ["", "[", " "].include?(b_s) && ["", ".", "]", " "].include?(a_s)
+
+         # Split by the delimiters and record separate refs.
       
-      last_n = -1
-      current_ref = ""
-      refs = []
-      parts = s.partition(Regexp.new "#{b_s}\\d+#{a_s}")
-
-      while not parts[1].length.zero?
-        n = parts[1][/\d+/].to_i
-        if last_n == -1
-          last_n = n
+        last_n = -1
+        current_ref = ""
+        refs = []
+        parts = s.partition(Regexp.new "#{b_s}\\d+#{a_s}")
+        
+        while not parts[1].length.zero?
+          n = parts[1][/\d+/].to_i
+          if last_n == -1
+            last_n = n
         elsif n == last_n.next
-          current_ref += parts[0]
-          refs << {
-            :content => current_ref.strip,
-            :order => last_n
-          }
-          current_ref = ""
-          last_n = last_n.next
-        else
-          current_ref += parts[0] + parts[1]
+            current_ref += parts[0]
+            refs << {
+              :content => current_ref.strip,
+              :order => last_n
+            }
+            current_ref = ""
+            last_n = last_n.next
+          else
+            current_ref += parts[0] + parts[1]
+          end
+
+          parts = parts[2].partition(Regexp.new "#{b_s}\\d+#{a_s}")
         end
+        
+        refs << {
+          :content => (current_ref + parts[0]).strip,
+          :order => last_n
+        }
+        
+        refs
 
-        parts = parts[2].partition(Regexp.new "#{b_s}\\d+#{a_s}")
+      else
+        []
       end
-
-      refs << {
-        :content => (current_ref + parts[0]).strip,
-        :order => last_n
-      }
-
-      refs
     end
     
     def self.include_in pdf

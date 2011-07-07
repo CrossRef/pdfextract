@@ -57,7 +57,7 @@
 * Handle type 3 font font matrices.
 * Handle writing mode selection for composite fonts (type 0)
   (different font metrics). 
-* Some way of splitting SpatialObjects by page.
+* DONE Some way of splitting SpatialObjects by page.
 * !! Handle type 3 font operators. These may not be supported by 
   pdf-reader!
 * DONE Add spatials parser.post { }, use in text_runs to sort and merge
@@ -77,7 +77,7 @@
 * DONE Characters on pages with images are sometimes not detected. Graphics
   state issue?
 * When --margins and --zones specified duplicate margins appear
-* in output.
+  in output.
 * Header, footer, body detection should use most frequent page layout
   as layout for all pages.
 * Pass chunk locations through to resolved references.

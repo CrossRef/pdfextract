@@ -7,7 +7,7 @@ module PdfExtract
 
     def self.include_in pdf
       char_slop = 0.2
-      word_slop = 1.5
+      word_slop = 4.0
       overlap_slop = 0.9
       
       pdf.spatials :chunks, :paged => true, :depends_on => [:characters] do |parser|
@@ -18,7 +18,6 @@ module PdfExtract
         end
         
         parser.objects :characters do |chars|
-          # TODO Handle pages.
           y = chars[:y]
           rows[y] = [] if rows[y].nil?
 
@@ -93,3 +92,4 @@ module PdfExtract
 
   end
 end
+

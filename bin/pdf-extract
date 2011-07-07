@@ -26,6 +26,24 @@ outputs = {
   :png => proc { |f| File::basename(f.sub /\.[a-zA-Z0-9]+\Z/, "") + ".mask.png" }
 }
 
+commands = [
+  {
+    :name => "extract",
+    :view => :xml,
+    :description => "Extract objects as XML."
+  },
+  {
+    :name => "mark",
+    :view => :pdf,
+    :description => "Highlight bounding boxes of objects in a PDF."
+  },
+  {
+    :name => "annotate",
+    :view => :not_implemented,
+    :description => "Annotate a PDF with attributes of extracted objects."
+  }
+]
+
 $chosen_objects = []
 
 objects.each do |o|
@@ -51,15 +69,15 @@ global_option "--output=FILE" do |filename|
   $output = filename
 end
 
-outputs.each_key do |view|
-  command view.to_sym do |c|
-    c.syntax = "pdf-extract #{view} [objects] filename"
-    c.description = "Output selected objects as #{view.upcase}."
+commands.each do |cmd|
+  command cmd[:name].to_sym do |c|
+    c.syntax = "pdf-extract #{cmd[:name]} filename [options]"
+    c.description = cmd[:description]
 
     c.action do |args, options|
       args.each do |filename|
-        $output = outputs[view].call(filename) if $output.nil?
-        out = PdfExtract.view filename, :as => view.to_sym do |pdf|
+        $output = outputs[cmd[:view]].call(filename) if $output.nil?
+        out = PdfExtract.view filename, :as => cmd[:view] do |pdf|
           $chosen_objects.each do |name|
             pdf.send name.to_sym
           end
@@ -75,3 +93,4 @@ outputs.each_key do |view|
 
   end
 end
+

@@ -122,7 +122,6 @@ module PdfExtract
         fonts = {}
         font_metrics = {}
         page_n = 0
-        raw_text = ""
         render_state = {
           :tm => Matrix.identity(3),
           :tlm => Matrix.identity(3)
@@ -268,20 +267,6 @@ module PdfExtract
           render_state[:tlm] = render_state[:tm]
           nil
         end
-
-        # Show raw text callbacks. Record the raw test for use in
-        # glyph width tables and so on.
-
-        # [:set_spacing_next_line_show_text_raw,
-        #  :move_to_next_line_and_show_text_raw,
-        #  :show_text_raw,
-        #  :show_text_with_positioning_raw].each do |cb|
-        #   parser.for cb do |data|
-        #     puts data
-        #     raw_text = data[0]
-        #     nil
-        #   end
-        # end
 
         # Show text operators.
 

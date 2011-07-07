@@ -47,9 +47,45 @@ module PdfExtract::Resolve
     
   end
   
-  class CrossRef
+  class SimpleTextQuery
+
+    @@cookie = nil
     
     def self.find ref
+      create_session
+
+      post = Net::HTTP::Post.new "/SimpleTextQuery"
+      post.add_field "Cookie", @@cookie
+      post.add_field "Referer", "http://www.crossref.org/SimpleTextQuery"
+      post.set_form_data({
+        "command" => "Submit",
+        "freetext" => ref,
+        #"emailField" => "kward@crossref.org",
+        "doiField" => "",
+        #"username" => "",
+        #"password" => ""
+      })
+      response = Net::HTTP.start "www.crossref.org" do |http|
+        http.request post
+      end
+      
+      doc = Nokogiri::HTML response.body
+      doi = doc.at_css "td.resultB > a"
+      
+      if doi.nil?
+        {}
+      else
+        {:doi => doi.content.sub("doi:", "")}
+      end
+    end
+
+    def self.create_session
+      if @@cookie.nil?
+        Net::HTTP.start "www.crossref.org" do |http|
+          response = http.get "/SimpleTextQuery"
+          @@cookie = response["Set-Cookie"]
+        end
+      end
     end
     
   end

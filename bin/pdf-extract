@@ -8,11 +8,10 @@ program :name, 'pdf-extract'
 program :version, '0.0.1'
 program :description, 'PDF content extraction toolkit'
 
-semantic = ['titles', 'sections']
+semantic = ['resolved_references', 'references', 'titles', 'sections']
 margins = ['top_margins', 'bottom_margins', 'left_margins', 'right_margins']
 zones = ['headers', 'footers', 'bodies']
-objects = ['resolved_references', 'references', 'characters', 'chunks',
-           'regions', 'columns'] + semantic + margins + zones
+objects = ['characters', 'chunks', 'regions', 'columns'] + semantic + margins + zones
 
 resolvers = {
   "sigg" => PdfExtract::Resolve::Sigg,
@@ -86,7 +85,7 @@ commands.each do |cmd|
         if $output == :stdout
           say out
         else
-          PdfExtract.view_class(view).write(out, $output)
+          PdfExtract.view_class(cmd[:view]).write(out, $output)
         end
       end
     end

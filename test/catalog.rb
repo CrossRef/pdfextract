@@ -15,16 +15,15 @@ require 'json'
 
 program :name, "catalog"
 program :version, "0.0.1"
+program :description, "Build a PDF catalog, with metadata."
 
 def query_uri verb, prefix, issue, year
+  q = "verb=#{verb}&metadataPrefix=cr_unixml&set=#{prefix}:#{issue}:#{year}"
+  q = CGI.escape q
   URI::HTTP.build({
     :host => "oai.crossref.org",
     :path => "/OAIHandler",
-    :query => {
-      :verb => verb,
-      :metadataPrefix => "cr_unixml",
-      :set => "#{prefix}:#{issue}:#{year}"                
-    }
+    :query => q
   })
 end
 
@@ -40,7 +39,7 @@ def get_dois prefix, issue, year
   Net::HTTP.start uri.host do |http|
     response = http.get uri.request_uri
 
-    if response == 200
+    if response.code.to_i == 200
       parse_dois response.body
     else
       fail "Failed to get metadata. OAI server returned: #{response.code}"
@@ -52,9 +51,9 @@ command :populate do |c|
   c.syntax = "catalog populate publisher_prefix:journal_id:year"
   c.description = "Add Crossref Metadata to a catalog."
 
-  c.acton do |args, options|
+  c.action do |args, options|
     args.each do |limiting_set|
-      dois = get_dois limiting_set.split(":")
+      dois = get_dois(*limiting_set.split(":"))
       say dois.to_json
     end
   end

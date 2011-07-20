@@ -13,6 +13,9 @@ require 'commander/import'
 require 'nokogiri'
 require 'json'
 
+program :name, "catalog"
+program :version, "0.0.1"
+
 def query_uri verb, prefix, issue, year
   URI::HTTP.build({
     :host => "oai.crossref.org",

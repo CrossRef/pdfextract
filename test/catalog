@@ -42,14 +42,38 @@ def parse_dois xml
   identifiers.map { |id| id.text.sub "info:doi/", "" }
 end
 
-def get_dois options
-  uri = query_uri "ListIdentifiers", options
+def parse_records xml
+  doc = Nokogiri::XML::Document.parse xml
+
+  doc.css("metadata").map do |metadata|
+    #publication = {
+      # :title => metadata.at_css("full_title").text,
+    #   :issue => metadata.at_css("issue").text,
+    #   :volume => metadata.at_css("volume").text
+    # }
+
+    contributors = metadata.css("person_name").map do |name|
+      name.at_css("given_name").text + " " + name.at_css("surname")
+    end
+
+    {
+      :doi => metadata.at_css("doi").text,
+      :first_page => metadata.at_css("first_page").text,
+      :last_page => metadata.at_css("last_page").text,
+      :publication => publication,
+      :contributors => contibutors
+    }
+  end
+end
+
+def get_records options
+  uri = query_uri "ListRecords", options
 
   Net::HTTP.start uri.host do |http|
     response = http.get uri.request_uri
 
     if response.code.to_i == 200
-      parse_dois response.body
+      parse_records response.body
     else
       fail "Failed to get metadata. OAI server returned: #{response.code}"
     end
@@ -66,7 +90,7 @@ def read_catalog filename=catalog_filename
       JSON.load file
     end
   else
-    say "Created new catalog."
+    say "Created a new catalog."
     {}
   end
 end
@@ -93,25 +117,21 @@ end
 
 command :populate do |c|
   c.syntax = "catalog populate --prefix=10.5555 --journal=5 --year=2002"
-  c.description = "Add Crossref Metadata to a catalog."
+  c.description = "Add CrossRef metadata to a catalog."
 
   c.action do |args, options|
-    dois = get_dois $set_spec
+    records = get_records $set_spec
 
     with_catalog do |catalog|
-      dois.each do |doi|
-        catalog[doi] = {
-          :doi => doi,
-          :owner => $set_spec[:prefix]
-        }
+      records.each do |record|
+        catalog[record[:doi]] = record.merge(:from => $set_spec)
       end
-      say "Added or updated #{dois.count} records."
     end
   end
 end
 
 command :pdfs do |c|
-  c.syntax = "catalog download"
+  c.syntax = "catalog pdfs"
   c.description = "Locate and download PDFs for DOIs in a catalog."
 
   c.action do |args, options|

@@ -43,6 +43,7 @@ def parse_dois xml
 end
 
 def parse_records xml
+  puts xml
   doc = Nokogiri::XML::Document.parse xml
 
   doc.css("metadata").map do |metadata|
@@ -66,14 +67,19 @@ def parse_records xml
   end
 end
 
-def get_records options
+def parse_setspecs xml
+  doc = Nokogiri::XML::Document.parse xml
+  doc.css("setSpec").map { |s| s.text }.uniq
+end
+
+def get_xml options
   uri = query_uri "ListRecords", options
 
   Net::HTTP.start uri.host do |http|
     response = http.get uri.request_uri
 
     if response.code.to_i == 200
-      parse_records response.body
+      response.body
     else
       fail "Failed to get metadata. OAI server returned: #{response.code}"
     end
@@ -115,12 +121,23 @@ $set_spec = {}
   end
 end
 
+command :list do |c|
+  c.syntax = "catalog list --prefix=10.1109"
+  c.description = "List set specifications in OAI metadata."
+
+  c.action do |args, options|
+    parse_setspecs(get_xml($set_spec)).each do |setspec|
+      say setspec
+    end
+  end
+end
+
 command :populate do |c|
   c.syntax = "catalog populate --prefix=10.5555 --journal=5 --year=2002"
   c.description = "Add CrossRef metadata to a catalog."
 
   c.action do |args, options|
-    records = get_records $set_spec
+    records = parse_records get_xml($set_spec)
 
     with_catalog do |catalog|
       records.each do |record|

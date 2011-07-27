@@ -18,6 +18,10 @@ program :name, "catalog"
 program :version, "0.0.1"
 program :description, "Build a PDF catalog, with metadata."
 
+def ns
+  {"cr" => "http://www.crossref.org/xschema/1.0"}
+end
+
 def query_uri verb, options={}
   prefix = options[:prefix]
   journal = options[:journal]
@@ -26,7 +30,7 @@ def query_uri verb, options={}
   if prefix.nil? || (!year.nil? && journal.nil?)
     fail "Must specify one of prefix, prefix:journal, or prefix:journal:year."
   end
-  
+
   set = CGI.escape [prefix, journal, year].compact.join(":")
   q = "verb=#{verb}&metadataPrefix=cr_unixml&set=#{set}"
   URI::HTTP.build({
@@ -43,26 +47,25 @@ def parse_dois xml
 end
 
 def parse_records xml
-  puts xml
   doc = Nokogiri::XML::Document.parse xml
 
-  doc.css("metadata").map do |metadata|
-    #publication = {
-      # :title => metadata.at_css("full_title").text,
-    #   :issue => metadata.at_css("issue").text,
-    #   :volume => metadata.at_css("volume").text
-    # }
+  doc.xpath("//cr:journal", ns).map do |metadata|
+    publication = {
+       :title => metadata.at_xpath(".//cr:full_title", ns).text,
+       :issue => metadata.at_xpath(".//cr:issue", ns).text,
+       :volume => metadata.at_xpath(".//cr:volume", ns).text
+    }
 
-    contributors = metadata.css("person_name").map do |name|
-      name.at_css("given_name").text + " " + name.at_css("surname")
+    contributors = metadata.xpath(".//cr:person_name", ns).map do |name|
+        name.at_xpath(".//cr:given_name", ns).text + " " + name.at_xpath(".//cr:surname", ns)
     end
 
     {
-      :doi => metadata.at_css("doi").text,
-      :first_page => metadata.at_css("first_page").text,
-      :last_page => metadata.at_css("last_page").text,
+      :doi => metadata.at_xpath(".//cr:doi", ns).text,
+      :first_page => metadata.at_xpath(".//cr:first_page", ns).text,
+      :last_page => metadata.at_xpath(".//cr:last_page", ns).text,
       :publication => publication,
-      :contributors => contibutors
+      :contributors => contributors
     }
   end
 end
@@ -72,8 +75,8 @@ def parse_setspecs xml
   doc.css("setSpec").map { |s| s.text }.uniq
 end
 
-def get_xml options
-  uri = query_uri "ListRecords", options
+def get_xml verb, options
+  uri = query_uri verb, options
 
   Net::HTTP.start uri.host do |http|
     response = http.get uri.request_uri
@@ -84,6 +87,18 @@ def get_xml options
       fail "Failed to get metadata. OAI server returned: #{response.code}"
     end
   end
+end
+
+def get_records options
+  parse_records get_xml("ListRecords", options)
+end
+
+def get_dois options
+  parse_dois get_xml("ListIdentifiers", options)
+end
+
+def get_sets options
+  parse_setspecs get_xml("ListSets", options)
 end
 
 def catalog_filename
@@ -126,7 +141,7 @@ command :list do |c|
   c.description = "List set specifications in OAI metadata."
 
   c.action do |args, options|
-    parse_setspecs(get_xml($set_spec)).each do |setspec|
+    get_sets($set_spec).each do |setspec|
       say setspec
     end
   end
@@ -137,13 +152,15 @@ command :populate do |c|
   c.description = "Add CrossRef metadata to a catalog."
 
   c.action do |args, options|
-    records = parse_records get_xml($set_spec)
-
+    records = get_records $set_spec
+    
     with_catalog do |catalog|
       records.each do |record|
         catalog[record[:doi]] = record.merge(:from => $set_spec)
       end
     end
+
+    say "Added #{records.count} records to catalog."
   end
 end
 
@@ -154,3 +171,4 @@ command :pdfs do |c|
   c.action do |args, options|
   end
 end
+

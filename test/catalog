@@ -13,14 +13,11 @@ require 'uri/http'
 require 'commander/import'
 require 'nokogiri'
 require 'json'
+require 'getpdf'
 
 program :name, "catalog"
 program :version, "0.0.1"
 program :description, "Build a PDF catalog, with metadata."
-
-def ns
-  {"cr" => "http://www.crossref.org/xschema/1.0"}
-end
 
 def query_uri verb, options={}
   prefix = options[:prefix]
@@ -48,8 +45,9 @@ end
 
 def parse_records xml
   doc = Nokogiri::XML::Document.parse xml
+  ns = {"cr" => "http://www.crossref.org/xschema/1.0"}
 
-  doc.xpath("//cr:journal", ns).map do |metadata|
+  doc.xpath("//cr:crossref", ns).map do |metadata|
     publication = {
        :title => metadata.at_xpath(".//cr:full_title", ns).text,
        :issue => metadata.at_xpath(".//cr:issue", ns).text,
@@ -57,16 +55,31 @@ def parse_records xml
     }
 
     contributors = metadata.xpath(".//cr:person_name", ns).map do |name|
-        name.at_xpath(".//cr:given_name", ns).text + " " + name.at_xpath(".//cr:surname", ns)
+      full_name = name.at_xpath(".//cr:given_name", ns).text
+      full_name += " "
+      full_name += name.at_xpath(".//cr:surname", ns).text
+      full_name
     end
 
-    {
+    citations = metadata.xpath(".//cr:unstructured_citation", ns).map { |c| c.text }
+
+    article = {
       :doi => metadata.at_xpath(".//cr:doi", ns).text,
-      :first_page => metadata.at_xpath(".//cr:first_page", ns).text,
-      :last_page => metadata.at_xpath(".//cr:last_page", ns).text,
+      :title => metadata.at_xpath(".//cr:title", ns).text,
       :publication => publication,
-      :contributors => contributors
+      :contributors => contributors,
+      :citations => citations
     }
+
+    if metadata.at_xpath ".//cr:first_page", ns
+      article[:first_page] = metadata.at_xpath ".//cr:first_page", ns
+    end
+
+    if metadata.at_xpath ".//cr:last_page", ns
+      article[:last_page] = metadata.at_xpath ".//cr:last_page", ns
+    end
+
+    article
   end
 end
 
@@ -138,7 +151,7 @@ end
 
 command :list do |c|
   c.syntax = "catalog list --prefix=10.1109"
-  c.description = "List set specifications in OAI metadata."
+  c.description = "List set specs in OAI metadata."
 
   c.action do |args, options|
     get_sets($set_spec).each do |setspec|
@@ -160,7 +173,7 @@ command :populate do |c|
       end
     end
 
-    say "Added #{records.count} records to catalog."
+    say "Added or updated #{records.count} records."
   end
 end
 
@@ -169,6 +182,31 @@ command :pdfs do |c|
   c.description = "Locate and download PDFs for DOIs in a catalog."
 
   c.action do |args, options|
+    pdfs_added = 0
+    
+    with_catalog do |catalog|
+      catalog.map! do |record|
+        pdf_filename = GetPdf.get_from_doi record[:doi]
+        unless pdf_filename.nil?
+          record.merge({:pdf => pdf_filename})
+          say "Found PDF for #{record[:doi]}."
+          pdfs_added = pdfs_added.next
+        end
+      end
+    end
+
+    say "Found #{pdfs_added} PDFs."
+  end
+end
+
+command :count do |c|
+  c.syntax = "catalog count"
+  c.description = "Count records in a catalog."
+
+  c.action do |args, options|
+    with_catalog do |catalog|
+      say catalog.count.to_s
+    end
   end
 end
 

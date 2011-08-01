@@ -14,6 +14,7 @@ require 'commander/import'
 require 'nokogiri'
 require 'json'
 require 'getpdf'
+require_relative '../lib/pdf-extract'
 
 program :name, "catalog"
 program :version, "0.0.1"
@@ -212,6 +213,39 @@ command :count do |c|
     with_catalog do |catalog|
       say catalog.count.to_s
     end
+  end
+end
+
+command :run do |c|
+  c.syntax = "catalog run"
+  c.description = "Run pdfextract on PDFs in a catalog"
+
+  c.action do |args, options|
+
+    with_catalog do |catalog|
+      catalog.each do |doi, record|
+        if record["pdf"] and not record["references"]
+          say "Running pdfextract for #{doi}..."
+
+          begin
+            xml = PdfExtract.view(record["pdf"], :as => :xml) do |pdf|
+              pdf.references
+            end
+
+            references_filename = record["pdf"] + ".xml"
+          
+            File.open(references_filename, "w") do |file|
+              file.write xml
+            end
+
+            record[doi][:references] = references_filename
+          rescue StandardError => e
+            say "Failed because of: #{e}"
+          end
+        end
+      end
+    end
+
   end
 end
 

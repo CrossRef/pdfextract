@@ -25,7 +25,7 @@ def query_uri verb, options={}
   year = options[:year]
 
   if prefix.nil? || (!year.nil? && journal.nil?)
-    fail "Must specify one of prefix, prefix:journal, or prefix:journal:year."
+    fail "Must specify one of prefix, prefix:journal, or prefix:journal:year"
   end
 
   set = CGI.escape [prefix, journal, year].compact.join(":")
@@ -124,7 +124,7 @@ def read_catalog filename=catalog_filename
       JSON.load file
     end
   else
-    say "Created a new catalog."
+    say "Created a new catalog"
     {}
   end
 end
@@ -151,7 +151,7 @@ end
 
 command :list do |c|
   c.syntax = "catalog list --prefix=10.1109"
-  c.description = "List set specs in OAI metadata."
+  c.description = "List set specs in OAI metadata"
 
   c.action do |args, options|
     get_sets($set_spec).each do |setspec|
@@ -162,7 +162,7 @@ end
 
 command :populate do |c|
   c.syntax = "catalog populate --prefix=10.5555 --journal=5 --year=2002"
-  c.description = "Add CrossRef metadata to a catalog."
+  c.description = "Add CrossRef metadata to a catalog"
 
   c.action do |args, options|
     records = get_records $set_spec
@@ -173,24 +173,29 @@ command :populate do |c|
       end
     end
 
-    say "Added or updated #{records.count} records."
+    say "Added or updated #{records.count} records"
   end
 end
 
 command :pdfs do |c|
   c.syntax = "catalog pdfs"
-  c.description = "Locate and download PDFs for DOIs in a catalog."
+  c.description = "Locate and download PDFs for DOIs in a catalog"
 
   c.action do |args, options|
     pdfs_added = 0
     
     with_catalog do |catalog|
-      catalog.map! do |record|
-        pdf_filename = GetPdf.get_from_doi record[:doi]
-        unless pdf_filename.nil?
-          record.merge({:pdf => pdf_filename})
-          say "Found PDF for #{record[:doi]}."
-          pdfs_added = pdfs_added.next
+      catalog.each do |doi, record|
+        unless record["pdf"]
+          say "Crawling for #{doi}..."
+          pdf_filename = GetPdf.get_from_doi doi
+          if pdf_filename.nil?
+            say "Couldn't find PDF"
+          else
+            record[:pdf] = pdf_filename
+            say "Found PDF"
+            pdfs_added = pdfs_added.next
+          end
         end
       end
     end
@@ -201,7 +206,7 @@ end
 
 command :count do |c|
   c.syntax = "catalog count"
-  c.description = "Count records in a catalog."
+  c.description = "Count records in a catalog"
 
   c.action do |args, options|
     with_catalog do |catalog|

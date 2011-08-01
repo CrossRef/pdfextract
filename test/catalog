@@ -142,6 +142,15 @@ def with_catalog &block
   write_catalog catalog
 end
 
+def parse_xml_citations xml
+  doc = Nokogiri::XML::Document.parse xml
+  doc.css("reference").map { |r| r.text }
+end
+
+def diff_list left, right
+  (left.count - right.count).abs
+end
+
 $set_spec = {}
 
 ["prefix", "journal", "year"].each do |item|
@@ -224,7 +233,7 @@ command :run do |c|
 
     with_catalog do |catalog|
       catalog.each do |doi, record|
-        if record["pdf"] and not record["references"]
+        if record["pdf"] and not record["extracted"]
           say "Running pdfextract for #{doi}..."
 
           begin
@@ -238,7 +247,7 @@ command :run do |c|
               file.write xml
             end
 
-            record[doi][:references] = references_filename
+            record[:extracted] = references_filename
           rescue StandardError => e
             say "Failed because of: #{e}"
           end
@@ -246,6 +255,37 @@ command :run do |c|
       end
     end
 
+  end
+end
+
+command :stats do |c|
+  c.syntax = "catalog stats"
+  c.description = "Success rate of pdfextract"
+
+  c.action do |args, options|
+
+    with_catalog do |catalog|
+      
+      diffs = []
+      
+      catalog.each do |doi, record|
+        if record["pdf"] and record["extracted"]
+          diffs << diff_list(parse_xml_citations(xml), record[:citations])
+        end
+      end 
+
+      if diffs.count.zero?
+        say "No records with a PDF and pdf-extract results"
+      else
+        successful = diffs.count { |diff| diff.zero? }
+        unsuccessful = diffs.count - successful
+
+        success_percent = (successful / diffs.count) * 100.0
+        
+        say "Successfully matched all references: #{successful} (#{success_percent}%)"
+      end
+    end
+    
   end
 end
 

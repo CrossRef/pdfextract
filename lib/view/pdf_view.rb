@@ -1,5 +1,4 @@
 require 'prawn'
-
 require_relative 'abstract_view'
 
 module PdfExtract
@@ -41,4 +40,4 @@ module PdfExtract
     
   end
 end
-      
+

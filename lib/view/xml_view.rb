@@ -54,9 +54,23 @@ module PdfExtract
 
     def write_obj_to_xml obj, type, xml
       attribs = obj.reject { |k, _| @@ignored_attributes.include? k }
+      nested_objs = attribs.reject { |_, v| ! (v.kind_of?(Hash) || v.kind_of?(Array)) }
+      attribs = attribs.reject { |_, v| v.kind_of?(Hash) || v.kind_of?(Array) }
+      
       xml.send singular_name(type.to_s), attribs do
         if obj.key? :content
           xml.text Language::transliterate(obj[:content].to_s)
+        end
+
+        nested_objs.each do |name, nested_obj|
+          element_name = singular_name name.to_s
+          if nested_obj.kind_of? Hash
+            write_obj_to_xml nested_obj, element_name, xml
+          elsif nested_obj.kind_of? Array
+            nested_obj.each do |item|
+              write_obj_to_xml item, element_name, xml
+            end
+          end
         end
       end
     end

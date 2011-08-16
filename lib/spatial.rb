@@ -31,7 +31,20 @@ module PdfExtract
       })
 
       if options[:lines]
-        so[:content] = concat_lines a[:content], b[:content]
+        so[:lines] = []
+
+        if a.key? :lines
+          so[:lines] += a[:lines]
+        else
+          so[:lines] << {:content => a[:content], :x => a[:x]}
+        end
+
+        if b.key? :lines
+          so[:lines] += b[:lines]
+        else
+          so[:lines] << {:content => b[:content], :x => b[:x]}
+        end
+        
       else
         so[:content] = a[:content] + options[:separator] + b[:content]
       end

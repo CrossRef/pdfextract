@@ -8,7 +8,14 @@ module PdfExtract
     @@max_letter_ratio = 0.5
     @@min_word_count = 3
 
-    def self.split_refs s
+    def self.split_by_margin s
+      # Split when there is a difference in margins.
+    end
+
+    def self.split_by_lines s
+    end
+
+    def self.split_by_delimiter s
       # Find sequential numbers and use them as partition points.
 
       # Determine the charcaters that are most likely part of numeric

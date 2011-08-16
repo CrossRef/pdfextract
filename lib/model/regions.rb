@@ -16,6 +16,13 @@ module PdfExtract
 
       lr.include? rx1 or lr.include? rx2 or rr.include? lx1 or rr.include? lx2
     end
+
+    def self.append_line_offsets region
+      region[:lines] ||= []
+      region[:lines].each do |line|
+        line[:offset] = line[:x] - region[:x]
+      end
+    end
     
     def self.include_in pdf
       line_slop_factor = 0.4
@@ -48,7 +55,7 @@ module PdfExtract
           while chunks.count > compare_index
             b = chunks.first
             t = chunks[compare_index]
-
+              
             line_height = b[:line_height]
             line_slop = [line_height, t[:height]].min * line_slop_factor
             incident_y = (b[:y] + b[:height] + line_slop) >= t[:y]
@@ -68,6 +75,13 @@ module PdfExtract
             end
           end
           regions << chunks.first
+          regions.compact!
+
+          regions.each do |region|
+            append_line_offsets region
+          end
+
+          regions
         end
       end
     end

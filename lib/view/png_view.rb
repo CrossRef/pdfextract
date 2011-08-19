@@ -5,7 +5,7 @@ require_relative 'abstract_view'
 module PdfExtract
   class PngView < AbstractView
 
-    def render
+    def render options={}
       img = Magick::Image.new(800, 1000) { self.background_color = "white" }
 
       objects.each_pair do |type, objs|

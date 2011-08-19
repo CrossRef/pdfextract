@@ -8,7 +8,33 @@ module PdfExtract
 
     @@ignored_attributes = [:content, :page, :page_width, :page_height]
 
-    def render
+    @@numeric_attributes = [:x, :y, :width, :height, :offset, :line_height,
+                            :page_height, :page_width]
+
+    # Return renderable attributes
+    def get_xml_attributes obj
+      attribs = obj.reject { |k, _| @@ignored_attributes.include? k }
+      attribs = attribs.reject { |_, v| v.kind_of?(Hash) || v.kind_of?(Array) }
+      attribs.each_pair do |k, v|
+        if @@numeric_attributes.include? k
+          attribs[k] = v.floor
+        end
+      end
+      attribs
+    end
+
+    def get_nested_objs obj
+      nested = obj.reject { |_, v| ! (v.kind_of?(Hash) || v.kind_of?(Array)) }
+      if @render_options[:lines]
+        nested
+      else
+        nested.reject { |k, _| k == :lines }
+      end
+    end
+
+    def render options={}
+      @render_options = {:lines => true}.merge(options)
+
       pages = {}
       page_params = {}
       pageless = {}
@@ -53,16 +79,15 @@ module PdfExtract
     end
 
     def write_obj_to_xml obj, type, xml
-      attribs = obj.reject { |k, _| @@ignored_attributes.include? k }
-      nested_objs = attribs.reject { |_, v| ! (v.kind_of?(Hash) || v.kind_of?(Array)) }
-      attribs = attribs.reject { |_, v| v.kind_of?(Hash) || v.kind_of?(Array) }
-      
-      xml.send singular_name(type.to_s), attribs do
-        if obj.key? :content
+      xml.send singular_name(type.to_s), get_xml_attributes(obj) do
+
+        if @render_options[:lines] && obj.key?(:content)
           xml.text Language::transliterate(obj[:content].to_s)
+        elsif obj.key?(:content) || obj.key?(:lines)
+          xml.text Language::transliterate(Spatial.get_text_content obj)
         end
 
-        nested_objs.each do |name, nested_obj|
+        get_nested_objs(obj).each do |name, nested_obj|
           element_name = singular_name name.to_s
           if nested_obj.kind_of? Hash
             write_obj_to_xml nested_obj, element_name, xml

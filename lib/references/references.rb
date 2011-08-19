@@ -100,7 +100,7 @@ module PdfExtract
           if section[:letter_ratio] >= @@min_letter_ratio &&
               section[:letter_ratio] <= @@max_letter_ratio &&
               section[:word_count] >= @@min_word_count
-            refs += split_refs Spatial.get_text_content section
+            refs += split_by_delimiter Spatial.get_text_content section
           end
         end
 

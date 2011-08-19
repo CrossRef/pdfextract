@@ -73,7 +73,13 @@ module PdfExtract
 
     def self.get_text_content obj
       if obj[:lines]
-        obj[:lines].map { |l| l[:content] }.join "\n"
+        obj[:lines].map do |line|
+          if line[:content] =~ /\-\Z/
+            line[:content][0..-2]
+          else
+            line[:content] + " "
+          end
+        end.join("").strip
       elsif obj[:content]
         obj[:content]
       else

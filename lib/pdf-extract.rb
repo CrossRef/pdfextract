@@ -52,7 +52,7 @@ module PdfExtract
 
   def self.view filename, options = {}, &block
     pdf = parse filename, &block
-    view_class(options[:as]).new(pdf, filename).render
+    view_class(options[:as]).new(pdf, filename).render options
   end
 
   def self.init

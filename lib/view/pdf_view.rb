@@ -4,7 +4,7 @@ require_relative 'abstract_view'
 module PdfExtract
   class PdfView < AbstractView
 
-    def render
+    def render options={}
       Prawn::Document.new :template => @filename do |doc|
         objects.each_pair do |type, objs|
           last_page = 1

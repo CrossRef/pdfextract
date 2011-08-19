@@ -45,6 +45,8 @@ commands = [
 
 $chosen_objects = []
 
+$render_options = {}
+
 objects.each do |o|
   global_option "--#{o}" do |_|
     $chosen_objects << o
@@ -68,6 +70,10 @@ global_option "--output=FILE" do |filename|
   $output = filename
 end
 
+global_option "--no-lines" do |_|
+  $render_options.merge!({:lines => false})
+end
+
 commands.each do |cmd|
   command cmd[:name].to_sym do |c|
     c.syntax = "pdf-extract #{cmd[:name]} filename [options]"
@@ -76,7 +82,8 @@ commands.each do |cmd|
     c.action do |args, options|
       args.each do |filename|
         $output = outputs[cmd[:view]].call(filename) if $output.nil?
-        out = PdfExtract.view filename, :as => cmd[:view] do |pdf|
+        opts = {:as => cmd[:view]}.merge $render_options
+        out = PdfExtract.view filename, opts do |pdf|
           $chosen_objects.each do |name|
             pdf.send name.to_sym
           end

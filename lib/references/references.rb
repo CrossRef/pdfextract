@@ -1,3 +1,5 @@
+require_relative "../spatial"
+
 module PdfExtract
   module References
 
@@ -14,6 +16,7 @@ module PdfExtract
 
     def self.split_by_lines s
     end
+    
 
     def self.split_by_delimiter s
       # Find sequential numbers and use them as partition points.
@@ -97,7 +100,7 @@ module PdfExtract
           if section[:letter_ratio] >= @@min_letter_ratio &&
               section[:letter_ratio] <= @@max_letter_ratio &&
               section[:word_count] >= @@min_word_count
-            refs += split_refs section[:content]
+            refs += split_refs Spatial.get_text_content section
           end
         end
 

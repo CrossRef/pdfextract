@@ -1,4 +1,5 @@
 require_relative '../language'
+require_relative '../spatial'
 
 module PdfExtract
   module Sections
@@ -58,39 +59,29 @@ module PdfExtract
             columns.each do |c|
               column = c[:column]
               c[:regions].each do |region|
-
+                
                 # TODO Use line_height instead.
                 if region[:width] >= (column[:width] * @@width_ratio)
                   
                   case non_sections.count
                   when 0
+                    
                     last = sections.last
                     if !last.nil? && last[:font] == region[:font] &&
-                            last[:line_height].floor == region[:line_height].floor
-                      sections.last.merge!({
-                        :content => sections.last[:content] + ' ' + region[:content]
-                      })
+                        last[:line_height].floor == region[:line_height].floor
+                      content = Spatial.merge_lines(sections.last, region, {})
+                      sections.last.merge!(content)
                     else
-                      sections << {
-                        :content => region[:content],
-                        :font => region[:font],
-                        :line_height => region[:line_height]
-                      }
+                      sections << Spatial.drop_spatial(region)
                     end
+                    
                   when 1
-                    sections << {
-                      :name => non_sections.last[:content],
-                      :content => region[:content],
-                      :font => region[:font],
-                      :line_height => region[:line_height]
-                    }
+                    section = Spatial.drop_spatial region
+                    section[:name] = Spatial.get_text_content(non_sections.last)
+                    sections << section
                     non_sections = []
                   else
-                    sections << {
-                      :content => region[:content],
-                      :font => region[:font],
-                      :line_height => region[:line_height]
-                    }
+                    sections << Spatial.drop_spatial(region)
                     non_sections = []
                   end
                   
@@ -103,9 +94,10 @@ module PdfExtract
           end
 
           sections.map do |section|
+            content = Spatial.get_text_content section
             section.merge({
-              :letter_ratio => Language.letter_ratio(section[:content]),
-              :word_count => Language.word_count(section[:content])           
+              :letter_ratio => Language.letter_ratio(content),
+              :word_count => Language.word_count(content)           
             })
           end
         end

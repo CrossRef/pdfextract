@@ -8,12 +8,36 @@ module PdfExtract
       :write_mode => :left_to_right
     }
 
+    @@spatial_attribs = [:x, :y, :width, :height, :page_width, :page_height, :page]
+
     def self.concat_lines top, bottom
       if top =~ /\-\Z/
         top[0..-2] + bottom
       else
         top + ' ' + bottom
       end
+    end
+
+    def self.drop_spatial obj
+      obj.dup.delete_if { |k, v| @@spatial_attribs.include? k }
+    end
+
+    def self.merge_lines a, b, so
+      so[:lines] = []
+      
+      if a.key? :lines
+        so[:lines] += a[:lines]
+      else
+        so[:lines] << {:content => a[:content], :x => a[:x]}
+      end
+      
+      if b.key? :lines
+        so[:lines] += b[:lines]
+      else
+        so[:lines] << {:content => b[:content], :x => b[:x]}
+      end
+
+      so
     end
 
     def self.merge a, b, options={}
@@ -31,20 +55,7 @@ module PdfExtract
       })
 
       if options[:lines]
-        so[:lines] = []
-
-        if a.key? :lines
-          so[:lines] += a[:lines]
-        else
-          so[:lines] << {:content => a[:content], :x => a[:x]}
-        end
-
-        if b.key? :lines
-          so[:lines] += b[:lines]
-        else
-          so[:lines] << {:content => b[:content], :x => b[:x]}
-        end
-        
+        merge_lines a, b, so
       else
         so[:content] = a[:content] + options[:separator] + b[:content]
       end
@@ -58,6 +69,16 @@ module PdfExtract
       end
 
       so
+    end
+
+    def self.get_text_content obj
+      if obj[:lines]
+        obj[:lines].map { |l| l[:content] }.join "\n"
+      elsif obj[:content]
+        obj[:content]
+      else
+        obj
+      end
     end
 
     # Collapse a list of objects into one. Will merge objects in the

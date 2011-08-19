@@ -1,3 +1,4 @@
+require_relative "../spatial"
 
 module PdfExtract
   module Titles
@@ -14,7 +15,7 @@ module PdfExtract
         parser.after do
           # A title should:
           #   be longer than one letter,
-          titles.reject! { |r| r[:content].strip.length < 2 }
+          titles.reject! { |r| Spatial.get_text_content(r).strip.length < 2}
 
           #   be in the top half of a page,
           titles.reject! { |r| r[:y] < (r[:page_height] / 2.0) }
@@ -37,7 +38,7 @@ module PdfExtract
             []
           else
             {
-              :content => titles.first[:content],
+              :content => Spatial.get_text_content(titles.first),
               :line_height => titles.first[:line_height],
               :font => titles.first[:font]
             }

@@ -28,13 +28,13 @@ module PdfExtract
       if a.key? :lines
         so[:lines] += a[:lines]
       else
-        so[:lines] << {:content => a[:content], :x => a[:x]}
+        so[:lines] << a.dup
       end
       
       if b.key? :lines
         so[:lines] += b[:lines]
       else
-        so[:lines] << {:content => b[:content], :x => b[:x]}
+        so[:lines] << b.dup
       end
 
       so

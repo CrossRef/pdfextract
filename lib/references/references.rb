@@ -10,13 +10,23 @@ module PdfExtract
     @@max_letter_ratio = 0.5
     @@min_word_count = 3
 
-    def self.split_by_margin s
-      # Split when there is a difference in margins.
+    def self.split_by_margin lines
+      lines = lines.dup
+      refs = []
+      while not lines.empty?
+        first_offset = lines.first[:offset].floor
+        lines = lines.drop 1
+        ref_lines = lines.take_while { |line| line[:offset].floor != first_offset }
+        lines = lines.drop ref_lines.count
+        ref = lines.first[:content] + " " + ref_lines.map { |l| l[:content] }.join(" ")
+        refs << {:content => ref}
+      end
+      refs
     end
 
-    def self.split_by_lines s
+    def self.split_by_line_spacing lines
+      # Need: y_offset of each line.
     end
-    
 
     def self.split_by_delimiter s
       # Find sequential numbers and use them as partition points.
@@ -100,6 +110,7 @@ module PdfExtract
           if section[:letter_ratio] >= @@min_letter_ratio &&
               section[:letter_ratio] <= @@max_letter_ratio &&
               section[:word_count] >= @@min_word_count
+            #refs += split_by_margin section[:lines]
             refs += split_by_delimiter Spatial.get_text_content section
           end
         end

@@ -8,8 +8,9 @@ module PdfExtract
 
     @@ignored_attributes = [:content, :page, :page_width, :page_height]
 
-    @@numeric_attributes = [:x, :y, :width, :height, :offset, :line_height,
-                            :page_height, :page_width]
+    @@numeric_attributes = [:x, :y, :width, :height, :line_height,
+                            :page_height, :page_width, :x_offset, :y_offset,
+                            :spacing]
 
     # Return renderable attributes
     def get_xml_attributes obj

@@ -20,7 +20,18 @@ module PdfExtract
     def self.append_line_offsets region
       region[:lines] ||= []
       region[:lines].each do |line|
-        line[:offset] = line[:x] - region[:x]
+        line[:x_offset] = line[:x] - region[:x]
+        line[:y_offset] = line[:y] - region[:y]
+      end
+    end
+
+    def self.append_line_spacing region
+      region[:lines] ||= []
+      height_taken = 0
+      region[:lines].each do |line|
+        from_top = region[:height] - (line[:y_offset] + line[:height])
+        line[:spacing] = from_top - height_taken
+        height_taken = from_top + line[:height]
       end
     end
     
@@ -79,6 +90,7 @@ module PdfExtract
 
           regions.each do |region|
             append_line_offsets region
+            append_line_spacing region
           end
 
           regions

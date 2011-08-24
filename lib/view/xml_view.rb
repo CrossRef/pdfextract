@@ -18,7 +18,7 @@ module PdfExtract
       attribs = attribs.reject { |_, v| v.kind_of?(Hash) || v.kind_of?(Array) }
       attribs.each_pair do |k, v|
         if @@numeric_attributes.include? k
-          attribs[k] = v.floor
+          attribs[k] = v.round(@render_options[:round])
         end
       end
       attribs
@@ -34,7 +34,7 @@ module PdfExtract
     end
 
     def render options={}
-      @render_options = {:lines => true}.merge(options)
+      @render_options = {:lines => true, :round => 1}.merge(options)
 
       pages = {}
       page_params = {}

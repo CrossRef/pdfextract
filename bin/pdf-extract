@@ -57,7 +57,7 @@ global_option "--semantic" do |_| $chosen_objects += semantic end
 global_option "--margins" do |_| $chosen_objects += margins end
 global_option "--zones" do |_| $chosen_objects += zones end
 
-global_option "--resolvers=RESOLVERS" do |chosen_resolvers|
+global_option "--resolvers RESOLVERS" do |chosen_resolvers|
   chosen_resolvers = chosen_resolvers.split ","
   chosen_resolvers.each do |name|
     fail "No such resolver #{resolver}" unless resolvers.key? name
@@ -66,12 +66,16 @@ global_option "--resolvers=RESOLVERS" do |chosen_resolvers|
   PdfExtract::Resolve.resolvers = chosen_resolvers
 end
 
-global_option "--output=FILE" do |filename|
+global_option "--output FILE" do |filename|
   $output = filename
 end
 
 global_option "--no-lines" do |_|
   $render_options.merge!({:lines => false})
+end
+
+global_option "--precision DIGITS" do |digits|
+  $render_options.merge!({:round => digits.to_i})
 end
 
 commands.each do |cmd|

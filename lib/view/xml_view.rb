@@ -34,7 +34,7 @@ module PdfExtract
     end
 
     def render options={}
-      @render_options = {:lines => true, :round => 1}.merge(options)
+      @render_options = {:lines => true, :round => 1, :outline => false}.merge(options)
 
       pages = {}
       page_params = {}
@@ -82,10 +82,12 @@ module PdfExtract
     def write_obj_to_xml obj, type, xml
       xml.send singular_name(type.to_s), get_xml_attributes(obj) do
 
-        if @render_options[:lines] && obj.key?(:content)
-          xml.text Language::transliterate(obj[:content].to_s)
-        elsif obj.key?(:content) || obj.key?(:lines)
-          xml.text Language::transliterate(Spatial.get_text_content obj)
+        unless @render_options[:outline]
+          if @render_options[:lines] && obj.key?(:content)
+            xml.text Language::transliterate(obj[:content].to_s)
+          elsif obj.key?(:content) || obj.key?(:lines)
+            xml.text Language::transliterate(Spatial.get_text_content obj)
+          end
         end
 
         get_nested_objs(obj).each do |name, nested_obj|

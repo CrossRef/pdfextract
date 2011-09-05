@@ -64,7 +64,7 @@ module PdfExtract
 
                 if region[:width] >= column[:width]
                   non_sections << region
-                elsif !sections.last.nil? && match?(last, region)
+                elsif !sections.last.nil? && match?(sections.last, region)
                   content = Spatial.merge_lines(sections.last, region, {})
                   sections.last.merge!(content)
                 else
@@ -74,8 +74,6 @@ module PdfExtract
               end
             end
           end
-
-          
 
           sections.map do |section|
             content = Spatial.get_text_content section

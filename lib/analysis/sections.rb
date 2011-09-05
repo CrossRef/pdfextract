@@ -4,8 +4,20 @@ require_relative '../spatial'
 module PdfExtract
   module Sections
 
-    @@width_ratio = 0.8
+    @@letter_ratio_threshold = 0.1
+    
+    def self.match? a, b
+      lh = a[:line_height].floor == b[:line_height].floor
+      f = a[:font] == b[:font]
 
+      lra = Language.letter_ratio(Spatial.get_text_content a)
+      lrb = Language.letter_ratio(Spatial.get_text_content b)
+
+      lr = (lra - lrb).abs <= @@letter_ratio_threshold
+
+      lh && f && lr
+    end
+      
     def self.include_in pdf
       pdf.spatials :sections, :depends_on => [:regions, :columns] do |parser|
 
@@ -42,16 +54,6 @@ module PdfExtract
             columns.sort_by! { |c| c[:column][:x] }
           end
 
-          # Every region with a width to body width ratio higher
-          # than @@width_ratio is considered to be the body of a
-          # section. Multiple occurant bodies are concatenated.
-
-          # A single region between two section body regions is considered
-          # to be the section header of the section below.
-
-          # Any other regions, including multiple regions between two
-          # section body regions, are discarded.
-
           sections = []
           non_sections = []
           
@@ -59,39 +61,21 @@ module PdfExtract
             columns.each do |c|
               column = c[:column]
               c[:regions].each do |region|
-                
-                # TODO Use line_height instead.
-                if region[:width] >= (column[:width] * @@width_ratio)
-                  
-                  case non_sections.count
-                  when 0
-                    
-                    last = sections.last
-                    if !last.nil? && last[:font] == region[:font] &&
-                        last[:line_height].floor == region[:line_height].floor
-                      content = Spatial.merge_lines(sections.last, region, {})
-                      sections.last.merge!(content)
-                    else
-                      sections << Spatial.drop_spatial(region)
-                    end
-                    
-                  when 1
-                    section = Spatial.drop_spatial region
-                    section[:name] = Spatial.get_text_content(non_sections.last)
-                    sections << section
-                    non_sections = []
-                  else
-                    sections << Spatial.drop_spatial(region)
-                    non_sections = []
-                  end
-                  
-                else
+
+                if region[:width] >= column[:width]
                   non_sections << region
+                elsif !sections.last.nil? && match?(last, region)
+                  content = Spatial.merge_lines(sections.last, region, {})
+                  sections.last.merge!(content)
+                else
+                  sections << region
                 end
                 
               end
             end
           end
+
+          
 
           sections.map do |section|
             content = Spatial.get_text_content section

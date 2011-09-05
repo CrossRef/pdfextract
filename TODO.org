@@ -84,3 +84,12 @@
 *** TODO Rewrite pdf.rb.
 *** DONE Better organise pre/object/post call storage in pdf.rb . Perhaps
     a pre and post per object type.
+
+** To version 0.1
+*** DONE Join regions into sections only when their textual attributes match,
+    such as letter ratio.
+*** TODO Allow skipping when joining regions, or try to join vertically, then
+    horizontally. Should allow for merging of disparate regions such
+    as at the end of an article and beginning of another.
+*** TODO Either move pdf-reader changes into pdf-extract or get patches committed.
+*** TODO Split by line spacing and split by margin

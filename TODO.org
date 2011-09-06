@@ -91,5 +91,6 @@
 *** TODO Allow skipping when joining regions, or try to join vertically, then
     horizontally. Should allow for merging of disparate regions such
     as at the end of an article and beginning of another.
+*** TODO Bug: First line sometimes not appearing in lines or --no-lines content.
 *** TODO Either move pdf-reader changes into pdf-extract or get patches committed.
 *** TODO Split by line spacing and split by margin

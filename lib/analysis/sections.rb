@@ -4,18 +4,38 @@ require_relative '../spatial'
 module PdfExtract
   module Sections
 
-    @@letter_ratio_threshold = 0.1
+    @@letter_ratio_threshold = 0.3
+
+    @@width_ratio = 0.9
+
+    @@body_content_threshold = 0.1
     
     def self.match? a, b
-      lh = a[:line_height].floor == b[:line_height].floor
+      lh = a[:line_height].round(2) == b[:line_height].round(2)
+      
       f = a[:font] == b[:font]
 
-      lra = Language.letter_ratio(Spatial.get_text_content a)
-      lrb = Language.letter_ratio(Spatial.get_text_content b)
-
-      lr = (lra - lrb).abs <= @@letter_ratio_threshold
-
+      # lra = Language.letter_ratio(Spatial.get_text_content a)
+      # lrb = Language.letter_ratio(Spatial.get_text_content b)
+      # lr = (lra - lrb).abs <= @@letter_ratio_threshold
+      
+      # XXX Disabled since it doesn't seem to match.
+      lr = true
+      
       lh && f && lr
+    end
+
+    def self.candidate? region, column
+      # Regions that make up sections or headers must be
+      # both less width than their column width and,
+      # unless they are a single line, must be within the
+      # @@width_ratio.
+      within_column = region[:width] <= column[:width]
+      if Spatial.line_count(region) <= 1
+        within_column
+      else
+        within_column && (region[:width] / column[:width]) >= @@width_ratio
+      end
     end
       
     def self.include_in pdf
@@ -55,23 +75,72 @@ module PdfExtract
           end
 
           sections = []
-          non_sections = []
           
           pages.each_pair do |page, columns|
             columns.each do |c|
               column = c[:column]
               c[:regions].each do |region|
 
-                if region[:width] >= column[:width]
-                  non_sections << region
-                elsif !sections.last.nil? && match?(sections.last, region)
-                  content = Spatial.merge_lines(sections.last, region, {})
-                  sections.last.merge!(content)
-                else
-                  sections << region
+                if candidate? region, column
+                  if !sections.last.nil? && match?(sections.last, region)
+                    content = Spatial.merge_lines(sections.last, region, {})
+                    sections.last.merge!(content)
+                  else
+                    sections << region
+                  end
                 end
                 
               end
+            end
+          end
+
+          # Body sizes are those with more than x% of total text.
+          
+          
+          # Find the most common font size. We'll treat this as the
+          # section body font size.
+          sizes = {}
+          sections.each do |section|
+            sizes[section[:line_height].round(2)] ||= 0
+            sizes[section[:line_height].round(2)] += Spatial.get_text_content(section).length
+          end
+
+          body_line_height = sizes.sort { |a, b| b.last <=> a.last }.first.first
+          puts body_line_height
+
+          # Remove anything that is less than the body size.
+          #sections = sections.reject { |section| section[:line_height].round(2) < body_line_height }
+
+          # Find the longest distance between body line height and
+          # header line heights.
+          body_line_height = body_line_height.round(2)
+          last_body_position = 0
+          distances = {}
+          longest_distance = 0
+          sections.reverse.each_index do |index|
+            section = sections[index]
+            section_line_height = section[:line_height].round(2)
+            puts section_line_height
+            if section_line_height == body_line_height
+              last_body_position = index
+            else
+              distance = index - last_body_position
+              distances[section_line_height] ||= 0
+              if distance > distances[section_line_height]
+                distances[section_line_height] = distance
+              end
+
+              longest_distance = [longest_distance, distance].max
+            end
+          end
+
+          # Mark up sections as either bodies or headers.
+          sections.each do |section|
+            line_height = section[:line_height].round(2)
+            if line_height == body_line_height
+              section[:type] = "body"
+            else
+              section[:type] = "h" + (longest_distance - distances[line_height]).to_s
             end
           end
 

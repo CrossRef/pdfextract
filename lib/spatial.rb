@@ -71,6 +71,13 @@ module PdfExtract
       so
     end
 
+    def self.line_count obj
+      line_count = 0
+      line_count += obj[:content].count("\n") + 1 if obj[:content]
+      line_count += obj[:lines].length if obj[:lines]
+      line_count
+    end
+
     def self.get_text_content obj
       if obj[:lines]
         obj[:lines].map do |line|

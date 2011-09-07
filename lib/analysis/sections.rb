@@ -34,7 +34,7 @@ module PdfExtract
       if Spatial.line_count(region) <= 1
         within_column
       else
-        within_column && (region[:width] / column[:width]) >= @@width_ratio
+        within_column && (region[:width].to_f / column[:width]) >= @@width_ratio
       end
     end
       
@@ -94,34 +94,35 @@ module PdfExtract
             end
           end
 
-          # Body sizes are those with more than x% of total text.
-          
-          
-          # Find the most common font size. We'll treat this as the
+          # Find the most common font sizes. We'll treat this as the
           # section body font size.
+          char_count = 0
           sizes = {}
           sections.each do |section|
             sizes[section[:line_height].round(2)] ||= 0
             sizes[section[:line_height].round(2)] += Spatial.get_text_content(section).length
           end
 
-          body_line_height = sizes.sort { |a, b| b.last <=> a.last }.first.first
-          puts body_line_height
+          # Body sizes are those with more than x% of total content
+          body_line_heights = []
+          sizes.each_pair do |line_height, count|
+            if count.to_f / char_count >= @@body_content_threshold
+              body_line_heights << line_height
+            end
+          end
 
           # Remove anything that is less than the body size.
           #sections = sections.reject { |section| section[:line_height].round(2) < body_line_height }
 
           # Find the longest distance between body line height and
           # header line heights.
-          body_line_height = body_line_height.round(2)
           last_body_position = 0
           distances = {}
           longest_distance = 0
           sections.reverse.each_index do |index|
             section = sections[index]
             section_line_height = section[:line_height].round(2)
-            puts section_line_height
-            if section_line_height == body_line_height
+            if body_line_heights.include? section_line_height
               last_body_position = index
             else
               distance = index - last_body_position
@@ -137,7 +138,7 @@ module PdfExtract
           # Mark up sections as either bodies or headers.
           sections.each do |section|
             line_height = section[:line_height].round(2)
-            if line_height == body_line_height
+            if body_line_heights.include? line_height
               section[:type] = "body"
             else
               section[:type] = "h" + (longest_distance - distances[line_height]).to_s

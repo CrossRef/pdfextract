@@ -10,23 +10,28 @@ module PdfExtract
     @@max_letter_ratio = 0.5
     @@min_word_count = 3
 
-    def self.split_by_margin lines
-      lines = lines.dup
-      refs = []
-      while not lines.empty?
-        first_offset = lines.first[:offset].floor
-        lines = lines.drop 1
-        ref_lines = lines.take_while { |line| line[:offset].floor != first_offset }
-        lines = lines.drop ref_lines.count
-        ref = lines.first[:content] + " " + ref_lines.map { |l| l[:content] }.join(" ")
-        refs << {:content => ref}
+    def self.partition_by ary, &block
+      remaining = ary.dup
+      parts = []      
+      while not remaining.empty?
+        parts << remaining.take_while { |elem| yield elem }
+        remaining.drop arys[-1].length
+        parts << remaining.first unless remaining.empty?
       end
-      refs
+      parts
     end
 
-    def self.split_by_line_spacing lines
-      # Need: y_offset of each line.
-    end
+    # def self.split_by_margin lines
+    #   delimiting_x_offset = lines.first[:x_offset].floor
+    #   parts = partition_by lines { |line| lines[:x_offset].foor != delimiting_x_offset }
+    #   parts.map { |part| {:content => part.join " "} }
+    # end
+
+    # def self.split_by_line_spacing lines
+    #   delimiting_spacing = lines[1][:spacing].floor
+    #   parts = partition_by lines { |line| lines[:spacing].floor != delimiting_spacing }
+    #   parts.map { |part| {:content => part.join " "} }
+    # end
 
     def self.split_by_delimiter s
       # Find sequential numbers and use them as partition points.

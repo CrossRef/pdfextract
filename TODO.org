@@ -75,7 +75,7 @@
     in output.
 *** TODO Header, footer, body detection should use most frequent page layout
     as layout for all pages.
-*** TODO Pass chunk locations through to resolved references.
+*** DONE Pass chunk locations through to resolved references.
 
 ** Long tasks, greater than 3 hours
 *** DONE Examine text_runs spatial definition and determine processing that

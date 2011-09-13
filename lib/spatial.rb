@@ -28,13 +28,13 @@ module PdfExtract
       if a.key? :lines
         so[:lines] += a[:lines]
       else
-        so[:lines] << a.dup
+        so[:lines] << as_line(a)
       end
       
       if b.key? :lines
         so[:lines] += b[:lines]
       else
-        so[:lines] << b.dup
+        so[:lines] << as_line(b)
       end
 
       so
@@ -60,7 +60,7 @@ module PdfExtract
         so[:content] = a[:content] + options[:separator] + b[:content]
       end
       
-      if a[:content].length > b[:content].length
+      if get_text_content(a).length > get_text_content(b).length
         so[:font] = a[:font]
         so[:line_height] = a[:line_height]
       else
@@ -76,6 +76,19 @@ module PdfExtract
       line_count += obj[:content].count("\n") + 1 if obj[:content]
       line_count += obj[:lines].length if obj[:lines]
       line_count
+    end
+
+    def self.get_dimensions obj
+      {
+        :x => obj[:x],
+        :y => obj[:y],
+        :width => obj[:width],
+        :height => obj[:height]
+      }
+    end
+
+    def self.as_line obj
+      get_dimensions(obj).merge({:content => obj[:content]})
     end
 
     def self.get_text_content obj

@@ -8,7 +8,7 @@ module PdfExtract
 
     @@width_ratio = 0.9
 
-    @@body_content_threshold = 0.1
+    @@body_content_threshold = 0.25
     
     def self.match? a, b
       lh = a[:line_height].round(2) == b[:line_height].round(2)
@@ -34,6 +34,7 @@ module PdfExtract
       if Spatial.line_count(region) <= 1
         within_column
       else
+        puts "ratio = #{within_column && (region[:width].to_f / column[:width]) >= @@width_ratio}"
         within_column && (region[:width].to_f / column[:width]) >= @@width_ratio
       end
     end
@@ -94,6 +95,8 @@ module PdfExtract
             end
           end
 
+          # TODO Should instead find the most common line height + font name pairs.
+          
           # Find the most common font sizes. We'll treat this as the
           # section body font size.
           char_count = 0

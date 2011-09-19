@@ -10,7 +10,7 @@ module PdfExtract
 
     @@numeric_attributes = [:x, :y, :width, :height, :line_height,
                             :page_height, :page_width, :x_offset, :y_offset,
-                            :spacing]
+                            :spacing, :letter_ratio]
 
     # Return renderable attributes
     def get_xml_attributes obj
@@ -34,7 +34,7 @@ module PdfExtract
     end
 
     def render options={}
-      @render_options = {:lines => true, :round => 1, :outline => false}.merge(options)
+      @render_options = {:lines => true, :round => 2, :outline => false}.merge(options)
 
       pages = {}
       page_params = {}

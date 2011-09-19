@@ -39,20 +39,21 @@ module PdfExtract
     end
   
     def self.clusters items, keys, options = {}
-      options = {:k => 5, :delta => 0.001}.merge options
+      options = {:k => 10, :delta => 0.001}.merge options
 
       # Make k clusters with random centre points
       cs = []
-      k.times do
+      options[:k].times do
         idx = (items.length * rand).to_i
         cs << {:centre => take_keys(items[idx], keys), :items => []}
+        puts cs.last[:centre]
       end
 
       while true
         
         # Add each item to a cluster
         items.each do |item|
-          min_distance = +INFINITY
+          min_distance = Float::MAX
           selected_cluster = nil
 
           cs.each do |cluster|
@@ -66,13 +67,13 @@ module PdfExtract
           selected_cluster[:items] << item
         end
 
-        max_delta = -INFINITY
+        max_delta = Float::MIN
 
         # Recalculate centre points and max delta
         cs.each do |cluster|
           old_centre = cluster[:centre]
           centre = cluster_centre cluster
-          cluster.merge! {:centre => centre}
+          cluster[:centre] = centre
 
           max_delta = [ndist(old_centre, centre, keys), max_delta].max
         end

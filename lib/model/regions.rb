@@ -103,7 +103,7 @@ module PdfExtract
             end
           end
 
-          regions
+          regions.sort_by { |obj| -obj[:y] }
         end
       end
     end

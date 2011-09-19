@@ -14,24 +14,30 @@ module PdfExtract
       remaining = ary.dup
       parts = []      
       while not remaining.empty?
-        parts << remaining.take_while { |elem| yield elem }
-        remaining.drop arys[-1].length
-        parts << remaining.first unless remaining.empty?
+        matching = remaining.take_while { |elem| yield elem }
+        unless matching.empty?
+          parts << matching
+          remaining = remaining.drop matching.length
+        end
+        unless remaining.empty?
+          parts << [remaining.first]
+          remaining = remaining.drop 1
+        end
       end
       parts
     end
 
-    # def self.split_by_margin lines
-    #   delimiting_x_offset = lines.first[:x_offset].floor
-    #   parts = partition_by lines { |line| lines[:x_offset].foor != delimiting_x_offset }
-    #   parts.map { |part| {:content => part.join " "} }
-    # end
+    def self.split_by_margin lines
+      delimiting_x_offset = lines.first[:x_offset].floor
+      parts = partition_by(lines) { |line| line[:x_offset].floor != delimiting_x_offset }
+      parts.map { |part| {:content => part.join(" ")} }
+    end
 
-    # def self.split_by_line_spacing lines
-    #   delimiting_spacing = lines[1][:spacing].floor
-    #   parts = partition_by lines { |line| lines[:spacing].floor != delimiting_spacing }
-    #   parts.map { |part| {:content => part.join " "} }
-    # end
+    def self.split_by_line_spacing lines
+      delimiting_spacing = lines[1][:spacing].floor
+      parts = partition_by(lines) { |line| line[:spacing].floor != delimiting_spacing }
+      parts.map { |part| {:content => part.join(" ")} }
+    end
 
     def self.split_by_delimiter s
       # Find sequential numbers and use them as partition points.
@@ -115,8 +121,8 @@ module PdfExtract
           if section[:letter_ratio] >= @@min_letter_ratio &&
               section[:letter_ratio] <= @@max_letter_ratio &&
               section[:word_count] >= @@min_word_count
-            #refs += split_by_margin section[:lines]
-            refs += split_by_delimiter Spatial.get_text_content section
+            refs += split_by_margin section[:lines]
+            #refs += split_by_delimiter Spatial.get_text_content section
           end
         end
 

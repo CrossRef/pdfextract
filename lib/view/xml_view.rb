@@ -10,7 +10,7 @@ module PdfExtract
 
     @@numeric_attributes = [:x, :y, :width, :height, :line_height,
                             :page_height, :page_width, :x_offset, :y_offset,
-                            :spacing, :letter_ratio]
+                            :spacing, :letter_ratio, :cap_ratio, :year_ratio]
 
     # Return renderable attributes
     def get_xml_attributes obj

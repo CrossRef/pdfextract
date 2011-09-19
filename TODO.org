@@ -104,3 +104,19 @@
     Could be occuring in chunk generation or in region generation.
 *** TODO Bug: Regions appear in reverse y sort order in output. Likely causing
     problems with section header analysis.
+
+* Problems
+
+** How do I determine the correct reference parsing scheme?
+
+*** How do I distingush between junk references and real references?
+
+** Reference section detection does not always work, and may misidentify
+   non-ref sections as reference sections.
+
+*** TODO Proper name ratio
+*** DONE Punctuation ratio
+*** DONE Capitalised words ratio
+*** DONE Year literals ratio
+
+*** Are all of these above average for the content as a whole?

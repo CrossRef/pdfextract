@@ -34,7 +34,6 @@ module PdfExtract
       if Spatial.line_count(region) <= 1
         within_column
       else
-        puts "ratio = #{within_column && (region[:width].to_f / column[:width]) >= @@width_ratio}"
         within_column && (region[:width].to_f / column[:width]) >= @@width_ratio
       end
     end
@@ -150,7 +149,7 @@ module PdfExtract
 
           sections.map do |section|
             content = Spatial.get_text_content section
-            section.merge({
+            Spatial.drop_spatial(section).merge({
               :letter_ratio => Language.letter_ratio(content),
               :word_count => Language.word_count(content)           
             })

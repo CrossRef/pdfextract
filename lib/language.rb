@@ -16,7 +16,6 @@ module PdfExtract
       s.count("A-Z0-9\-[],.\"'()") / s.length.to_f
     end
 
-
     # TODO Ignore caps in middle of words
     def self.cap_ratio s
       sentence_end = true

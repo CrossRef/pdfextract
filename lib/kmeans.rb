@@ -46,7 +46,6 @@ module PdfExtract
       options[:k].times do
         idx = (items.length * rand).to_i
         cs << {:centre => take_keys(items[idx], keys), :items => []}
-        puts cs.last[:centre]
       end
 
       while true
@@ -66,6 +65,10 @@ module PdfExtract
 
           selected_cluster[:items] << item
         end
+
+        # Drop clusters with no items (often because of duplicate
+        # initial centre points)
+        cs = cs.reject { |cluster| cluster[:items].empty? }
 
         max_delta = Float::MIN
 

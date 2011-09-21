@@ -120,3 +120,5 @@
 *** DONE Year literals ratio
 
 *** Are all of these above average for the content as a whole?
+
+*** TODO Language.cap_ratio should ignore mid-word caps

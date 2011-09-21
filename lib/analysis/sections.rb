@@ -1,5 +1,6 @@
 require_relative '../language'
 require_relative '../spatial'
+require_relative '../kmeans'
 
 module PdfExtract
   module Sections
@@ -147,7 +148,7 @@ module PdfExtract
             end
           end
 
-          sections.map do |section|
+          sections = sections.map do |section|
             content = Spatial.get_text_content section
             Spatial.drop_spatial(section).merge({
               :letter_ratio => Language.letter_ratio(content),
@@ -156,6 +157,23 @@ module PdfExtract
               :word_count => Language.word_count(content)           
             })
           end
+
+          viable_sections = sections.reject do |s|
+            s[:letter_ratio].zero? && s[:cap_ratio].zero? && s[:year_ratio].zero?
+          end
+
+          clusters = Kmeans.clusters(viable_sections, [:letter_ratio,
+                                                       :cap_ratio,
+                                                       :year_ratio])
+
+          clusters.map do |cluster|
+            cluster[:items].each do |item|
+              centre = cluster[:centre].values.map {|v| v.round(3) }.join ", "
+              item[:centre] = centre
+            end
+            cluster[:items]
+          end.flatten
+            
         end
         
       end

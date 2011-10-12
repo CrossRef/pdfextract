@@ -152,28 +152,38 @@ module PdfExtract
             content = Spatial.get_text_content section
             Spatial.drop_spatial(section).merge({
               :letter_ratio => Language.letter_ratio(content),
-              :cap_ratio => Language.cap_ratio(content),                           
+              :cap_ratio => Language.cap_ratio(content),                  
               :year_ratio => Language.year_ratio(content),
-              :word_count => Language.word_count(content)           
+              :name_ratio => Language.name_ratio(content),
+              :word_count => Language.word_count(content)
             })
           end
 
-          viable_sections = sections.reject do |s|
-            s[:letter_ratio].zero? && s[:cap_ratio].zero? && s[:year_ratio].zero?
+          viable_sections = []
+          non_viable_sections = []
+
+          sections.each do |s|
+            if s[:letter_ratio].zero? && s[:cap_ratio].zero? && s[:year_ratio].zero?
+              non_viable_sections << s
+            else
+              viable_sections << s
+            end
           end
 
           clusters = Kmeans.clusters(viable_sections, [:letter_ratio,
                                                        :cap_ratio,
-                                                       :year_ratio])
+                                                       :year_ratio,
+                                                       :name_ratio])
 
-          clusters.map do |cluster|
+          clustered_sections = clusters.map do |cluster|
             cluster[:items].each do |item|
-              centre = cluster[:centre].values.map {|v| v.round(3) }.join ", "
+              centre = cluster[:centre].values.map { |v| v.round(3) }.join ", "
               item[:centre] = centre
             end
             cluster[:items]
           end.flatten
-            
+
+          clustered_sections + non_viable_sections
         end
         
       end

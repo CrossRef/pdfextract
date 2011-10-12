@@ -39,13 +39,15 @@ module PdfExtract
     end
   
     def self.clusters items, keys, options = {}
-      options = {:k => 10, :delta => 0.001}.merge options
+      options = {:k => 10, :delta => 0.001, :init => []}.merge options
 
-      # Make k clusters with random centre points
-      cs = []
-      options[:k].times do
-        idx = (items.length * rand).to_i
-        cs << {:centre => take_keys(items[idx], keys), :items => []}
+      cs = options[:init]
+      if cs.empty?
+        # Make k clusters with random centre points
+        options[:k].times do
+          idx = (items.length * rand).to_i
+          cs << {:centre => take_keys(items[idx], keys), :items => []}
+        end
       end
 
       while true

@@ -23,9 +23,7 @@ module PdfExtract::Names
           }
 
           @@db.execute("select * from names where name = ?", query_word) do |row|
-            puts row[0]
             if row[2] == 1
-              puts "ambig = " + row[0]
               sum += @@ambiguous_weighting
             else
               sum += @@unambiguous_weighting

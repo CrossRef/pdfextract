@@ -5,6 +5,7 @@ module PdfExtract
     
     @@min_score = 200
     @@min_word_count = 3
+    @@min_sequence_count = 3
 
     def self.partition_by ary, &block
       matching = []
@@ -131,6 +132,23 @@ module PdfExtract
     def self.multi_spacing? lines
       lines.uniq { |line| line[:spacing].floor }.count > 1
     end
+
+    def self.numeric_sequence? content
+      last_n = -1
+      seq_count = 0
+      content.scan /\d+/ do |m|
+        if m.to_i < 1000 # Avoid misinterpreting years as sequence
+          if last_n == -1
+            last_n = m.to_i
+          elsif last_n.next == m.to_i
+            last_n = last_n.next
+            seq_count = seq_count.next
+          end
+        end
+      end
+
+      seq_count >= @@min_sequence_count
+    end
     
     def self.include_in pdf
       pdf.spatials :references, :depends_on => [:sections] do |parser|
@@ -143,12 +161,12 @@ module PdfExtract
               section[:reference_score] <= 20000 &&
               section[:word_count] >= @@min_word_count
 
-            if multi_margin? section[:lines]
+            if numeric_sequence? Spatial.get_text_content section
+              refs += split_by_delimiter Spatial.get_text_content section
+            elsif multi_margin? section[:lines]
               refs += split_by_margin section[:lines]
             elsif multi_spacing? section[:lines]
               refs += split_by_spacing section[:lines]
-            else
-              refs += split_by_delimiter Spatial.get_text_content section
             end
             
           end

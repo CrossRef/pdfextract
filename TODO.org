@@ -122,3 +122,9 @@
 *** DONE Are all of these above average for the content as a whole?
 
 *** TODO Language.cap_ratio should ignore mid-word caps
+
+* Config params
+
+** All module instance vars
+** Reference delimiter hint - numerical, margin, line spacing
+** Reference header hint

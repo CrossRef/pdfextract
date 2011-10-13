@@ -157,7 +157,7 @@ module PdfExtract
 
         parser.objects :sections do |section|
           # TODO Take top x%, fix Infinity coming back from score.
-          if section[:reference_score] >= 120 &&
+          if section[:reference_score] >= 100 &&
               section[:reference_score] <= 20000 &&
               section[:word_count] >= @@min_word_count
 

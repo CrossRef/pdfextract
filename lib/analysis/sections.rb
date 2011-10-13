@@ -78,58 +78,6 @@ module PdfExtract
         })
       end
     end
-
-    def self.add_content_types sections
-      # TODO Should instead find the most common line height + font name pairs.
-          
-      # Find the most common font sizes. We'll treat this as the
-      # section body font size.
-      char_count = 0
-      sizes = {}
-      sections.each do |section|
-        sizes[section[:line_height].round(2)] ||= 0
-        sizes[section[:line_height].round(2)] += Spatial.get_text_content(section).length
-      end
-      
-      # Body sizes are those with more than x% of total content
-      body_line_heights = []
-      sizes.each_pair do |line_height, count|
-        if count.to_f / char_count >= @@body_content_threshold
-          body_line_heights << line_height
-        end
-      end
-      
-      # Find the longest distance between body line height and
-      # header line heights.
-      last_body_position = 0
-      distances = {}
-      longest_distance = 0
-      sections.reverse.each_index do |index|
-        section = sections[index]
-        section_line_height = section[:line_height].round(2)
-        if body_line_heights.include? section_line_height
-          last_body_position = index
-        else
-          distance = index - last_body_position
-          distances[section_line_height] ||= 0
-          if distance > distances[section_line_height]
-            distances[section_line_height] = distance
-          end
-          
-          longest_distance = [longest_distance, distance].max
-        end
-      end
-      
-      # Mark up sections as either bodies or headers.
-      sections.each do |section|
-        line_height = section[:line_height].round(2)
-        if body_line_heights.include? line_height
-          section[:type] = "body"
-        else
-          section[:type] = "h" + (longest_distance - distances[line_height]).to_s
-        end
-      end
-    end
       
     def self.include_in pdf
       pdf.spatials :sections, :depends_on => [:regions, :columns] do |parser|
@@ -189,7 +137,7 @@ module PdfExtract
 
           # We now have sections. Add information to them.
           # add_content_types sections
-          add_content_stats sections
+          sections = add_content_stats sections
 
           # Score sections into categories based on their textual attributes.
           ideals = {

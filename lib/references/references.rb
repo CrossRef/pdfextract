@@ -6,8 +6,7 @@ module PdfExtract
     # TODO Line delimited citations.
     # TODO Indent /outdent delimited citations.
     
-    @@min_letter_ratio = 0.2
-    @@max_letter_ratio = 0.5
+    @@min_score = 200
     @@min_word_count = 3
 
     def self.partition_by ary, &block
@@ -118,11 +117,10 @@ module PdfExtract
         refs = []
 
         parser.objects :sections do |section|
-          if section[:letter_ratio] >= @@min_letter_ratio &&
-              section[:letter_ratio] <= @@max_letter_ratio &&
+          if section[:reference_score] >= @@min_score &&
               section[:word_count] >= @@min_word_count
-            refs += split_by_margin section[:lines]
-            #refs += split_by_delimiter Spatial.get_text_content section
+            # refs += split_by_margin section[:lines]
+            refs += split_by_delimiter Spatial.get_text_content section
           end
         end
 

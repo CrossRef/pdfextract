@@ -2,39 +2,52 @@ require_relative "../spatial"
 
 module PdfExtract
   module References
-
-    # TODO Line delimited citations.
-    # TODO Indent /outdent delimited citations.
     
     @@min_score = 200
     @@min_word_count = 3
 
     def self.partition_by ary, &block
-      remaining = ary.dup
-      parts = []      
-      while not remaining.empty?
-        matching = remaining.take_while { |elem| yield elem }
-        unless matching.empty?
+      matching = []
+      parts = []
+      ary.each do |item|
+        if yield(item)
           parts << matching
-          remaining = remaining.drop matching.length
+          matching = []
         end
-        unless remaining.empty?
-          parts << [remaining.first]
-          remaining = remaining.drop 1
-        end
+        matching << item
       end
       parts
     end
 
+    def self.frequencies lines, delimit_key
+      fs = {}
+      lines.each do |line|
+        val = line[delimit_key].floor
+        fs[val] ||= 0
+        fs[val] = fs[val].next
+      end
+
+      ary = []
+      fs.each_pair do |key, val|
+        ary << {:value => key, :count => val}
+      end
+
+      ary.sort_by { |item| item[:count] }.reverse
+    end
+
+    def self.select_delimiter lines, delimit_key
+      frequencies(lines, delimit_key)[1][:value]
+    end
+
     def self.split_by_margin lines
-      delimiting_x_offset = lines.first[:x_offset].floor
-      parts = partition_by(lines) { |line| line[:x_offset].floor != delimiting_x_offset }
+      delimiting_x_offset = select_delimiter lines, :x_offset
+      parts = partition_by(lines) { |line| line[:x_offset].floor == delimiting_x_offset }
       parts.map { |part| {:content => part.map { |line| line[:content] }.join(" ")} }
     end
 
     def self.split_by_line_spacing lines
-      delimiting_spacing = lines[1][:spacing].floor
-      parts = partition_by(lines) { |line| line[:spacing].floor != delimiting_spacing }
+      delimiting_spacing = select_delimiter lines, :spacing
+      parts = partition_by(lines) { |line| line[:spacing].floor == delimiting_spacing }
       parts.map { |part| {:content => part.map { |line| line[:content] }.join(" ")} }
     end
 

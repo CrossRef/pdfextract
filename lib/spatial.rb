@@ -141,6 +141,27 @@ module PdfExtract
 
       b_x1 >= a_x1 && b_x2 <= a_x2 && b_y1 >= a_y1 && b_y2 <= a_y2 
     end
+
+    def self.score items, ideals
+      types = {}
+      ideals.keys.each do |name|
+        types[name] = ideals[name].keys
+      end
+      
+      items.each do |item|
+        score = 0
+        
+        types.each do |name, vars|
+          
+          vars.each do |var_name|
+            diff = (item[var_name] - ideals[name][var_name]).abs
+            score += 1.to_f / diff
+          end
+          
+          item[(name.to_s + "_score").to_sym] = score
+        end
+      end
+    end
     
   end
 end

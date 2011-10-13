@@ -38,6 +38,98 @@ module PdfExtract
         within_column && (region[:width].to_f / column[:width]) >= @@width_ratio
       end
     end
+
+    def self.reference_cluster clusters
+      # Find the cluster with name_ratio closest to 0.1
+      # Those are our reference sections.
+      ideal = 0.1
+      ref_cluster = nil
+      smallest_diff = 1
+      
+      clusters.each do |cluster|
+        diff = (cluster[:centre][:name_ratio] - ideal).abs
+        if diff < smallest_diff
+          ref_cluster = cluster
+          smallest_diff = diff
+        end
+      end
+
+      ref_cluster
+    end
+
+    def self.clusters_to_spatials clusters
+      clusters.map do |cluster|
+        cluster[:items].each do |item|
+          centre = cluster[:centre].values.map { |v| v.round(3) }.join ", "
+          item[:centre] = centre
+        end
+        cluster[:items]
+      end.flatten
+    end
+
+    def self.add_content_stats sections
+      sections.map do |section|
+        content = Spatial.get_text_content section
+        Spatial.drop_spatial(section).merge({
+          :letter_ratio => Language.letter_ratio(content),
+          :year_ratio => Language.year_ratio(content),                              
+          :name_ratio => Language.name_ratio(content),
+          :word_count => Language.word_count(content)
+        })
+      end
+    end
+
+    def self.add_content_types sections
+      # TODO Should instead find the most common line height + font name pairs.
+          
+      # Find the most common font sizes. We'll treat this as the
+      # section body font size.
+      char_count = 0
+      sizes = {}
+      sections.each do |section|
+        sizes[section[:line_height].round(2)] ||= 0
+        sizes[section[:line_height].round(2)] += Spatial.get_text_content(section).length
+      end
+      
+      # Body sizes are those with more than x% of total content
+      body_line_heights = []
+      sizes.each_pair do |line_height, count|
+        if count.to_f / char_count >= @@body_content_threshold
+          body_line_heights << line_height
+        end
+      end
+      
+      # Find the longest distance between body line height and
+      # header line heights.
+      last_body_position = 0
+      distances = {}
+      longest_distance = 0
+      sections.reverse.each_index do |index|
+        section = sections[index]
+        section_line_height = section[:line_height].round(2)
+        if body_line_heights.include? section_line_height
+          last_body_position = index
+        else
+          distance = index - last_body_position
+          distances[section_line_height] ||= 0
+          if distance > distances[section_line_height]
+            distances[section_line_height] = distance
+          end
+          
+          longest_distance = [longest_distance, distance].max
+        end
+      end
+      
+      # Mark up sections as either bodies or headers.
+      sections.each do |section|
+        line_height = section[:line_height].round(2)
+        if body_line_heights.include? line_height
+          section[:type] = "body"
+        else
+          section[:type] = "h" + (longest_distance - distances[line_height]).to_s
+        end
+      end
+    end
       
     def self.include_in pdf
       pdf.spatials :sections, :depends_on => [:regions, :columns] do |parser|
@@ -95,95 +187,27 @@ module PdfExtract
             end
           end
 
-          # TODO Should instead find the most common line height + font name pairs.
-          
-          # Find the most common font sizes. We'll treat this as the
-          # section body font size.
-          char_count = 0
-          sizes = {}
-          sections.each do |section|
-            sizes[section[:line_height].round(2)] ||= 0
-            sizes[section[:line_height].round(2)] += Spatial.get_text_content(section).length
-          end
+          # We now have sections. Add information to them.
+          # add_content_types sections
+          add_content_stats sections
 
-          # Body sizes are those with more than x% of total content
-          body_line_heights = []
-          sizes.each_pair do |line_height, count|
-            if count.to_f / char_count >= @@body_content_threshold
-              body_line_heights << line_height
-            end
-          end
+          # Score sections into categories based on their textual attributes.
+          ideals = {
+            :reference => {
+              :name_ratio => 0.1,
+              :letter_ratio => 0.2,
+              :year_ratio => 0.05
+            },
+            :body => {
+              :name_ratio => 0.03,
+              :letter_ratio => 0.1,
+              :year_ratio => 0.0
+            }
+          }
 
-          # Remove anything that is less than the body size.
-          #sections = sections.reject { |section| section[:line_height].round(2) < body_line_height }
+          Spatial.score(sections, ideals)
 
-          # Find the longest distance between body line height and
-          # header line heights.
-          last_body_position = 0
-          distances = {}
-          longest_distance = 0
-          sections.reverse.each_index do |index|
-            section = sections[index]
-            section_line_height = section[:line_height].round(2)
-            if body_line_heights.include? section_line_height
-              last_body_position = index
-            else
-              distance = index - last_body_position
-              distances[section_line_height] ||= 0
-              if distance > distances[section_line_height]
-                distances[section_line_height] = distance
-              end
-
-              longest_distance = [longest_distance, distance].max
-            end
-          end
-
-          # Mark up sections as either bodies or headers.
-          sections.each do |section|
-            line_height = section[:line_height].round(2)
-            if body_line_heights.include? line_height
-              section[:type] = "body"
-            else
-              section[:type] = "h" + (longest_distance - distances[line_height]).to_s
-            end
-          end
-
-          sections = sections.map do |section|
-            content = Spatial.get_text_content section
-            Spatial.drop_spatial(section).merge({
-              :letter_ratio => Language.letter_ratio(content),
-              :cap_ratio => Language.cap_ratio(content),                  
-              :year_ratio => Language.year_ratio(content),
-              :name_ratio => Language.name_ratio(content),
-              :word_count => Language.word_count(content)
-            })
-          end
-
-          viable_sections = []
-          non_viable_sections = []
-
-          sections.each do |s|
-            if s[:letter_ratio].zero? && s[:cap_ratio].zero? && s[:year_ratio].zero?
-              non_viable_sections << s
-            else
-              viable_sections << s
-            end
-          end
-
-          clusters = Kmeans.clusters(viable_sections, [:letter_ratio,
-                                                       :cap_ratio,
-                                                       :year_ratio,
-                                                       :name_ratio])
-
-          clustered_sections = clusters.map do |cluster|
-            cluster[:items].each do |item|
-              centre = cluster[:centre].values.map { |v| v.round(3) }.join ", "
-              item[:centre] = centre
-            end
-            cluster[:items]
-          end.flatten
-
-          clustered_sections + non_viable_sections
+          sections
         end
         
       end

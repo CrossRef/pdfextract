@@ -17,7 +17,7 @@ module PdfExtract::Names
       words.each do |word|
         word = word.downcase
 
-        if not @@stop_words.include? word
+        if not @@stop_words.include? word && word.length > 1
           query_word = word.capitalize.gsub(/-(.)/) { |s|
             "-" + s[1].capitalize
           }

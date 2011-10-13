@@ -57,7 +57,8 @@ module PdfExtract
       if options[:lines]
         merge_lines a, b, so
       else
-        so[:content] = a[:content] + options[:separator] + b[:content]
+        so[:content] = (a[:content] + options[:separator] + b[:content])
+        so[:content] = so[:content].gsub /\s+/, " "
       end
       
       if get_text_content(a).length > get_text_content(b).length

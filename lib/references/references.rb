@@ -125,7 +125,9 @@ module PdfExtract
         refs = []
 
         parser.objects :sections do |section|
-          if section[:reference_score] >= @@min_score &&
+          # TODO Take top x%, fix Infinity coming back from score.
+          if section[:reference_score] >= 120 &&
+              section[:reference_score] <= 20000 &&
               section[:word_count] >= @@min_word_count
 
             if multi_margin? section[:lines]

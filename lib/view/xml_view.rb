@@ -83,10 +83,10 @@ module PdfExtract
       xml.send singular_name(type.to_s), get_xml_attributes(obj) do
 
         unless @render_options[:outline]
-          if @render_options[:lines] && obj.key?(:content)
-            xml.text Language::transliterate(obj[:content].to_s)
-          elsif obj.key?(:content) || obj.key?(:lines)
+          if not @render_options[:lines]
             xml.text Language::transliterate(Spatial.get_text_content obj)
+          elsif obj.key?(:content)
+            xml.text Language::transliterate(obj[:content].to_s)
           end
         end
 

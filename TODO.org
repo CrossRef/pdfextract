@@ -75,7 +75,7 @@
     in output.
 *** TODO Header, footer, body detection should use most frequent page layout
     as layout for all pages.
-*** TODO Pass chunk locations through to resolved references.
+*** DONE Pass chunk locations through to resolved references.
 
 ** Long tasks, greater than 3 hours
 *** DONE Examine text_runs spatial definition and determine processing that
@@ -84,3 +84,47 @@
 *** TODO Rewrite pdf.rb.
 *** DONE Better organise pre/object/post call storage in pdf.rb . Perhaps
     a pre and post per object type.
+
+** To version 0.1
+*** DONE Join regions into sections only when their textual attributes match,
+    such as letter ratio.
+*** TODO Allow skipping when joining regions, or try to join vertically, then
+    horizontally. Should allow for merging of disparate regions such
+    as at the end of an article and beginning of another.
+*** DONE Bug: First line sometimes not appearing in lines or --no-lines content.
+    Probably region construction is creating regions with line and
+    non-line content.
+*** TODO Bug: Some section headers being merged into their body as a single region.
+*** TODO Either move pdf-reader changes into pdf-extract or get patches committed.
+*** DONE Split by line spacing and split by margin
+*** DONE Bug: Section objects appear within <page> elements. Should be pageless.
+*** TODO Possibly analyse PDF for different font+line_height pairs, force all
+    regions into those classifications.
+*** TODO Bug: When merging chunks left to right, sometimes they merge out of order.
+    Could be occuring in chunk generation or in region generation.
+*** TODO Bug: Regions appear in reverse y sort order in output. Likely causing
+    problems with section header analysis.
+
+* Problems
+
+** How do I determine the correct reference parsing scheme?
+
+*** DONE How do I distingush between junk references and real references?
+
+** Reference section detection does not always work, and may misidentify
+   non-ref sections as reference sections.
+
+*** DONE Proper name ratio
+*** DONE Punctuation ratio
+*** DONE Capitalised words ratio
+*** DONE Year literals ratio
+
+*** DONE Are all of these above average for the content as a whole?
+
+*** TODO Language.cap_ratio should ignore mid-word caps
+
+* Config params
+
+** All module instance vars
+** Reference delimiter hint - numerical, margin, line spacing
+** Reference header hint

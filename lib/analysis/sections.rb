@@ -1,11 +1,84 @@
 require_relative '../language'
 require_relative '../spatial'
+require_relative '../kmeans'
 
 module PdfExtract
   module Sections
 
-    @@width_ratio = 0.8
+    @@letter_ratio_threshold = 0.3
 
+    @@width_ratio = 0.9
+
+    @@body_content_threshold = 0.25
+    
+    def self.match? a, b
+      lh = a[:line_height].round(2) == b[:line_height].round(2)
+      
+      f = a[:font] == b[:font]
+
+      # lra = Language.letter_ratio(Spatial.get_text_content a)
+      # lrb = Language.letter_ratio(Spatial.get_text_content b)
+      # lr = (lra - lrb).abs <= @@letter_ratio_threshold
+      
+      # XXX Disabled since it doesn't seem to match.
+      lr = true
+      
+      lh && f && lr
+    end
+
+    def self.candidate? region, column
+      # Regions that make up sections or headers must be
+      # both less width than their column width and,
+      # unless they are a single line, must be within the
+      # @@width_ratio.
+      within_column = region[:width] <= column[:width]
+      if Spatial.line_count(region) <= 1
+        within_column
+      else
+        within_column && (region[:width].to_f / column[:width]) >= @@width_ratio
+      end
+    end
+
+    def self.reference_cluster clusters
+      # Find the cluster with name_ratio closest to 0.1
+      # Those are our reference sections.
+      ideal = 0.1
+      ref_cluster = nil
+      smallest_diff = 1
+      
+      clusters.each do |cluster|
+        diff = (cluster[:centre][:name_ratio] - ideal).abs
+        if diff < smallest_diff
+          ref_cluster = cluster
+          smallest_diff = diff
+        end
+      end
+
+      ref_cluster
+    end
+
+    def self.clusters_to_spatials clusters
+      clusters.map do |cluster|
+        cluster[:items].each do |item|
+          centre = cluster[:centre].values.map { |v| v.round(3) }.join ", "
+          item[:centre] = centre
+        end
+        cluster[:items]
+      end.flatten
+    end
+
+    def self.add_content_stats sections
+      sections.map do |section|
+        content = Spatial.get_text_content section
+        Spatial.drop_spatial(section).merge({
+          :letter_ratio => Language.letter_ratio(content),
+          :year_ratio => Language.year_ratio(content),                              
+          :name_ratio => Language.name_ratio(content),
+          :word_count => Language.word_count(content)
+        })
+      end
+    end
+      
     def self.include_in pdf
       pdf.spatials :sections, :depends_on => [:regions, :columns] do |parser|
 
@@ -42,64 +115,47 @@ module PdfExtract
             columns.sort_by! { |c| c[:column][:x] }
           end
 
-          # Every region with a width to body width ratio higher
-          # than @@width_ratio is considered to be the body of a
-          # section. Multiple occurant bodies are concatenated.
-
-          # A single region between two section body regions is considered
-          # to be the section header of the section below.
-
-          # Any other regions, including multiple regions between two
-          # section body regions, are discarded.
-
           sections = []
-          non_sections = []
           
           pages.each_pair do |page, columns|
             columns.each do |c|
               column = c[:column]
               c[:regions].each do |region|
-                
-                # TODO Use line_height instead.
-                if region[:width] >= (column[:width] * @@width_ratio)
-                  
-                  case non_sections.count
-                  when 0
-                    
-                    last = sections.last
-                    if !last.nil? && last[:font] == region[:font] &&
-                        last[:line_height].floor == region[:line_height].floor
-                      content = Spatial.merge_lines(sections.last, region, {})
-                      sections.last.merge!(content)
-                    else
-                      sections << Spatial.drop_spatial(region)
-                    end
-                    
-                  when 1
-                    section = Spatial.drop_spatial region
-                    section[:name] = Spatial.get_text_content(non_sections.last)
-                    sections << section
-                    non_sections = []
+
+                if candidate? region, column
+                  if !sections.last.nil? && match?(sections.last, region)
+                    content = Spatial.merge_lines(sections.last, region, {})
+                    sections.last.merge!(content)
                   else
-                    sections << Spatial.drop_spatial(region)
-                    non_sections = []
+                    sections << region
                   end
-                  
-                else
-                  non_sections << region
                 end
                 
               end
             end
           end
 
-          sections.map do |section|
-            content = Spatial.get_text_content section
-            section.merge({
-              :letter_ratio => Language.letter_ratio(content),
-              :word_count => Language.word_count(content)           
-            })
-          end
+          # We now have sections. Add information to them.
+          # add_content_types sections
+          sections = add_content_stats sections
+
+          # Score sections into categories based on their textual attributes.
+          ideals = {
+            :reference => {
+              :name_ratio => 0.1,
+              :letter_ratio => 0.2,
+              :year_ratio => 0.05
+            },
+            :body => {
+              :name_ratio => 0.03,
+              :letter_ratio => 0.1,
+              :year_ratio => 0.0
+            }
+          }
+
+          Spatial.score(sections, ideals)
+
+          sections
         end
         
       end

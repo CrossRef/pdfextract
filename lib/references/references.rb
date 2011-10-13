@@ -2,30 +2,54 @@ require_relative "../spatial"
 
 module PdfExtract
   module References
-
-    # TODO Line delimited citations.
-    # TODO Indent /outdent delimited citations.
     
-    @@min_letter_ratio = 0.2
-    @@max_letter_ratio = 0.5
+    @@min_score = 200
     @@min_word_count = 3
+    @@min_sequence_count = 3
+
+    def self.partition_by ary, &block
+      matching = []
+      parts = []
+      ary.each do |item|
+        if yield(item)
+          parts << matching
+          matching = []
+        end
+        matching << item
+      end
+      parts
+    end
+
+    def self.frequencies lines, delimit_key
+      fs = {}
+      lines.each do |line|
+        val = line[delimit_key].floor
+        fs[val] ||= 0
+        fs[val] = fs[val].next
+      end
+
+      ary = []
+      fs.each_pair do |key, val|
+        ary << {:value => key, :count => val}
+      end
+
+      ary.sort_by { |item| item[:count] }.reverse
+    end
+
+    def self.select_delimiter lines, delimit_key
+      frequencies(lines, delimit_key)[1][:value]
+    end
 
     def self.split_by_margin lines
-      lines = lines.dup
-      refs = []
-      while not lines.empty?
-        first_offset = lines.first[:offset].floor
-        lines = lines.drop 1
-        ref_lines = lines.take_while { |line| line[:offset].floor != first_offset }
-        lines = lines.drop ref_lines.count
-        ref = lines.first[:content] + " " + ref_lines.map { |l| l[:content] }.join(" ")
-        refs << {:content => ref}
-      end
-      refs
+      delimiting_x_offset = select_delimiter lines, :x_offset
+      parts = partition_by(lines) { |line| line[:x_offset].floor == delimiting_x_offset }
+      parts.map { |part| {:content => part.map { |line| line[:content] }.join(" ")} }
     end
 
     def self.split_by_line_spacing lines
-      # Need: y_offset of each line.
+      delimiting_spacing = select_delimiter lines, :spacing
+      parts = partition_by(lines) { |line| line[:spacing].floor == delimiting_spacing }
+      parts.map { |part| {:content => part.map { |line| line[:content] }.join(" ")} }
     end
 
     def self.split_by_delimiter s
@@ -100,6 +124,31 @@ module PdfExtract
         []
       end
     end
+
+    def self.multi_margin? lines
+      lines.uniq { |line| line[:x_offset].floor }.count > 1
+    end
+
+    def self.multi_spacing? lines
+      lines.uniq { |line| line[:spacing].floor }.count > 1
+    end
+
+    def self.numeric_sequence? content
+      last_n = -1
+      seq_count = 0
+      content.scan /\d+/ do |m|
+        if m.to_i < 1000 # Avoid misinterpreting years as sequence
+          if last_n == -1
+            last_n = m.to_i
+          elsif last_n.next == m.to_i
+            last_n = last_n.next
+            seq_count = seq_count.next
+          end
+        end
+      end
+
+      seq_count >= @@min_sequence_count
+    end
     
     def self.include_in pdf
       pdf.spatials :references, :depends_on => [:sections] do |parser|
@@ -107,11 +156,19 @@ module PdfExtract
         refs = []
 
         parser.objects :sections do |section|
-          if section[:letter_ratio] >= @@min_letter_ratio &&
-              section[:letter_ratio] <= @@max_letter_ratio &&
+          # TODO Take top x%, fix Infinity coming back from score.
+          if section[:reference_score] >= 120 &&
+              section[:reference_score] <= 20000 &&
               section[:word_count] >= @@min_word_count
-            #refs += split_by_margin section[:lines]
-            refs += split_by_delimiter Spatial.get_text_content section
+
+            if numeric_sequence? Spatial.get_text_content section
+              refs += split_by_delimiter Spatial.get_text_content section
+            elsif multi_margin? section[:lines]
+              refs += split_by_margin section[:lines]
+            elsif multi_spacing? section[:lines]
+              refs += split_by_spacing section[:lines]
+            end
+            
           end
         end
 

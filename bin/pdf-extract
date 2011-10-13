@@ -78,6 +78,10 @@ global_option "--precision DIGITS" do |digits|
   $render_options.merge!({:round => digits.to_i})
 end
 
+global_option "--outline" do |_|
+  $render_options.merge!({:outline => true})
+end
+
 commands.each do |cmd|
   command cmd[:name].to_sym do |c|
     c.syntax = "pdf-extract #{cmd[:name]} filename [options]"

@@ -28,13 +28,13 @@ module PdfExtract
       if a.key? :lines
         so[:lines] += a[:lines]
       else
-        so[:lines] << a.dup
+        so[:lines] << as_line(a)
       end
       
       if b.key? :lines
         so[:lines] += b[:lines]
       else
-        so[:lines] << b.dup
+        so[:lines] << as_line(b)
       end
 
       so
@@ -57,10 +57,11 @@ module PdfExtract
       if options[:lines]
         merge_lines a, b, so
       else
-        so[:content] = a[:content] + options[:separator] + b[:content]
+        so[:content] = (a[:content] + options[:separator] + b[:content])
+        so[:content] = so[:content].gsub /\s+/, " "
       end
       
-      if a[:content].length > b[:content].length
+      if get_text_content(a).length > get_text_content(b).length
         so[:font] = a[:font]
         so[:line_height] = a[:line_height]
       else
@@ -69,6 +70,26 @@ module PdfExtract
       end
 
       so
+    end
+
+    def self.line_count obj
+      line_count = 0
+      line_count += obj[:content].count("\n") + 1 if obj[:content]
+      line_count += obj[:lines].length if obj[:lines]
+      line_count
+    end
+
+    def self.get_dimensions obj
+      {
+        :x => obj[:x],
+        :y => obj[:y],
+        :width => obj[:width],
+        :height => obj[:height]
+      }
+    end
+
+    def self.as_line obj
+      get_dimensions(obj).merge({:content => obj[:content]})
     end
 
     def self.get_text_content obj
@@ -120,6 +141,27 @@ module PdfExtract
       b_y2 = b[:y] + b[:height]
 
       b_x1 >= a_x1 && b_x2 <= a_x2 && b_y1 >= a_y1 && b_y2 <= a_y2 
+    end
+
+    def self.score items, ideals
+      types = {}
+      ideals.keys.each do |name|
+        types[name] = ideals[name].keys
+      end
+      
+      items.each do |item|
+        score = 0
+        
+        types.each do |name, vars|
+          
+          vars.each do |var_name|
+            diff = (item[var_name] - ideals[name][var_name]).abs
+            score += 1.to_f / diff
+          end
+          
+          item[(name.to_s + "_score").to_sym] = score
+        end
+      end
     end
     
   end

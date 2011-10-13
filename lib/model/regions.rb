@@ -60,8 +60,14 @@ module PdfExtract
 
         # TODO Rewrite to use Spatial::collapse so that text is in proper
         # order.
-        
+
         parser.after do
+          # Convert chunks to have line content.
+          chunks.each do |chunk|
+            chunk[:lines] = [Spatial.as_line(chunk)]
+            chunk.delete :content
+          end
+          
           compare_index = 1
           while chunks.count > compare_index
             b = chunks.first
@@ -85,15 +91,19 @@ module PdfExtract
               compare_index = 1
             end
           end
-          regions << chunks.first
-          regions.compact!
+          
+          regions << chunks.first unless chunks.first.nil?
 
           regions.each do |region|
             append_line_offsets region
             append_line_spacing region
+
+            region[:lines].map! do |line|
+              Spatial.drop_spatial line
+            end
           end
 
-          regions
+          regions.sort_by { |obj| -obj[:y] }
         end
       end
     end

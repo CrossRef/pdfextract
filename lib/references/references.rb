@@ -29,13 +29,13 @@ module PdfExtract
     def self.split_by_margin lines
       delimiting_x_offset = lines.first[:x_offset].floor
       parts = partition_by(lines) { |line| line[:x_offset].floor != delimiting_x_offset }
-      parts.map { |part| {:content => part.join(" ")} }
+      parts.map { |part| {:content => part.map { |line| line[:content] }.join(" ")} }
     end
 
     def self.split_by_line_spacing lines
       delimiting_spacing = lines[1][:spacing].floor
       parts = partition_by(lines) { |line| line[:spacing].floor != delimiting_spacing }
-      parts.map { |part| {:content => part.join(" ")} }
+      parts.map { |part| {:content => part.map { |line| line[:content] }.join(" ")} }
     end
 
     def self.split_by_delimiter s
@@ -110,6 +110,14 @@ module PdfExtract
         []
       end
     end
+
+    def self.multi_margin? lines
+      lines.uniq { |line| line[:x_offset].floor }.count > 1
+    end
+
+    def self.multi_spacing? lines
+      lines.uniq { |line| line[:spacing].floor }.count > 1
+    end
     
     def self.include_in pdf
       pdf.spatials :references, :depends_on => [:sections] do |parser|
@@ -119,8 +127,15 @@ module PdfExtract
         parser.objects :sections do |section|
           if section[:reference_score] >= @@min_score &&
               section[:word_count] >= @@min_word_count
-            # refs += split_by_margin section[:lines]
-            refs += split_by_delimiter Spatial.get_text_content section
+
+            if multi_margin? section[:lines]
+              refs += split_by_margin section[:lines]
+            elsif multi_spacing? section[:lines]
+              refs += split_by_spacing section[:lines]
+            else
+              refs += split_by_delimiter Spatial.get_text_content section
+            end
+            
           end
         end
 

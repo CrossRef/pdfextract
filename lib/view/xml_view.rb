@@ -17,7 +17,7 @@ module PdfExtract
       attribs = obj.reject { |k, _| @@ignored_attributes.include? k }
       attribs = attribs.reject { |_, v| v.kind_of?(Hash) || v.kind_of?(Array) }
       attribs.each_pair do |k, v|
-        if @@numeric_attributes.include? k
+        if @@numeric_attributes.include?(k) || k.to_s =~ /.+_score/
           attribs[k] = v.round(@render_options[:round])
         end
       end

@@ -142,14 +142,14 @@ module PdfExtract
           # Score sections into categories based on their textual attributes.
           ideals = {
             :reference => {
-              :name_ratio => 0.1,
-              :letter_ratio => 0.2,
-              :year_ratio => 0.05
+              :name_ratio => [0.2, 5],
+              :letter_ratio => [0.25, 2],
+              :year_ratio => [0.05, 7]
             },
             :body => {
-              :name_ratio => 0.03,
-              :letter_ratio => 0.1,
-              :year_ratio => 0.0
+              :name_ratio => [0.03, 1],
+              :letter_ratio => [0.1, 1],
+              :year_ratio => [0.0, 1]
             }
           }
 

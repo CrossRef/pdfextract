@@ -148,18 +148,31 @@ module PdfExtract
       ideals.keys.each do |name|
         types[name] = ideals[name].keys
       end
-      
-      items.each do |item|
-        score = 0
+
+      types.each do |name, vars|
+        score_name = (name.to_s + "_score").to_sym
         
-        types.each do |name, vars|
-          
-          vars.each do |var_name|
-            diff = (item[var_name] - ideals[name][var_name]).abs
-            score += 1.to_f / diff
+        vars.each do |var_name|
+
+          scores = []
+          items.each do |item|
+            diff = (item[var_name] - ideals[name][var_name][0]).abs
+            if diff.zero?
+              diff = Float::MIN
+            end
+            scores << 1.0 / diff
+          end
+
+          score_max = scores.max
+          weighted_scores = scores.map do |score|
+             (score / score_max) * ideals[name][var_name][1]
+          end
+
+          items.each_index do |idx|
+            items[idx][score_name] ||= 0.0
+            items[idx][score_name] += weighted_scores[idx]
           end
           
-          item[(name.to_s + "_score").to_sym] = score
         end
       end
     end

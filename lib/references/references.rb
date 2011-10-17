@@ -3,8 +3,7 @@ require_relative "../spatial"
 module PdfExtract
   module References
     
-    @@min_score = 200
-    @@min_word_count = 3
+    @@min_score = 7
     @@min_sequence_count = 3
 
     def self.partition_by ary, &block
@@ -157,10 +156,7 @@ module PdfExtract
 
         parser.objects :sections do |section|
           # TODO Take top x%, fix Infinity coming back from score.
-          if section[:reference_score] >= 100 &&
-              section[:reference_score] <= 20000 &&
-              section[:word_count] >= @@min_word_count
-
+          if section[:reference_score] >= @@min_score
             if numeric_sequence? Spatial.get_text_content section
               refs += split_by_delimiter Spatial.get_text_content section
             elsif multi_margin? section[:lines]

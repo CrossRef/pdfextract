@@ -94,16 +94,32 @@
 *** DONE Bug: First line sometimes not appearing in lines or --no-lines content.
     Probably region construction is creating regions with line and
     non-line content.
-*** TODO Bug: Some section headers being merged into their body as a single region.
+*** DONE Bug: Some section headers being merged into their body as a single region.
 *** TODO Either move pdf-reader changes into pdf-extract or get patches committed.
 *** DONE Split by line spacing and split by margin
 *** DONE Bug: Section objects appear within <page> elements. Should be pageless.
-*** TODO Possibly analyse PDF for different font+line_height pairs, force all
-    regions into those classifications.
 *** TODO Bug: When merging chunks left to right, sometimes they merge out of order.
     Could be occuring in chunk generation or in region generation.
 *** TODO Bug: Regions appear in reverse y sort order in output. Likely causing
     problems with section header analysis.
+
+*** DONE Catalog system, download OAI-PMH metadata and PDFs
+*** DONE Apply name service data to section detection
+*** DONE Check for sequential delimiters first
+*** DONE Partition refs on delimiter type frequency
+    e.g. for x_offset (margin) delimiters, partition on the second
+    most frequent x_offset.
+*** DONE Sections still get split by one-liner regions
+    Such as refs section of one-column.pdf
+    Those one-liners should really get merged into regions, they
+    are often part of a line.
+
+    No longer an issue due to ignoring regions that are less than
+    almost column width when joining sections.
+*** DONE Headers joining onto section bodies. Thus appear as refs!
+    Was due to not ignoring one-liners that were far less than the
+    column width. Though will still have an issue with multi-line
+    section headers.
 
 * Problems
 
@@ -128,3 +144,4 @@
 ** All module instance vars
 ** Reference delimiter hint - numerical, margin, line spacing
 ** Reference header hint
+   

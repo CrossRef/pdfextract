@@ -32,11 +32,7 @@ module PdfExtract
       # unless they are a single line, must be within the
       # @@width_ratio.
       within_column = region[:width] <= column[:width]
-      if Spatial.line_count(region) <= 1
-        within_column
-      else
-        within_column && (region[:width].to_f / column[:width]) >= @@width_ratio
-      end
+      within_column && (region[:width].to_f / column[:width]) >= @@width_ratio
     end
 
     def self.reference_cluster clusters
@@ -72,8 +68,8 @@ module PdfExtract
         content = Spatial.get_text_content section
         Spatial.drop_spatial(section).merge({
           :letter_ratio => Language.letter_ratio(content),
-          :year_ratio => Language.year_ratio(content),                              
-          :name_ratio => Language.name_ratio(content),
+          :year_ratio => Language.year_ratio(content),                                            :cap_ratio => Language.cap_ratio(content),
+          :name_ratio => Language.name_ratio(content),          
           :word_count => Language.word_count(content)
         })
       end

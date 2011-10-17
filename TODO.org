@@ -57,10 +57,7 @@
     pdf-reader!
 *** DONE Add spatials parser.post { }, use in text_runs to sort and merge
     adjacent runs. Or split text_runs into characters and text_runs.
-*** TODO Implement PNG output. Should be able to specify opacity of each
-    spatial object type, so that text runs can be seen even though
-    groups and section are overlayed. Or, low opacity for all, auto
-    select a different colour for each type.
+*** TODO Implement json output.
 *** DONE For some PDFs, character width and height not detected correctly.
 *** DONE In some PDFs, ascent, descent and bbox info for fonts is not
     available. Seems to be those fonts whose base font is one of the
@@ -73,8 +70,6 @@
     state issue?
 *** TODO When --margins and --zones specified duplicate margins appear
     in output.
-*** TODO Header, footer, body detection should use most frequent page layout
-    as layout for all pages.
 *** DONE Pass chunk locations through to resolved references.
 
 ** Long tasks, greater than 3 hours
@@ -95,7 +90,7 @@
     Probably region construction is creating regions with line and
     non-line content.
 *** DONE Bug: Some section headers being merged into their body as a single region.
-*** TODO Either move pdf-reader changes into pdf-extract or get patches committed.
+*** DONE Either move pdf-reader changes into pdf-extract or get patches committed.
 *** DONE Split by line spacing and split by margin
 *** DONE Bug: Section objects appear within <page> elements. Should be pageless.
 *** TODO Bug: When merging chunks left to right, sometimes they merge out of order.
@@ -136,8 +131,6 @@
 *** DONE Year literals ratio
 
 *** DONE Are all of these above average for the content as a whole?
-
-*** TODO Language.cap_ratio should ignore mid-word caps
 
 * Config params
 

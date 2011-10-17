@@ -36,7 +36,7 @@ module PdfExtract
     end
     
     def self.include_in pdf
-      line_slop_factor = 0.4
+      line_slop_factor = 0.5
 
       pdf.spatials :regions, :paged => true, :depends_on => [:chunks] do |parser|
         chunks = []
@@ -81,8 +81,8 @@ module PdfExtract
               chunks[0] = Spatial.merge t, b, :lines => true
               chunks.delete_at compare_index
               compare_index = 1
-            elsif incident_y
-              # Could be more chunks within range on y axis.
+            elsif compare_index < chunks.count - 1
+              # Could be more chunks within range.
               compare_index = compare_index.next
             else
               # Finished region.

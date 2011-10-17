@@ -162,9 +162,8 @@ module PdfExtract
             elsif multi_margin? section[:lines]
               refs += split_by_margin section[:lines]
             elsif multi_spacing? section[:lines]
-              refs += split_by_spacing section[:lines]
+              refs += split_by_line_spacing section[:lines]
             end
-            
           end
         end
 

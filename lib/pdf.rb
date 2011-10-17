@@ -159,6 +159,10 @@ module PdfExtract
       paged_objs
     end
 
+    def [](type)
+      @spatial_objects[type]
+    end
+
     private
 
     def append_deps deps_list

@@ -3,7 +3,7 @@ require_relative "../spatial"
 module PdfExtract
   module References
     
-    @@min_score = 7
+    @@min_score = 6.5
     @@min_sequence_count = 3
 
     def self.partition_by ary, &block

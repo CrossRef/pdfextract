@@ -12,6 +12,7 @@ module PdfExtract
     
     def initialize
       @settings = {}
+      @agents = {}
     end
   
     def [] key
@@ -19,8 +20,13 @@ module PdfExtract
         raise("Attempt to use undeclared setting \"#{key}\"")
     end
     
-    def []= key, value
-      @settings[key] = value
+    def set key, value, agent=""
+      if @@defaults[key]
+        @settings[key] = value
+        @agents[key] = agent
+      else
+        raise "Attempt to set an undefined setting \"#{key}\""
+      end
     end
 
     def unmodified
@@ -29,6 +35,10 @@ module PdfExtract
 
     def modified
       @settings
+    end
+
+    def agent key
+      @agents[key]
     end
     
   end
@@ -193,6 +203,10 @@ module PdfExtract
 
     def [](type)
       @spatial_objects[type]
+    end
+
+    def set setting, value, agent=""
+      @settings.set setting, value, agent
     end
 
     private

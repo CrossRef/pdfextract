@@ -42,7 +42,7 @@
     paragraphs to merge incorrectly.
 *** DONE Figure out which state, and when (text object start/end, page
     start/end, text show ops) should be pushed/popped.
-*** TODO Move parsing parameters to the Pdf class. Settable via pdf-extract.
+*** DONE Move parsing parameters to the Pdf class. Settable via pdf-extract.
 
 ** Tasks, up to 3 hours
 *** DONE Handle new line operators, and all show text operators.

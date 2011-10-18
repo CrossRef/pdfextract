@@ -1,6 +1,37 @@
 require 'pdf-reader'
 
 module PdfExtract
+
+  class Settings
+    
+    @@defaults = {}
+    
+    def self.default key, default_value
+      @@defaults[key] = default_value
+    end
+    
+    def initialize
+      @settings = {}
+    end
+  
+    def [] key
+      @settings[key] || @@defaults[key] ||
+        raise("Attempt to use undeclared setting \"#{key}\"")
+    end
+    
+    def []= key, value
+      @settings[key] = value
+    end
+
+    def unmodified
+      @@defaults.reject { |k, v| @settings[k] }
+    end
+
+    def modified
+      @settings
+    end
+    
+  end
   
   class Receiver
 
@@ -125,7 +156,7 @@ module PdfExtract
   class Pdf
     
     attr_accessor :operating_type, :spatial_calls, :spatial_builders, :spatial_objects
-    attr_accessor :spatial_options
+    attr_accessor :spatial_options, :settings
     
     def method_missing name, *args
       raise "No such spatial type #{name}"
@@ -140,6 +171,7 @@ module PdfExtract
       @spatial_calls = []
       @spatial_objects = {}
       @spatial_options = {}
+      @settings = Settings.new
     end
 
     def explicit_call? name

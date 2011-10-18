@@ -84,7 +84,7 @@ end
 
 commands.each do |cmd|
   command cmd[:name].to_sym do |c|
-    c.syntax = "pdf-extract #{cmd[:name]} filename [options]"
+    c.syntax = "pdf-extract #{cmd[:name]} [options] filename"
     c.description = cmd[:description]
 
     c.action do |args, options|
@@ -105,6 +105,22 @@ commands.each do |cmd|
       end
     end
 
+  end
+end
+
+command :settings do |c|
+  c.syntax = "pdf-extract settings [options]"
+  c.description = "Print settings that pdf-extract will use to screen."
+
+  c.action do |args, options|
+    s = PdfExtract::Pdf.new.settings
+    puts "UNCHANGED:"
+    puts ""
+    s.unmodified.each_pair { |k, v| puts "#{k}:\t#{v}" }
+    puts ""
+    puts "CHANGED:"
+    puts ""
+    s.modified.each_pair { |k, v| puts "#{k}:\t#{v}" }
   end
 end
 

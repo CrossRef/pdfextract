@@ -3,6 +3,8 @@ require_relative '../spatial'
 module PdfExtract
   module Regions
 
+    Settings.default :line_slop, 0.5
+
     # TODO Handle :writing_mode once present in characters and text_chunks.
 
     def self.incident l, r
@@ -36,8 +38,6 @@ module PdfExtract
     end
     
     def self.include_in pdf
-      line_slop_factor = 0.5
-
       pdf.spatials :regions, :paged => true, :depends_on => [:chunks] do |parser|
         chunks = []
         regions = []
@@ -74,7 +74,7 @@ module PdfExtract
             t = chunks[compare_index]
               
             line_height = b[:line_height]
-            line_slop = [line_height, t[:height]].min * line_slop_factor
+            line_slop = [line_height, t[:height]].min * pdf.settings[:line_slop]
             incident_y = (b[:y] + b[:height] + line_slop) >= t[:y]
             
             if incident_y && incident(t, b)

@@ -2,9 +2,9 @@ require_relative "../spatial"
 
 module PdfExtract
   module References
-    
-    @@min_score = 6.5
-    @@min_sequence_count = 3
+ 
+    Settings.default :min_score, 6.5
+    Settings.default :min_sequence_count, 3
 
     def self.partition_by ary, &block
       matching = []
@@ -132,7 +132,7 @@ module PdfExtract
       lines.uniq { |line| line[:spacing].floor }.count > 1
     end
 
-    def self.numeric_sequence? content
+    def self.numeric_sequence? pdf, content
       last_n = -1
       seq_count = 0
       content.scan /\d+/ do |m|
@@ -146,7 +146,7 @@ module PdfExtract
         end
       end
 
-      seq_count >= @@min_sequence_count
+      seq_count >= pdf.settings[:min_sequence_count]
     end
     
     def self.include_in pdf
@@ -156,8 +156,8 @@ module PdfExtract
 
         parser.objects :sections do |section|
           # TODO Take top x%, fix Infinity coming back from score.
-          if section[:reference_score] >= @@min_score
-            if numeric_sequence? Spatial.get_text_content section
+          if section[:reference_score] >= pdf.settings[:min_score]
+            if numeric_sequence? pdf, Spatial.get_text_content(section)
               refs += split_by_delimiter Spatial.get_text_content section
             elsif multi_margin? section[:lines]
               refs += split_by_margin section[:lines]

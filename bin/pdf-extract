@@ -85,7 +85,7 @@ global_option "--outline" do |_|
   $render_options[:outline] = true
 end
 
-global_option "--set SETTING" do |s|
+global_option "--set SETTING:VALUE" do |s|
   (name, value) = s.split ":"
   $overrides[name] = value
 end

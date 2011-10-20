@@ -14,7 +14,7 @@ module PdfExtract::Names
       File.join(File.dirname(File.expand_path(__FILE__)), "../data/" + data_filename)
     end
 
-    @@db = SQLite3::Database.new(path_to_data("familynames.db"))
+    @@db = SQLite3::Database.new(path_to_data("familynames.db"), {:readonly => true})
     @@stop_words = File.open(path_to_data("stopwords.txt")).read.split(",")
    
     def self.detect_names content

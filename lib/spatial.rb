@@ -144,10 +144,10 @@ module PdfExtract
     end
 
     def self.overlap? from, by, a, b
-      a_top = a[:y] + a[:height]
-      b_top = b[:y] + b[:height]
+      a_top = a[from] + a[by]
+      b_top = b[rom] + b[by]
 
-      (b_top <= a_top && b_top >= a[:y]) || (b[:y] >= a[:y] && b[:y] <= b_top)
+      (b_top <= a_top && b_top >= a[from]) || (b[from] >= a[from] && b[from] <= b_top)
     end
 
     def self.score items, ideals

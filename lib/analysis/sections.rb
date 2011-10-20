@@ -107,7 +107,7 @@ module PdfExtract
               column = c[:column]
               
               c[:regions].each do |region|
-
+               
                 if candidate? pdf, region, column
                   if !found.last.nil? && match?(found.last, region)
                     content = Spatial.merge_lines(found.last, region, {})

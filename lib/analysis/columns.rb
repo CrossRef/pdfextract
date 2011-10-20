@@ -38,7 +38,6 @@ module PdfExtract
         end
 
         parser.after do
-          body_width_factor = pdf.settings[:body_width_factor]
           column_sample_count = pdf.settings[:column_sample_count]
           
           step = 1.0 / (column_sample_count + 1)

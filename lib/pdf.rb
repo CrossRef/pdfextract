@@ -22,7 +22,7 @@ module PdfExtract
     
     def set key, value, agent=""
       if @@defaults[key]
-        @settings[key] = value
+        @settings[key] = value.to_f
         @agents[key] = agent
       else
         raise "Attempt to set an undefined setting \"#{key}\""

@@ -3,7 +3,7 @@ require_relative '../spatial'
 module PdfExtract
   module Regions
 
-    Settings.default :line_slop, 0.5
+    Settings.default :line_slop, 1.0
 
     # TODO Handle :writing_mode once present in characters and text_chunks.
 

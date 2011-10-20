@@ -5,6 +5,7 @@ module PdfExtract
  
     Settings.default :min_score, 6.5
     Settings.default :min_sequence_count, 3
+    Settings.default :max_reference_order, 1000
 
     def self.partition_by ary, &block
       matching = []
@@ -51,31 +52,32 @@ module PdfExtract
       parts.map { |part| {:content => part.map { |line| line[:content] }.join(" ")} }
     end
 
-    def self.split_by_delimiter s
+    def self.split_by_delimiter pdf, s
       # Find sequential numbers and use them as partition points.
 
       # Determine the charcaters that are most likely part of numeric
       # delimiters.
       
-      before = {}
       after = {}
+      before = {}
       last_n = -1
       
       s.scan /[^\d]?\d+[^\d]/ do |m|
         n = m[/\d+/].to_i
-        
-        if last_n == -1
-          before[m[0]] ||= 0
-          before[m[0]] = before[m[0]].next
-          after[m[-1]] ||= 0
-          after[m[-1]] = after[m[-1]].next
-          last_n = n
-        elsif n == last_n.next
-          before[m[0]] ||= 0
-          before[m[0]] = before[m[0]].next
-          after[m[-1]] ||= 0
-          after[m[-1]] = after[m[-1]].next
-          last_n = last_n.next
+        if n < pdf.settings[:max_reference_order]
+          if last_n == -1
+            before[m[0]] ||= 0
+            before[m[0]] = before[m[0]].next
+            after[m[-1]] ||= 0
+            after[m[-1]] = after[m[-1]].next
+            last_n = n
+          elsif n == last_n.next
+            before[m[0]] ||= 0
+            before[m[0]] = before[m[0]].next
+            after[m[-1]] ||= 0
+            after[m[-1]] = after[m[-1]].next
+            last_n = last_n.next
+          end
         end
       end
 
@@ -84,20 +86,21 @@ module PdfExtract
       a_s = "" if after.length.zero?
       a_s = "\\" + after.max_by { |_, v| v }[0] unless after.length.zero?
 
+      # TODO Turn into settings. Needs typed settings
       if ["", "\\[", "\\ "].include?(b_s) && ["", "\\.", "\\]", "\\ "].include?(a_s)
 
         # Split by the delimiters and record separate refs.
-      
+        
         last_n = -1
         current_ref = ""
         refs = []
-        parts = s.partition(Regexp.new "#{b_s}\\d+#{a_s}")
+        parts = s.partition(Regexp.new "#{b_s}?\\d+#{a_s}")
         
         while not parts[1].length.zero?
-          n = parts[1][/\d+/].to_i
-          if last_n == -1
+          n = parts[1][/\d+/].to_i          
+          if n < pdf.settings[:max_reference_order] && last_n == -1
             last_n = n
-        elsif n == last_n.next
+          elsif n == last_n.next
             current_ref += parts[0]
             refs << {
               :content => current_ref.strip,
@@ -109,7 +112,7 @@ module PdfExtract
             current_ref += parts[0] + parts[1]
           end
 
-          parts = parts[2].partition(Regexp.new "#{b_s}\\d+#{a_s}")
+          parts = parts[2].partition(Regexp.new "#{b_s}?\\d+#{a_s}")
         end
         
         refs << {
@@ -136,7 +139,8 @@ module PdfExtract
       last_n = -1
       seq_count = 0
       content.scan /\d+/ do |m|
-        if m.to_i < 1000 # Avoid misinterpreting years as sequence
+         # Avoid misinterpreting years as sequence
+        if m.to_i < pdf.settings[:max_reference_order]
           if last_n == -1
             last_n = m.to_i
           elsif last_n.next == m.to_i
@@ -158,7 +162,7 @@ module PdfExtract
           # TODO Take top x%, fix Infinity coming back from score.
           if section[:reference_score] >= pdf.settings[:min_score]
             if numeric_sequence? pdf, Spatial.get_text_content(section)
-              refs += split_by_delimiter Spatial.get_text_content section
+              refs += split_by_delimiter pdf, Spatial.get_text_content(section)
             elsif multi_margin? section[:lines]
               refs += split_by_margin section[:lines]
             elsif multi_spacing? section[:lines]

@@ -2,13 +2,20 @@ require "net/http"
 require "json"
 require "sqlite3"
 
+require_relative "pdf-extract"
+
 module PdfExtract::Names
 
   class NamesDatabase
-    @@db = SQLite3::Database.new(File.join("..", "data", "familynames.db"))
-    @@stop_words = File.open(File.join("..", "data", "stopwords.txt")).read.split(",")
     @@ambiguous_weighting = 0.1
     @@unambiguous_weighting = 1.0
+
+    def self.path_to_data data_filename
+      File.join(File.dirname(File.expand_path(__FILE__)), "../data/" + data_filename)
+    end
+
+    @@db = SQLite3::Database.new(path_to_data("familynames.db"))
+    @@stop_words = File.open(path_to_data("stopwords.txt")).read.split(",")
    
     def self.detect_names content
       words = content.split

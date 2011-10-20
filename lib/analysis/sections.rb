@@ -100,24 +100,31 @@ module PdfExtract
           end
 
           sections = []
+          found = []
           
           pages.each_pair do |page, columns|
             columns.each do |c|
               column = c[:column]
+              
               c[:regions].each do |region|
 
                 if candidate? pdf, region, column
-                  if !sections.last.nil? && match?(sections.last, region)
-                    content = Spatial.merge_lines(sections.last, region, {})
-                    sections.last.merge!(content)
+                  if !found.last.nil? && match?(found.last, region)
+                    content = Spatial.merge_lines(found.last, region, {})
+                    found.last.merge!(content)
                   else
-                    sections << region
+                    found << region
                   end
+                else
+                  sections = sections + found
+                  found = []
                 end
                 
               end
             end
           end
+
+          sections = sections + found
 
           # We now have sections. Add information to them.
           # add_content_types sections

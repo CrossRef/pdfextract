@@ -143,6 +143,13 @@ module PdfExtract
       b_x1 >= a_x1 && b_x2 <= a_x2 && b_y1 >= a_y1 && b_y2 <= a_y2 
     end
 
+    def self.overlap? from, by, a, b
+      a_top = a[:y] + a[:height]
+      b_top = b[:y] + b[:height]
+
+      (b_top <= a_top && b_top >= a[:y]) || (b[:y] >= a[:y] && b[:y] <= b_top)
+    end
+
     def self.score items, ideals
       types = {}
       ideals.keys.each do |name|

@@ -17,7 +17,7 @@ module PdfExtract
         end
         matching << item
       end
-      parts
+      parts.reject { |p| p.empty? }
     end
 
     def self.frequencies lines, delimit_key
@@ -42,12 +42,14 @@ module PdfExtract
 
     def self.split_by_margin lines
       delimiting_x_offset = select_delimiter lines, :x_offset
+      lines = lines.drop_while { |l| l[:x_offset].floor != delimiting_x_offset }
       parts = partition_by(lines) { |line| line[:x_offset].floor == delimiting_x_offset }
       parts.map { |part| {:content => part.map { |line| line[:content] }.join(" ")} }
     end
 
     def self.split_by_line_spacing lines
       delimiting_spacing = select_delimiter lines, :spacing
+      lines = lines.drop_while { |l| l[:spacing].floor != delimiting_spacing }
       parts = partition_by(lines) { |line| line[:spacing].floor == delimiting_spacing }
       parts.map { |part| {:content => part.map { |line| line[:content] }.join(" ")} }
     end

@@ -3,7 +3,7 @@ require_relative "../spatial"
 module PdfExtract
   module References
  
-    Settings.default :min_score, 6.4
+    Settings.default :min_score, 8.0
     Settings.default :min_sequence_count, 3
     Settings.default :max_reference_order, 1000
 

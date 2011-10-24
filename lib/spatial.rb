@@ -165,9 +165,15 @@ module PdfExtract
           items.each do |item|
             diff = (item[var_name] - ideals[name][var_name][0]).abs
             if diff.zero?
-              diff = Float::MIN
+              scores << 1.0
+            else
+              s = 1.0 / diff
+              if not s.finite?
+                scores << 0.0
+              else
+                scores << s
+              end
             end
-            scores << 1.0 / diff
           end
 
           score_max = scores.max

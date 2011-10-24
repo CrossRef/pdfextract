@@ -2,57 +2,84 @@ require_relative "../spatial"
 
 module PdfExtract
   module References
+ 
+    Settings.default :min_score, 6.4
+    Settings.default :min_sequence_count, 3
+    Settings.default :max_reference_order, 1000
 
-    # TODO Line delimited citations.
-    # TODO Indent /outdent delimited citations.
-    
-    @@min_letter_ratio = 0.2
-    @@max_letter_ratio = 0.5
-    @@min_word_count = 3
+    def self.partition_by ary, &block
+      matching = []
+      parts = []
+      ary.each do |item|
+        if yield(item)
+          parts << matching
+          matching = []
+        end
+        matching << item
+      end
+      parts.reject { |p| p.empty? }
+    end
+
+    def self.frequencies lines, delimit_key
+      fs = {}
+      lines.each do |line|
+        val = line[delimit_key].floor
+        fs[val] ||= 0
+        fs[val] = fs[val].next
+      end
+
+      ary = []
+      fs.each_pair do |key, val|
+        ary << {:value => key, :count => val}
+      end
+
+      ary.sort_by { |item| item[:count] }.reverse
+    end
+
+    def self.select_delimiter lines, delimit_key
+      frequencies(lines, delimit_key)[1][:value]
+    end
 
     def self.split_by_margin lines
-      lines = lines.dup
-      refs = []
-      while not lines.empty?
-        first_offset = lines.first[:offset].floor
-        lines = lines.drop 1
-        ref_lines = lines.take_while { |line| line[:offset].floor != first_offset }
-        lines = lines.drop ref_lines.count
-        ref = lines.first[:content] + " " + ref_lines.map { |l| l[:content] }.join(" ")
-        refs << {:content => ref}
-      end
-      refs
+      delimiting_x_offset = select_delimiter lines, :x_offset
+      lines = lines.drop_while { |l| l[:x_offset].floor != delimiting_x_offset }
+      parts = partition_by(lines) { |line| line[:x_offset].floor == delimiting_x_offset }
+      parts.map { |part| {:content => part.map { |line| line[:content] }.join(" ")} }
     end
 
     def self.split_by_line_spacing lines
-      # Need: y_offset of each line.
+      delimiting_spacing = select_delimiter lines, :spacing
+      lines = lines.drop_while { |l| l[:spacing].floor != delimiting_spacing }
+      parts = partition_by(lines) { |line| line[:spacing].floor == delimiting_spacing }
+      parts.map { |part| {:content => part.map { |line| line[:content] }.join(" ")} }
     end
 
-    def self.split_by_delimiter s
+    def self.split_by_delimiter pdf, s
       # Find sequential numbers and use them as partition points.
 
       # Determine the charcaters that are most likely part of numeric
       # delimiters.
       
-      before = {}
       after = {}
+      before = {}
       last_n = -1
       
       s.scan /[^\d]?\d+[^\d]/ do |m|
         n = m[/\d+/].to_i
-        
-        if last_n == -1
-          before[m[0]] ||= 0
-          before[m[0]] = before[m[0]].next
-          after[m[-1]] ||= 0
-          after[m[-1]] = after[m[-1]].next
-          last_n = n
-        elsif n == last_n.next
-          before[m[0]] ||= 0
-          before[m[0]] = before[m[0]].next
-          after[m[-1]] ||= 0
-          after[m[-1]] = after[m[-1]].next
-          last_n = last_n.next
+        if n < pdf.settings[:max_reference_order]
+          if last_n == -1
+            before[m[0]] ||= 0
+            before[m[0]] = before[m[0]].next
+            after[m[-1]] ||= 0
+            after[m[-1]] = after[m[-1]].next
+            last_n = n
+          elsif n == last_n.next
+            before[m[0]] ||= 0
+            before[m[0]] = before[m[0]].next
+            after[m[-1]] ||= 0
+            after[m[-1]] = after[m[-1]].next
+            last_n = last_n.next
+          end
         end
       end
 
@@ -61,20 +88,21 @@ module PdfExtract
       a_s = "" if after.length.zero?
       a_s = "\\" + after.max_by { |_, v| v }[0] unless after.length.zero?
 
+      # TODO Turn into settings. Needs typed settings
       if ["", "\\[", "\\ "].include?(b_s) && ["", "\\.", "\\]", "\\ "].include?(a_s)
 
         # Split by the delimiters and record separate refs.
-      
+        
         last_n = -1
         current_ref = ""
         refs = []
-        parts = s.partition(Regexp.new "#{b_s}\\d+#{a_s}")
+        parts = s.partition(Regexp.new "#{b_s}?\\d+#{a_s}")
         
         while not parts[1].length.zero?
-          n = parts[1][/\d+/].to_i
-          if last_n == -1
+          n = parts[1][/\d+/].to_i          
+          if n < pdf.settings[:max_reference_order] && last_n == -1
             last_n = n
-        elsif n == last_n.next
+          elsif n == last_n.next
             current_ref += parts[0]
             refs << {
               :content => current_ref.strip,
@@ -86,7 +114,7 @@ module PdfExtract
             current_ref += parts[0] + parts[1]
           end
 
-          parts = parts[2].partition(Regexp.new "#{b_s}\\d+#{a_s}")
+          parts = parts[2].partition(Regexp.new "#{b_s}?\\d+#{a_s}")
         end
         
         refs << {
@@ -100,6 +128,32 @@ module PdfExtract
         []
       end
     end
+
+    def self.multi_margin? lines
+      lines.uniq { |line| line[:x_offset].floor }.count > 1
+    end
+
+    def self.multi_spacing? lines
+      lines.uniq { |line| line[:spacing].floor }.count > 1
+    end
+
+    def self.numeric_sequence? pdf, content
+      last_n = -1
+      seq_count = 0
+      content.scan /\d+/ do |m|
+         # Avoid misinterpreting years as sequence
+        if m.to_i < pdf.settings[:max_reference_order]
+          if last_n == -1
+            last_n = m.to_i
+          elsif last_n.next == m.to_i
+            last_n = last_n.next
+            seq_count = seq_count.next
+          end
+        end
+      end
+
+      seq_count >= pdf.settings[:min_sequence_count]
+    end
     
     def self.include_in pdf
       pdf.spatials :references, :depends_on => [:sections] do |parser|
@@ -107,11 +161,15 @@ module PdfExtract
         refs = []
 
         parser.objects :sections do |section|
-          if section[:letter_ratio] >= @@min_letter_ratio &&
-              section[:letter_ratio] <= @@max_letter_ratio &&
-              section[:word_count] >= @@min_word_count
-            #refs += split_by_margin section[:lines]
-            refs += split_by_delimiter Spatial.get_text_content section
+          # TODO Take top x%, fix Infinity coming back from score.
+          if section[:reference_score] >= pdf.settings[:min_score]
+            if numeric_sequence? pdf, Spatial.get_text_content(section)
+              refs += split_by_delimiter pdf, Spatial.get_text_content(section)
+            elsif multi_margin? section[:lines]
+              refs += split_by_margin section[:lines]
+            elsif multi_spacing? section[:lines]
+              refs += split_by_line_spacing section[:lines]
+            end
           end
         end
 

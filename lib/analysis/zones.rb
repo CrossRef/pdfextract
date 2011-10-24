@@ -6,7 +6,7 @@ module PdfExtract
     # area.
 
     # Ratio of marginless page height to minimum body height.
-    @@body_ratio = 0.9
+    Settings.default :body_ratio, 0.9
 
     def self.include_in pdf
       deps = [:top_margins, :left_margins, :right_margins, :bottom_margins, :regions]
@@ -44,7 +44,7 @@ module PdfExtract
         parser.after do
           # Mask out a middle chunk of the document.
           marginless_height = t_margin[:y] - (b_margin[:y] + b_margin[:height])
-          a = (marginless_height - (marginless_height * @@body_ratio)) / 2
+          a = (marginless_height - (marginless_height * pdf.settings[:body_ratio])) / 2
           y_mask.append((b_margin[:y] + b_margin[:height] + a)..(t_margin[:y] - a))
           
           objs = []

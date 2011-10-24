@@ -3,10 +3,11 @@ require_relative "../spatial"
 module PdfExtract
   module Titles
 
+    Settings.default :title_slop, 0.2
+
     def self.include_in pdf
       pdf.spatials :titles, :depends_on => [:regions] do |parser|
         titles = []
-        title_slop_factor = 0.2
         
         parser.objects :regions do |region|
           titles << region
@@ -23,7 +24,7 @@ module PdfExtract
           #   be no less tall than a factor of the tallest text,
           titles.sort_by! { |r| -r[:line_height] }
           tallest_line = titles.first[:line_height]
-          title_slop = tallest_line - (tallest_line * title_slop_factor)
+          title_slop = tallest_line - (tallest_line * pdf.settings[:title_slop])
           titles.reject! { |r| r[:line_height] < title_slop }
           
           #   be on the earliest page with text,

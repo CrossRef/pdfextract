@@ -42,7 +42,7 @@
     paragraphs to merge incorrectly.
 *** DONE Figure out which state, and when (text object start/end, page
     start/end, text show ops) should be pushed/popped.
-*** TODO Move parsing parameters to the Pdf class. Settable via pdf-extract.
+*** DONE Move parsing parameters to the Pdf class. Settable via pdf-extract.
 
 ** Tasks, up to 3 hours
 *** DONE Handle new line operators, and all show text operators.
@@ -57,10 +57,7 @@
     pdf-reader!
 *** DONE Add spatials parser.post { }, use in text_runs to sort and merge
     adjacent runs. Or split text_runs into characters and text_runs.
-*** TODO Implement PNG output. Should be able to specify opacity of each
-    spatial object type, so that text runs can be seen even though
-    groups and section are overlayed. Or, low opacity for all, auto
-    select a different colour for each type.
+*** TODO Implement json output.
 *** DONE For some PDFs, character width and height not detected correctly.
 *** DONE In some PDFs, ascent, descent and bbox info for fonts is not
     available. Seems to be those fonts whose base font is one of the
@@ -73,9 +70,7 @@
     state issue?
 *** TODO When --margins and --zones specified duplicate margins appear
     in output.
-*** TODO Header, footer, body detection should use most frequent page layout
-    as layout for all pages.
-*** TODO Pass chunk locations through to resolved references.
+*** DONE Pass chunk locations through to resolved references.
 
 ** Long tasks, greater than 3 hours
 *** DONE Examine text_runs spatial definition and determine processing that
@@ -84,3 +79,62 @@
 *** TODO Rewrite pdf.rb.
 *** DONE Better organise pre/object/post call storage in pdf.rb . Perhaps
     a pre and post per object type.
+
+** To version 0.1
+*** DONE Join regions into sections only when their textual attributes match,
+    such as letter ratio.
+*** TODO Allow skipping when joining regions, or try to join vertically, then
+    horizontally. Should allow for merging of disparate regions such
+    as at the end of an article and beginning of another.
+*** DONE Bug: First line sometimes not appearing in lines or --no-lines content.
+    Probably region construction is creating regions with line and
+    non-line content.
+*** DONE Bug: Some section headers being merged into their body as a single region.
+*** DONE Either move pdf-reader changes into pdf-extract or get patches committed.
+*** DONE Split by line spacing and split by margin
+*** DONE Bug: Section objects appear within <page> elements. Should be pageless.
+*** TODO Bug: When merging chunks left to right, sometimes they merge out of order.
+    Could be occuring in chunk generation or in region generation.
+*** TODO Bug: Regions appear in reverse y sort order in output. Likely causing
+    problems with section header analysis.
+
+*** DONE Catalog system, download OAI-PMH metadata and PDFs
+*** DONE Apply name service data to section detection
+*** DONE Check for sequential delimiters first
+*** DONE Partition refs on delimiter type frequency
+    e.g. for x_offset (margin) delimiters, partition on the second
+    most frequent x_offset.
+*** DONE Sections still get split by one-liner regions
+    Such as refs section of one-column.pdf
+    Those one-liners should really get merged into regions, they
+    are often part of a line.
+
+    No longer an issue due to ignoring regions that are less than
+    almost column width when joining sections.
+*** DONE Headers joining onto section bodies. Thus appear as refs!
+    Was due to not ignoring one-liners that were far less than the
+    column width. Though will still have an issue with multi-line
+    section headers.
+
+* Problems
+
+** How do I determine the correct reference parsing scheme?
+
+*** DONE How do I distingush between junk references and real references?
+
+** Reference section detection does not always work, and may misidentify
+   non-ref sections as reference sections.
+
+*** DONE Proper name ratio
+*** DONE Punctuation ratio
+*** DONE Capitalised words ratio
+*** DONE Year literals ratio
+
+*** DONE Are all of these above average for the content as a whole?
+
+* Config params
+
+** All module instance vars
+** Reference delimiter hint - numerical, margin, line spacing
+** Reference header hint
+   

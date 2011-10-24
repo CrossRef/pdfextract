@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'commander/import'
+require 'json'
 require_relative '../lib/pdf-extract'
 require_relative '../lib/references/resolve'
 
@@ -47,6 +48,8 @@ $chosen_objects = []
 
 $render_options = {}
 
+$overrides = {}
+
 objects.each do |o|
   global_option "--#{o}" do |_|
     $chosen_objects << o
@@ -57,7 +60,7 @@ global_option "--semantic" do |_| $chosen_objects += semantic end
 global_option "--margins" do |_| $chosen_objects += margins end
 global_option "--zones" do |_| $chosen_objects += zones end
 
-global_option "--resolvers=RESOLVERS" do |chosen_resolvers|
+global_option "--resolvers RESOLVERS" do |chosen_resolvers|
   chosen_resolvers = chosen_resolvers.split ","
   chosen_resolvers.each do |name|
     fail "No such resolver #{resolver}" unless resolvers.key? name
@@ -66,17 +69,44 @@ global_option "--resolvers=RESOLVERS" do |chosen_resolvers|
   PdfExtract::Resolve.resolvers = chosen_resolvers
 end
 
-global_option "--output=FILE" do |filename|
+global_option "--output FILE" do |filename|
   $output = filename
 end
 
 global_option "--no-lines" do |_|
-  $render_options.merge!({:lines => false})
+  $render_options[:lines] = false
+end
+
+global_option "--precision DIGITS" do |digits|
+  $render_options[:round] = digits.to_i
+end
+
+global_option "--outline" do |_|
+  $render_options[:outline] = true
+end
+
+global_option "--set SETTING:VALUE" do |s|
+  (name, value) = s.split ":"
+  $overrides[name] = value
+end
+
+global_option "--config CONFIG_FILE" do |filename|
+  $config = filename
+end
+
+def self.apply_settings pdf
+  if not $config.nil?
+    conf = JSON.parse File.open($config, "r").read
+    conf.each_pair do |setting, value|
+      pdf.set setting.to_sym, value, $config
+    end
+  end
+  $overrides.each_pair { |k,v| pdf.set k.to_sym, v, "command line" }
 end
 
 commands.each do |cmd|
   command cmd[:name].to_sym do |c|
-    c.syntax = "pdf-extract #{cmd[:name]} filename [options]"
+    c.syntax = "pdf-extract #{cmd[:name]} [options] filename"
     c.description = cmd[:description]
 
     c.action do |args, options|
@@ -84,9 +114,8 @@ commands.each do |cmd|
         $output = outputs[cmd[:view]].call(filename) if $output.nil?
         opts = {:as => cmd[:view]}.merge $render_options
         out = PdfExtract.view filename, opts do |pdf|
-          $chosen_objects.each do |name|
-            pdf.send name.to_sym
-          end
+          apply_settings pdf
+          $chosen_objects.each { |name| pdf.send name.to_sym }
         end
 
         if $output == :stdout
@@ -97,6 +126,21 @@ commands.each do |cmd|
       end
     end
 
+  end
+end
+
+command :settings do |c|
+  c.syntax = "pdf-extract settings [options]"
+  c.description = "Print settings that pdf-extract will use to screen."
+
+  c.action do |args, options|
+    pdf = PdfExtract::Pdf.new
+    apply_settings pdf
+    s = pdf.settings
+    say "<%= color('AT DEFAULT:', BOLD) %>\n\n"
+    s.unmodified.each_pair { |k, v| say "#{k}:\t#{v}" }
+    say "\n<%= color('OVERRIDDEN:', BOLD) %>\n\n"
+    s.modified.each_pair { |k, v| say "#{k}:\t#{v}   (#{s.agent(k)})" }
   end
 end
 

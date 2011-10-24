@@ -5,6 +5,10 @@ module PdfExtract
 
     # TODO Look for obj[:writing_mode] == :vertical or :horizontal
 
+    Settings.default :char_slop, 0.2
+    Settings.default :word_slop, 4.0
+    Settings.default :overlap_slop, 0.9
+
     def self.include_in pdf
       char_slop = 0.2
       word_slop = 4.0
@@ -30,6 +34,10 @@ module PdfExtract
         end
 
         parser.after do
+          char_slop = pdf.settings[:char_slop]
+          word_slop = pdf.settings[:word_slop]
+          overlap_slop = pdf.settings[:overlap_slop]
+          
           text_chunks = []
 
           rows.each_pair do |y, row|

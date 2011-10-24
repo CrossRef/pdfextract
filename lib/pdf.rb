@@ -1,6 +1,47 @@
 require 'pdf-reader'
 
 module PdfExtract
+
+  class Settings
+    
+    @@defaults = {}
+    
+    def self.default key, default_value
+      @@defaults[key] = default_value
+    end
+    
+    def initialize
+      @settings = {}
+      @agents = {}
+    end
+  
+    def [] key
+      @settings[key] || @@defaults[key] ||
+        raise("Attempt to use undeclared setting \"#{key}\"")
+    end
+    
+    def set key, value, agent=""
+      if @@defaults[key]
+        @settings[key] = value.to_f
+        @agents[key] = agent
+      else
+        raise "Attempt to set an undefined setting \"#{key}\""
+      end
+    end
+
+    def unmodified
+      @@defaults.reject { |k, v| @settings[k] }
+    end
+
+    def modified
+      @settings
+    end
+
+    def agent key
+      @agents[key]
+    end
+    
+  end
   
   class Receiver
 
@@ -125,7 +166,7 @@ module PdfExtract
   class Pdf
     
     attr_accessor :operating_type, :spatial_calls, :spatial_builders, :spatial_objects
-    attr_accessor :spatial_options
+    attr_accessor :spatial_options, :settings
     
     def method_missing name, *args
       raise "No such spatial type #{name}"
@@ -140,6 +181,7 @@ module PdfExtract
       @spatial_calls = []
       @spatial_objects = {}
       @spatial_options = {}
+      @settings = Settings.new
     end
 
     def explicit_call? name
@@ -157,6 +199,14 @@ module PdfExtract
       end
 
       paged_objs
+    end
+
+    def [](type)
+      @spatial_objects[type]
+    end
+
+    def set setting, value, agent=""
+      @settings.set setting, value, agent
     end
 
     private

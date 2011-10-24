@@ -40,6 +40,9 @@ module PdfExtract
         @bbox = font.bbox
         @glyph_width_lookup = proc { |c| font.glyph_width c }
       end
+
+      @ascent = @bbox[3] if @ascent.zero?
+      @descent = @bbox[1] if @descent.zero?
     end
 
     def glyph_width c

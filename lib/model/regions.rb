@@ -3,6 +3,8 @@ require_relative '../spatial'
 module PdfExtract
   module Regions
 
+    Settings.default :line_slop, 1.0
+
     # TODO Handle :writing_mode once present in characters and text_chunks.
 
     def self.incident l, r
@@ -36,8 +38,6 @@ module PdfExtract
     end
     
     def self.include_in pdf
-      line_slop_factor = 0.4
-
       pdf.spatials :regions, :paged => true, :depends_on => [:chunks] do |parser|
         chunks = []
         regions = []
@@ -60,23 +60,29 @@ module PdfExtract
 
         # TODO Rewrite to use Spatial::collapse so that text is in proper
         # order.
-        
+
         parser.after do
+          # Convert chunks to have line content.
+          chunks.each do |chunk|
+            chunk[:lines] = [Spatial.as_line(chunk)]
+            chunk.delete :content
+          end
+          
           compare_index = 1
           while chunks.count > compare_index
             b = chunks.first
             t = chunks[compare_index]
               
             line_height = b[:line_height]
-            line_slop = [line_height, t[:height]].min * line_slop_factor
+            line_slop = [line_height, t[:height]].min * pdf.settings[:line_slop]
             incident_y = (b[:y] + b[:height] + line_slop) >= t[:y]
             
             if incident_y && incident(t, b)
               chunks[0] = Spatial.merge t, b, :lines => true
               chunks.delete_at compare_index
               compare_index = 1
-            elsif incident_y
-              # Could be more chunks within range on y axis.
+            elsif compare_index < chunks.count - 1
+              # Could be more chunks within range.
               compare_index = compare_index.next
             else
               # Finished region.
@@ -85,15 +91,19 @@ module PdfExtract
               compare_index = 1
             end
           end
-          regions << chunks.first
-          regions.compact!
+          
+          regions << chunks.first unless chunks.first.nil?
 
           regions.each do |region|
             append_line_offsets region
             append_line_spacing region
+
+            region[:lines].map! do |line|
+              Spatial.drop_spatial line
+            end
           end
 
-          regions
+          regions.sort_by { |obj| -obj[:y] }
         end
       end
     end

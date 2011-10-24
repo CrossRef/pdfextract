@@ -26,6 +26,10 @@ module PdfExtract
     attr_accessor :ascent, :descent, :bbox
 
     def initialize font
+      @ascent = 0
+      @descent = 0
+      @bbox = [0, 0, 0, 0]
+      
       base_font = font.basefont.to_s
       if @@base_fonts.key? base_font
         @ascent = @@base_fonts[base_font][:Ascent]
@@ -41,8 +45,10 @@ module PdfExtract
         @glyph_width_lookup = proc { |c| font.glyph_width c }
       end
 
-      @ascent = @bbox[3] if @ascent.zero?
-      @descent = @bbox[1] if @descent.zero?
+      if not @bbox.nil?
+        @ascent = @bbox[3] if @ascent.nil? || @ascent.zero?
+        @descent = @bbox[1] if @descent.nil? || @descent.zero?
+      end
     end
 
     def glyph_width c

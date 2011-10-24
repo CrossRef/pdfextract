@@ -7,7 +7,7 @@ require_relative "pdf-extract"
 module PdfExtract::Names
 
   class NamesDatabase
-    @@ambiguous_weighting = 0.1
+    @@ambiguous_weighting = 0.0
     @@unambiguous_weighting = 1.0
 
     def self.path_to_data data_filename

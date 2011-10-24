@@ -47,6 +47,9 @@ module PdfExtract
             y = body[:y] + (body[:height] * i * step)
             column_ranges << columns_at(y, body_regions)
           end
+
+          # Discard those with a coverage of 0.
+          column_ranges.reject! { |r| r.covered.zero? }
           
           # Discard those with more than x columns. They've probably hit a table.
           column_ranges.reject! { |r| r.count > pdf.settings[:max_column_count] }

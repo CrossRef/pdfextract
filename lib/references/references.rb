@@ -17,6 +17,7 @@ module PdfExtract
         end
         matching << item
       end
+      parts << matching
       parts.reject { |p| p.empty? }
     end
 

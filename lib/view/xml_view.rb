@@ -6,15 +6,20 @@ require_relative '../language'
 module PdfExtract
   class XmlView < AbstractView
 
-    @@ignored_attributes = [:content, :page, :page_width, :page_height]
+    @@ignored_attributes = [:content]
+
+    @@parent_ignored_attributes = [:page, :page_width, :page_height]
 
     @@numeric_attributes = [:x, :y, :width, :height, :line_height,
                             :page_height, :page_width, :x_offset, :y_offset,
                             :spacing, :letter_ratio, :cap_ratio, :year_ratio]
 
     # Return renderable attributes
-    def get_xml_attributes obj
+    def get_xml_attributes obj, parent=true
       attribs = obj.reject { |k, _| @@ignored_attributes.include? k }
+      if parent
+        attribs = attribs.reject { |k, _| @@parent_ignored_attributes.include? k }
+      end
       attribs = attribs.reject { |_, v| v.kind_of?(Hash) || v.kind_of?(Array) }
       attribs.each_pair do |k, v|
         if @@numeric_attributes.include?(k) || k.to_s =~ /.+_score/
@@ -79,8 +84,8 @@ module PdfExtract
       builder.to_xml
     end
 
-    def write_obj_to_xml obj, type, xml
-      xml.send singular_name(type.to_s), get_xml_attributes(obj) do
+    def write_obj_to_xml obj, type, xml, parent=true
+      xml.send singular_name(type.to_s), get_xml_attributes(obj, parent) do
 
         unless @render_options[:outline]
           if not @render_options[:lines]
@@ -93,10 +98,10 @@ module PdfExtract
         get_nested_objs(obj).each do |name, nested_obj|
           element_name = singular_name name.to_s
           if nested_obj.kind_of? Hash
-            write_obj_to_xml nested_obj, element_name, xml
+            write_obj_to_xml nested_obj, element_name, xml, false
           elsif nested_obj.kind_of? Array
             nested_obj.each do |item|
-              write_obj_to_xml item, element_name, xml
+              write_obj_to_xml item, element_name, xml, false
             end
           end
         end

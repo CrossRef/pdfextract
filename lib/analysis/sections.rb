@@ -112,8 +112,13 @@ module PdfExtract
                   if !found.last.nil? && match?(found.last, region)
                     content = Spatial.merge_lines(found.last, region, {})
                     found.last.merge!(content)
+
+                    found.last[:components] << Spatial.get_dimensions(region)
+                    
                   else
-                    found << region
+                    found << region.merge({
+                      :components => [Spatial.get_dimensions(region)]
+                    })
                   end
                 else
                   sections = sections + found

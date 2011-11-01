@@ -85,7 +85,9 @@ module PdfExtract
         :y => obj[:y],
         :width => obj[:width],
         :height => obj[:height],
-        :page => obj[:page]
+        :page => obj[:page],
+        :page_width => obj[:page_width],
+        :page_height => obj[:page_height]
       }
     end
 

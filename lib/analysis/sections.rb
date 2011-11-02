@@ -51,14 +51,16 @@ module PdfExtract
       end.flatten
     end
 
-    def self.add_content_stats sections
+    def self.add_content_stats sections, page_count
       sections.map do |section|
+        last_page = section[:components].max {|c| c[:page]}[:page]
         content = Spatial.get_text_content section
         Spatial.drop_spatial(section).merge({
           :letter_ratio => Language.letter_ratio(content),
           :year_ratio => Language.year_ratio(content),                                            :cap_ratio => Language.cap_ratio(content),
           :name_ratio => Language.name_ratio(content),          
-          :word_count => Language.word_count(content)
+          :word_count => Language.word_count(content),
+          :lateness => (last_page / page_count.to_f)             
         })
       end
     end
@@ -133,7 +135,7 @@ module PdfExtract
 
           # We now have sections. Add information to them.
           # add_content_types sections
-          sections = add_content_stats sections
+          sections = add_content_stats sections, pages.keys.count
 
           # Score sections into categories based on their textual attributes.
           ideals = {

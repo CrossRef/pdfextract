@@ -107,7 +107,7 @@ module PdfExtract
       elsif obj[:content]
         obj[:content]
       else
-        obj
+        ""
       end
     end
 

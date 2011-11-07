@@ -49,8 +49,17 @@ module PdfExtract
       end
     end
 
+    def self.find_media_box page, objects
+      if page[:MediaBox]
+        page[:MediaBox]
+      elsif page[:Parent]
+        find_media_box objects[page[:Parent]], objects
+      else
+        [0, 0, 0, 0]
+      end
+    end
+
     def self.make_text_runs text, tj, state, render_state, page, page_number
-      # TODO Ignore chars outside the page :MediaBox.
       # TODO Mul UserUnit if specified by page.
       # TODO Include writing mode, so that runs can be joined either
       #      virtically or horizontally in the join stage.
@@ -87,6 +96,8 @@ module PdfExtract
 
         px = bl_pos.row(0)[0]
         py = bl_pos.row(0)[1]
+
+        media_box = find_media_box(page.page_object, page.objects)
         
         objs << {
           :x => px,
@@ -97,8 +108,8 @@ module PdfExtract
           :content => state.last[:font].to_utf8(c),
           :page => page_number,
           :font => state.last[:font].basefont,
-          :page_width => page[:MediaBox][2] - page[:MediaBox][0],
-          :page_height => page[:MediaBox][3] - page[:MediaBox][1]
+          :page_width => media_box[2] - media_box[0],
+          :page_height => media_box[3] - media_box[1]
         }
         
         disp_x, disp_y = glyph_displacement(c, state)
@@ -114,6 +125,17 @@ module PdfExtract
       objs
     end
 
+    def self.build_fonts page
+      fonts = {}
+      font_metrics = {}
+      page.fonts.each do |label, ref|
+        font = PDF::Reader::Font.new(page.objects, page.objects[ref])
+        fonts[label] = font
+        font_metrics[label] = FontMetrics.new font
+      end
+      [fonts, font_metrics]
+    end
+
     def self.include_in pdf
 
       pdf.spatials :characters do |parser|
@@ -127,15 +149,19 @@ module PdfExtract
           :tlm => Matrix.identity(3)
         }
 
-        parser.for :resource_font do |data|
-          fonts[data[0]] = data[1]
-          font_metrics[data[0]] = FontMetrics.new data[1]
-          nil
-        end
+        # parser.for :resource_font do |data|
+        #   puts data
+        #   fonts[data[0]] = data[1]
+        #   font_metrics[data[0]] = FontMetrics.new data[1]
+        #   nil
+        # end
 
         parser.for :begin_page do |data|
           page = data[0]
           page_n = page_n.next
+
+          fonts, font_metrics = build_fonts page
+
           state << {
             :h_scale => 100,
             :char_spacing => 0,
@@ -270,7 +296,7 @@ module PdfExtract
 
         # Show text operators.
 
-        parser.for :set_spacing_next_line_show_text_raw do |data|
+        parser.for :set_spacing_next_line_show_text do |data|
           state.last[:word_spacing] = data[0]
           state.last[:char_spacing] = data[1]
           
@@ -282,7 +308,7 @@ module PdfExtract
           make_text_runs data[2], 0, state, render_state, page, page_n
         end
 
-        parser.for :move_to_next_line_and_show_text_raw do |data|
+        parser.for :move_to_next_line_and_show_text do |data|
           render_state[:tm] = Matrix[
             [1, 0, 0], [0, 1, 0], [0, -state.last[:leading], 1]
           ] * render_state[:tlm]
@@ -291,11 +317,11 @@ module PdfExtract
           make_text_runs data.first, 0, state, render_state, page, page_n
         end
 
-        parser.for :show_text_raw do |data|
+        parser.for :show_text do |data|
           make_text_runs data.first, 0, state, render_state, page, page_n
         end
         
-        parser.for :show_text_with_positioning_raw do |data|
+        parser.for :show_text_with_positioning do |data|
           data = data.first
           runs = []
           tj = 0

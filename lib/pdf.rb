@@ -129,9 +129,9 @@ module PdfExtract
         end
         
         paged_objs.each_pair do |page, objs|
-          self.call_before
+          call_before
 
-          if self.object_calls?
+          if object_calls?
             @object_listeners.each_pair do |type, listeners|
               listeners.each do |listener|
                 if objs[type].nil?
@@ -142,22 +142,29 @@ module PdfExtract
             end
           end
           
-          self.call_after
+          call_after
         end
         
       else
 
-        self.call_before
-        if self.object_calls?
-          self.call_object_listeners @pdf.spatial_objects
+        call_before
+        if object_calls?
+          call_object_listeners @pdf.spatial_objects
         end
-        self.call_after
+        call_after
 
       end
       
-      if self.for_calls?
-        self.expand_listeners_to_callback_methods
-        PDF::Reader.file filename, self, :raw_text => true
+      if for_calls?
+        expand_listeners_to_callback_methods
+        #PDF::Reader.file filename, self, :raw_text => true
+
+        reader = PDF::Reader.new filename, :raw_text => true
+        reader.pages.each do |page|
+          begin_page page
+          page.walk self
+          end_page page
+        end
       end
     end
 

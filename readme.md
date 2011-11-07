@@ -58,12 +58,15 @@ a number of default parsers, each one of which outputs one of these types of
 spatial object:
 
 - characters
-- text runs
+- line runs
 - regions
 - columns
 - headers
 - footers
+- margins
 - bodies
+- sections
+- references
 
 Each of these parsers constructs a list of spatial objects (modelled as a list of
 raw Ruby Hash objects) from either PDF page streams or the output of other

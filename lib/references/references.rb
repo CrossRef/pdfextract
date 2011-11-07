@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require_relative "../spatial"
 
 module PdfExtract
@@ -175,7 +176,8 @@ module PdfExtract
         end
 
         parser.after do
-          refs
+          # TODO Ideally we wouldn't see the ref headers here.
+          refs.reject {|ref| ref[:content].downcase.strip =~ /references?/ }
         end
 
       end

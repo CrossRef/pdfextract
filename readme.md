@@ -1,4 +1,5 @@
-# pdf-extract
+pdf-extract
+===========
 
 Install the latest version with:
 
@@ -189,10 +190,10 @@ lines of text, or *text runs*. *Regions* depends on *text runs*, which it combin
 into blocks of consecutive lines.
 
 Other parsers may not output spatial objects that represent text but instead some
-form of feature boundry. *Columns*, *headers* and *footers* are examples of such 
-parsers. The *columns* parser dependends on region spatial objects, which it takes
+form of feature boundry. `Columns`, `headers` and `footers` are examples of such 
+parsers. The `columns` parser dependends on region spatial objects, which it takes
 as input, then analyzes each page for space that is not covered by a text region,
-and finally uses this information to output "column" spatial objects that represent
+and finally uses this information to output `column` spatial objects that represent
 the boundries of columns.
 
 Other parser types depend on the output of more than one other parser. pdf-extract
@@ -202,22 +203,69 @@ examine both column boundries and their incidence with text region boundries.
 
 pdf-extract comes with a number of default parsers which are split into three
 categories. The first category, model, includes generic parsing of text into
-*characters*, *text runs* and *regions*. The second, analysis applies analysis that
-is usually only relevent to article or report PDFs, such as the detection of *headers*,
-*footers*, *bodies*, *columns* and *sections*. Finally, the *reference* parser extracts
+`characters`, `text runs` and `regions`. The second, analysis applies analysis that
+is usually only relevent to article or report PDFs, such as the detection of `headers`,
+`footers`, `bodies`, `columns` and `sections`. Finally, the *reference* parser extracts
 unstructured citations and is only really applicable to scholarly articles. 
 
 ## Extensibility
 
 Additional parsers can be registered with pdf-extract. New parsers can extract
-information directly from the PDF or use the output of other parsers.
+information directly from the PDF or use the output of other parsers. Here's one that
+extracts DOIs from headers and footers:
 
- - Paged and non-paged
+```ruby
+require "pdf-extract"
 
- - Settings
+module Dois
 
-pdf-extract also contains an extensible "view" component. Extracted spatial objects
-can be viewed in a number of ways, and pdf-extract currently allows extracted
-spatial objects to be represented as XML or raw Ruby Hashes. There is also a PDF
-view that renders spatial object boundries over the top of input PDFs.
+  PdfExtract::Settings.default :dx_host, "dx.doi.org"
+
+  def self.include_in pdf
+    pdf.spatials :dois, :paged => true, :depends_on => [:regions, :headers, :footers] do |parser|
+      dois = []
+      current_header = nil
+      current_footer = nil
+
+      parser.before do
+        dois = []
+      end
+
+      parser.objects :headers do |header|
+        current_header = header
+      end
+
+      parser.objects :footers do |footer|
+        current_footer = footer
+      end
+
+      parser.objects :regions do |region|
+        if PdfExtract::Spatials.contains? header, region
+            || PdfExtract::Spatials.contains? footer, region
+          text = PdfExtract::Spatial.get_text_content(region)
+          dois = dois + text.scan /doi:(10\.\d+\/[^\s]+)/
+          dois = dois + text.scan /#{pdf.settings[:dx_host]}\/(10\.\d+\/[^\s]+)/
+        end
+      end
+        
+      parser.after do
+        dois
+      end       
+  end
+end     
+
+PdfExtract::Pdf.add_parser Dois
+```          
+
+The above parser is dependent on `regions`, `headers` and `footers`. It also declares
+that it wants `:paged` content, meaning that it's before and after blocks are called
+once for each page. If `:paged` is set to false before and after are called only once
+for an entire PDF. Here paging allows us to look at the header and footer on each
+page and check each region for incidence. Without paging, we would receive all headers
+for all pages, then all footers for all pages, and finally all regions.
+
+Though the use is contrived in the example above, settings can be declared via
+`PdfExtract::Settings.default`. These must be decpared to be accessed later in the
+parser via `pdf.settings`. An attempt to access an undeclared setting will result
+in a fatal error.
 

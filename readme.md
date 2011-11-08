@@ -1,5 +1,9 @@
 # pdf-extract
 
+Install the latest version with:
+
+    $ gem install pdf-extract
+
 Welcome! pdf-extract is a some-what generic PDF content extraction toolkit with a 
 strong focus on extracting meaningful text from a PDF, such as a scholarly article's
 references.
@@ -35,10 +39,6 @@ The default line_slop can be printed to screen with the command:
 
 ## On the command-line
 
-pdf-extract can be used as a tool or Ruby library. 
-
-### Command-line Extraction
-
 To extract a spatial object type from a PDF on the command line use the extract 
 command:
 
@@ -48,7 +48,7 @@ A list of spatial types can be printed to screen with:
 
     $ pdf-extract help
 
-### Command-line Marking
+### Viewing spatial object bounderies
 
 Spatial object boundries can be drawn onto a PDF. This is helpful when debugging and
 when trying to set reasonable values for pdf-extract's settings:
@@ -104,36 +104,41 @@ Though in this case pdf-extract will print many empty `<line>` elements within e
 
     $ pdf-extract extract --sections --outline --no-lines myfile.pdf
 
-## Ruby
+## As a Ruby library
 
 There are two methods important to using pdf-extract as a Ruby library, 
 `PdfExtract::parse` and `PdfExtract::view`. The first parses a PDF into spatial
-objects represented by Ruby Hashes. The second parses and then exports spatial
-objects to a different representation, by default one of `PDF`, `PNG` or `XML`.
+objects represented by Ruby hashes. The second parses and then exports spatial
+objects to a different representation, by default one of PDF, PNG or XML.
 Here's an example of `parse`:
 
-    require "pdf-extract"
+```ruby
+require "pdf-extract"
 
-    objects = PdfExtract.parse "myfile.pdf" do |pdf|
-      pdf.regions
-      pdf.sections
-      pdf.references
-    end
+objects = PdfExtract.parse "myfile.pdf" do |pdf|
+  pdf.regions
+  pdf.sections
+  pdf.references
+end
+```
 
 This code creates an `objects` hash which contains `region`, `section` and `reference`
 spatial objects. Any spatial object type supported by pdf-extract can be parsed
-by calling it's spatial object method in a block like the one above. pdf-extract will
-only execute explicitly declared parsers like those above and parers from their 
+by calling its spatial object method in a block like the one above. pdf-extract will
+only execute explicitly declared parsers, like those above and parers from their 
 dependency chains.
 
 The example below shows how to read data from spatial objects:
 
-    require "pdf-extract"
-    objects = PdfExtract.parse "myfile.pdf" {|pdf| pdf.regions}
-    objects[:regions].each do |region|
-      puts "At (#{region[:x]}, #{region[:y]}):"
-      puts PdfExtract::Spatial.get_text_content region
-    end
+```ruby
+require "pdf-extract"
+
+objects = PdfExtract.parse "myfile.pdf" {|pdf| pdf.regions}
+objects[:regions].each do |region|
+  puts "At (#{region[:x]}, #{region[:y]}):"
+  puts PdfExtract::Spatial.get_text_content region
+end
+```
 
 The `get_text_content` unwraps the lines within a region or section into a single
 string. For other spatial types `object[:content]` can be used to access text
@@ -143,17 +148,20 @@ types so it is best to always use it to access content.
 The `PdfExtract::view` method can be used to output extracted content to XML, PNG
 or PDF:
 
-    require "pdf-extract"
-    xml = PdfExtract.view "myfile.pdf", :as => :xml do |pdf|
-      pdf.footers
-      pdf.headers
-      pdf.columns
-    end
-    xml.write("myfile.xml")
+```ruby
+require "pdf-extract"
+
+xml = PdfExtract.view "myfile.pdf", :as => :xml do |pdf|
+  pdf.footers
+  pdf.headers
+  pdf.columns
+end
+xml.write("myfile.xml")
+```
 
 ## Design
 
-pdf-extract's is split into functional units called *parsers*, each of which 
+pdf-extracts is composed of functional units called *parsers*, each of which 
 constructs a single *spatial object* type. For example, pdf-extract comes with 
 a number of default parsers, each one of which outputs one of these types of 
 spatial object:

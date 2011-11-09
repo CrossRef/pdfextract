@@ -153,42 +153,23 @@ module PdfExtract
       (b_top <= a_top && b_top >= a[from]) || (b[from] >= a[from] && b[from] <= b_top)
     end
 
-    def self.score items, ideals
-      types = {}
-      ideals.keys.each do |name|
-        types[name] = ideals[name].keys
-      end
-
-      types.each do |name, vars|
-        score_name = (name.to_s + "_score").to_sym
+    def self.score items, ideals, name
+      ideals.keys.each do |f|
+        diffs = items.map {|item| (item[f] - ideals[f][0]).abs}
+        diffs.map! {|d| d.nan? ? 1 : d}
+        max_diff = diffs.max
         
-        vars.each do |var_name|
-
-          scores = []
-          items.each do |item|
-            diff = (item[var_name] - ideals[name][var_name][0]).abs
-            if diff.zero?
-              scores << 1.0
-            else
-              s = 1.0 / diff
-              if not s.finite?
-                scores << 0.0
-              else
-                scores << s
-              end
-            end
+        scores = diffs.map do |d|
+          if d == 0
+            ideals[f][1]
+          else
+            (1 - (d / max_diff)) * ideals[f][1]
           end
+        end
 
-          score_max = scores.max
-          weighted_scores = scores.map do |score|
-             (score / score_max) * ideals[name][var_name][1]
-          end
-
-          items.each_index do |idx|
-            items[idx][score_name] ||= 0.0
-            items[idx][score_name] += weighted_scores[idx]
-          end
-          
+        items.each_index do |i|
+          items[i][name] ||= 0
+          items[i][name] = items[i][name] + scores[i]
         end
       end
     end

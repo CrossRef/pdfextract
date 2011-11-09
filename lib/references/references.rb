@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 require_relative "../spatial"
+require_relative "score"
 
 module PdfExtract
   module References
- 
-    Settings.default :min_score, 8.0
+
+    Settings.default :reference_flex, 0.1
     Settings.default :min_sequence_count, 3
     Settings.default :max_reference_order, 1000
+    Settings.default :min_lateness , 0.5
 
     def self.partition_by ary, &block
       matching = []
@@ -160,24 +162,44 @@ module PdfExtract
     def self.include_in pdf
       pdf.spatials :references, :depends_on => [:sections] do |parser|
 
-        refs = []
+        sections = []
 
         parser.objects :sections do |section|
-          # TODO Take top x%, fix Infinity coming back from score.
-          if section[:reference_score] >= pdf.settings[:min_score]
-            if numeric_sequence? pdf, Spatial.get_text_content(section)
-              refs += split_by_delimiter pdf, Spatial.get_text_content(section)
-            elsif multi_margin? section[:lines]
-              refs += split_by_margin section[:lines]
-            elsif multi_spacing? section[:lines]
-              refs += split_by_line_spacing section[:lines]
-            end
-          end
+          sections << section
         end
 
         parser.after do
+          max_score = sections.map {|s| s[:reference_score]}.max
+          min_permittable = max_score - (max_score * pdf.settings[:reference_flex])
+          
+          refs = []
+
+          sections = sections.reject do |s|
+            # A section without any years is definitely not a list of
+            # references. So too a section that appears in the first
+            # half of an article.
+            s[:lateness] < pdf.settings[:min_lateness] || s[:year_ratio].zero?
+          end
+          
+          sections.each do |section|
+            if section[:reference_score] >= min_permittable
+              if numeric_sequence? pdf, Spatial.get_text_content(section)
+                refs += split_by_delimiter pdf, Spatial.get_text_content(section)
+              elsif multi_margin? section[:lines]
+                refs += split_by_margin section[:lines]
+              elsif multi_spacing? section[:lines]
+                refs += split_by_line_spacing section[:lines]
+              end
+            end
+          end
+          
           # TODO Ideally we wouldn't see the ref headers here.
-          refs.reject {|ref| ref[:content].downcase.strip =~ /references?/ }
+          # Unfortunately publication details can look a lot like references.
+          refs.reject do |ref|
+            norm = ref[:content].downcase.strip
+            norm =~ /references?/ || norm =~ /submitted for publication/ || norm =~ /additional contributions/
+          end
+
         end
 
       end

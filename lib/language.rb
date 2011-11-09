@@ -5,12 +5,21 @@ module PdfExtract::Language
   def self.transliterate s
     s = s.gsub "\ufb01", "fi"
     s = s.gsub "\ufb02", "fl"
+    s = s.gsub "\ufb03", "ffi"
+    s = s.gsub "\ufb04", "ffl"
+    s = s.gsub "\ufb06", "st"
     s = s.gsub "\u2018", "'"
     s = s.gsub "\u2019", "'"
     s = s.gsub "\u2013", "-"
+    s = s.gsub "\u2014", "-"
     s = s.gsub "\u201c", "\""
     s = s.gsub "\u201d", "\""
-    s
+    s = s.gsub "\u25af", "("
+    s = s.gsub "\u00b4", ""
+    s = s.gsub "\u00b1", "-"
+    
+
+    s = s.gsub /\s+/, " "
   end
   
   def self.letter_ratio s
@@ -40,7 +49,7 @@ module PdfExtract::Language
     words = s.split
     
     year_words = words.map do |word|
-      word =~ /\.*\d{4}\.*/
+      word =~ /[^\d]\d{4}[^\d]/
     end
 
     year_words.reject { |year_word| not year_word }.length / words.length.to_f

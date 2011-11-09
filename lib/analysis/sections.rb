@@ -138,21 +138,15 @@ module PdfExtract
           sections = add_content_stats sections, pages.keys.count
 
           # Score sections into categories based on their textual attributes.
-          ideals = {
-            :reference => {
-              :name_ratio => [0.2, 2],
-              :letter_ratio => [0.25, 2],
-              :year_ratio => [0.05, 7],
-              :cap_ratio => [0.5, 5]
-            },
-            :body => {
-              :name_ratio => [0.03, 1],
-              :letter_ratio => [0.1, 1],
-              :year_ratio => [0.0, 1]
-            }
+          ref_ideals = {
+            :name_ratio => [0.14, 1],
+            :letter_ratio => [0.23, 6],
+            :year_ratio => [0.05, 10],
+            :cap_ratio => [0.49, 10],
+            :lateness => [0.96, 6]
           }
 
-          Spatial.score(sections, ideals)
+          Spatial.score(sections, ref_ideals, :reference_score)
 
           sections
         end

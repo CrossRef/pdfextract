@@ -243,8 +243,8 @@ module Dois
         if PdfExtract::Spatial.contains? header, region
             || PdfExtract::Spatial.contains? footer, region
           text = PdfExtract::Spatial.get_text_content(region)
-          dois = dois + text.scan /doi:(10\.\d+\/[^\s]+)/
-          dois = dois + text.scan /#{pdf.settings[:dx_host]}\/(10\.\d+\/[^\s]+)/
+          dois = dois + text.scan(/doi:(10\.\d+\/[^\s]+)/)
+          dois = dois + text.scan(/#{pdf.settings[:dx_host]}\/(10\.\d+\/[^\s]+)/)
         end
       end
         

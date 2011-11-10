@@ -9,7 +9,7 @@ Welcome! pdf-extract is a some-what generic PDF content extraction toolkit with 
 strong focus on extracting meaningful text from a PDF, such as a scholarly article's
 references.
 
-The latest version of pdf-extract is **0.0.7**. As such it is in active development
+The latest version of pdf-extract is **0.0.8**. As such it is in active development
 and should not be expected to work out of the box for your PDFs. However, if you're
 lucky, or by tweaking pdf-extract's setting you should be able to get reasonable
 results when extracting regions of text, column boundaries, headers, footers,

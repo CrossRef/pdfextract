@@ -1,8 +1,17 @@
 module PdfExtract
   module Columns
 
-    Settings.default :column_sample_count, 8
-    Settings.default :max_column_count, 3
+    Settings.declare :column_sample_count, {
+      :default => 8,
+      :module => self.name,
+      :description => "Columns are detected by sampling :column_sample_count lines across a page and examing the number of regions incident with each line."
+    }
+
+    Settings.declare :max_column_count, {
+      :default => 3,
+      :module => self.name,
+      :description => "The maximum number of columns that can ever occur. During column detection column counts larger than :max_column_count will be disregarded."
+    }
 
     def self.columns_at y, body_regions
       x_mask = MultiRange.new

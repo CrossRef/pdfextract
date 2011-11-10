@@ -5,7 +5,11 @@ require_relative '../kmeans'
 module PdfExtract
   module Sections
 
-    Settings.default :width_ratio, 0.9
+    Settings.declare :width_ratio, {
+      :default => 0.9,
+      :module => self.name,
+      :description => "Minimum ratio of text region width to containing column width for a text region to be considered as part of an article section."
+    }
     
     def self.match? a, b
       lh = a[:line_height].round(2) == b[:line_height].round(2)

@@ -3,7 +3,12 @@ require_relative '../spatial'
 module PdfExtract
   module Regions
 
-    Settings.default :line_slop, 1.0
+    Settings.declare :line_slop, {
+      :default => 1.0,
+      :module => self.name,
+      :description => "Maximum allowed line spacing between lines that are considered
+to be part of the same region. :line_slop is multiplied by the average line height of a region to find a maximum line spacing between a region and a candidate line."
+    }
 
     # TODO Handle :writing_mode once present in characters and text_chunks.
 

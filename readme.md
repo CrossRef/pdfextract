@@ -168,7 +168,7 @@ a number of default parsers, each one of which outputs one of these types of
 spatial object:
 
 - characters
-- line runs
+- chunks (or line runs)
 - regions
 - columns
 - headers
@@ -184,7 +184,7 @@ raw Ruby Hash objects) from either PDF page streams or the output of other
 parsers. Therefore some parsers have dependency on other parsers. For example, from
 the list above only the *characters* parser does not have dependency on other parser
 types. It creates character spatial objects, each of which defines the spatial location 
-of one character within the PDF, from only the content of the PDF. The *text runs*
+of one character within the PDF, from only the content of the PDF. The *chunks*
 parser depends on *characters*, which it takes as input and combines together to form
 lines of text, or *text runs*. *Regions* depends on *text runs*, which it combines
 into blocks of consecutive lines.
@@ -219,7 +219,11 @@ require "pdf-extract"
 
 module Dois
 
-  PdfExtract::Settings.default :dx_host, "dx.doi.org"
+  PdfExtract::Settings.delcare :dx_host, {
+    :default => "dx.doi.org",
+    :module => self.name,
+    :description => "Hostname of the DX resolver."
+  }
 
   def self.include_in pdf
     pdf.spatials :dois, :paged => true, :depends_on => [:regions, :headers, :footers] do |parser|
@@ -265,7 +269,7 @@ page and check each region for incidence. Without paging, we would receive all h
 for all pages, then all footers for all pages, and finally all regions.
 
 Though the use is contrived in the example above, settings can be declared via
-`PdfExtract::Settings.default`. These must be declared to be accessed later in the
-parser, using `pdf.settings`. An attempt to access an undeclared setting will result
-in a fatal error.
+`PdfExtract::Settings.declare`. Settings must be declared to be accessed later on in 
+the parser (via `pdf.settings`). An attempt to access an undeclared setting will 
+result in a fatal error.
 

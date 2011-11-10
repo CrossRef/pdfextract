@@ -5,10 +5,29 @@ require_relative "score"
 module PdfExtract
   module References
 
-    Settings.default :reference_flex, 0.1
-    Settings.default :min_sequence_count, 3
-    Settings.default :max_reference_order, 1000
-    Settings.default :min_lateness , 0.5
+    Settings.declare :reference_flex, {
+      :default => 0.1,
+      :module => self.name,
+      :description => "Article sections are given a score as potential reference sections. Their score is based on article section features, such as the number of family names that appear, the ratio of uppercase letters to lowercase, and so on. Any article section that has a score that is more than 1 - :reference_flex percent of the best score will be parsed as a reference section."
+    }
+
+    Settings.declare :min_sequence_count, {
+      :default => 3,
+      :module => self.name,
+      :description => "There must be :min_sequence_count or more numbered references within a candidate reference section for them to be parsed as number-delimited references."
+    }
+    
+    Settings.declare :max_reference_order, {
+      :default => 1000,
+      :module => self.name,
+      :description => "References whose number would be greater than :max_reference_order are ignored. This helps avoid confusing year literals with reference numbers."
+    }
+
+    Settings.declare :min_lateness, {
+      :default => 0.5,
+      :module => self.name,
+      :description => "Article sections that appear early in an article will not be considered as candidate reference sections. :min_lateness is a value from 0 to 1, where 0 represents the start of an article, 1 the end."
+    }
 
     def self.partition_by ary, &block
       matching = []

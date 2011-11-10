@@ -129,6 +129,10 @@ commands.each do |cmd|
   end
 end
 
+def norm_name k
+  k.sub /.+\:\:/, ""
+end
+
 command :settings do |c|
   c.syntax = "pdf-extract settings [options]"
   c.description = "Print settings that pdf-extract will use to screen."
@@ -137,10 +141,16 @@ command :settings do |c|
     pdf = PdfExtract::Pdf.new
     apply_settings pdf
     s = pdf.settings
-    say "<%= color('AT DEFAULT:', BOLD) %>\n\n"
-    s.unmodified.each_pair { |k, v| say "#{k}:\t#{v}" }
-    say "\n<%= color('OVERRIDDEN:', BOLD) %>\n\n"
-    s.modified.each_pair { |k, v| say "#{k}:\t#{v}   (#{s.agent(k)})" }
+
+    if s.modified.empty?
+      s.unmodified.each_pair { |k, v| say "====================\n<%= color('#{norm_name(v[:module])}', BOLD) %> declares <%= color('#{k}', BOLD) %>, default = <%= color('#{v[:default]}', BOLD) %>\n\n#{v[:description]}\n====================\n\n" }
+    else
+      say "<%= color('AT DEFAULT:', BOLD) %>\n\n"
+      s.unmodified.each_pair { |k, v| say "#{k}:\t#{v}" }
+    
+      say "\n<%= color('OVERRIDDEN:', BOLD) %>\n\n"
+      s.modified.each_pair { |k, v| say "#{k}:\t#{v}   (#{s.agent(k)})" }
+    end
   end
 end
 

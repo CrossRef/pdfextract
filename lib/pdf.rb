@@ -6,8 +6,13 @@ module PdfExtract
     
     @@defaults = {}
     
-    def self.default key, default_value
-      @@defaults[key] = default_value
+    def self.declare key, opts={}
+      default_hash = {
+        :default => "",
+        :description => "",
+        :module => ""
+      }.merge(opts)
+      @@defaults[key] = default_hash
     end
     
     def initialize
@@ -16,7 +21,8 @@ module PdfExtract
     end
   
     def [] key
-      @settings[key] || @@defaults[key] ||
+      @settings[key] ||
+        (@@defaults[key] && @@defaults[key][:default]) ||
         raise("Attempt to use undeclared setting \"#{key}\"")
     end
     

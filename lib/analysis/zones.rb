@@ -5,8 +5,11 @@ module PdfExtract
     # distance from margins. Should be within a factor of the body
     # area.
 
-    # Ratio of marginless page height to minimum body height.
-    Settings.default :body_ratio, 0.9
+    Settings.declare :body_ratio, {
+      :default => 0.9,
+      :module => "Bodies, Headers, Footers",
+      :description => "Minium permitted ratio of page height to candidate body zone height. When detecting headers, footers and body (area between header and footer) zones, candidate header and footer areas will be disregarded if they imply a body area whose height to page height ratio is less than :body_ratio."
+    }
 
     def self.include_in pdf
       deps = [:top_margins, :left_margins, :right_margins, :bottom_margins, :regions]

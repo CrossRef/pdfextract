@@ -3,7 +3,11 @@ require_relative "../spatial"
 module PdfExtract
   module Titles
 
-    Settings.default :title_slop, 0.2
+    Settings.declare :title_slop, {
+      :default => 0.2,
+      :module => self.name,
+      :description => "Regions of text whose font size is less than :title_slop percent of the largest font size in a PDF will be disregarded as candidate titles. Value must be 0 - 1."
+    }
 
     def self.include_in pdf
       pdf.spatials :titles, :depends_on => [:regions] do |parser|

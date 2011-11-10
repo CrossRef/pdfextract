@@ -5,14 +5,25 @@ module PdfExtract
 
     # TODO Look for obj[:writing_mode] == :vertical or :horizontal
 
-    Settings.default :char_slop, 0.2
-    Settings.default :word_slop, 4.0
-    Settings.default :overlap_slop, 0.9
+    Settings.declare :char_slop, {
+      :default => 0.2,
+      :module => self.name,
+      :description => "Maximum allowed space between characters for them to be considered part of the same word. char_slop is multiplied by the width of each character to find its joining width."
+    }
+
+    Settings.declare :word_slop, {
+      :default => 4.0,
+      :module => self.name,
+      :description => "Maximum allowed space between words for them to be considered part of the same line. word_slop is multiplied by width of the last character in a word to find its joining width."
+    }
+
+    Settings.declare :overlap_slop, {
+      :default => 0.9,
+      :module => self.name,
+      :description => "A minimum permitted ratio of the overlapped height of words for them to join together into lines."
+    }
 
     def self.include_in pdf
-      char_slop = 0.2
-      word_slop = 4.0
-      overlap_slop = 0.9
       
       pdf.spatials :chunks, :paged => true, :depends_on => [:characters] do |parser|
         rows = {}

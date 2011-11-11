@@ -206,9 +206,12 @@ categories. The first category, model, includes generic parsing of text into
 `characters`, `text runs` and `regions`. The second, analysis applies analysis that
 is usually only relevant to article or report PDFs, such as the detection of `headers`,
 `footers`, `bodies`, `columns` and `sections`. Finally, the *reference* parser extracts
-unstructured citations and is only really applicable to scholarly articles. 
+unstructured references and is only really applicable to scholarly articles. 
 
 ## Extensibility
+
+This is only particularly useful if you are hacking on `pdf-extract`. Otherwise it
+is best to process parsed spatial objects without defining a new parser.
 
 Additional parsers can be registered with pdf-extract. New parsers can extract
 information directly from the PDF or use the output of other parsers. Here's one that

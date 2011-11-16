@@ -1,11 +1,19 @@
 pdf-extract
 ===========
 
+## Quick start
+
 Install the latest version with:
 
     $ gem install pdf-extract
 
-Welcome! pdf-extract is a some-what generic PDF content extraction toolkit with a 
+Extract references from a PDF:
+
+    $ pdf-extract extract --references myfile.pdf
+
+## Introduction
+
+`pdf-extract` is a some-what generic PDF content extraction toolkit with a 
 strong focus on extracting meaningful text from a PDF, such as a scholarly article's
 references.
 

@@ -3,23 +3,38 @@ require_relative "names"
 module PdfExtract::Language
 
   def self.transliterate s
-    s = s.gsub "\ufb01", "fi"
-    s = s.gsub "\ufb02", "fl"
-    s = s.gsub "\ufb03", "ffi"
-    s = s.gsub "\ufb04", "ffl"
-    s = s.gsub "\ufb06", "st"
-    s = s.gsub "\u2018", "'"
-    s = s.gsub "\u2019", "'"
-    s = s.gsub "\u2013", "-"
-    s = s.gsub "\u2014", "-"
-    s = s.gsub "\u201c", "\""
-    s = s.gsub "\u201d", "\""
-    s = s.gsub "\u25af", "("
-    s = s.gsub "\u00b4", ""
-    s = s.gsub "\u00b1", "-"
-    
+    r = ""
 
-    s = s.gsub /\s+/, " "
+    s.each_char do |c|
+      case c
+
+      # Remove ligatures
+      when "\ufb00" then r << "ff"
+      when "\ufb01" then r << "fi"
+      when "\ufb02" then r << "fl"
+      when "\ufb03" then r << "ffi"
+      when "\ufb04" then r << "ffl"
+      when "\ufb05" then r << "ft"
+      when "\ufb06" then r << "st"
+      when "\u1d6b" then r << "ue"
+      
+      # Normalise some punctuation.
+      when "\u2018" then r << "'"
+      when "\u2019" then r << "'"
+      when "\u2013" then r << "-"
+      when "\u2014" then r << "-"
+      when "\u201c" then r << "\""
+      when "\u201d" then r << "\""
+      when "\u25af" then r << "("
+      when "\u00b4" then r << ""
+      when "\u00b1" then r << "-"
+
+      else
+        r << c
+      end
+    end
+      
+    r.gsub /\s+/, " "
   end
   
   def self.letter_ratio s

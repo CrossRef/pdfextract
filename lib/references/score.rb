@@ -21,7 +21,7 @@ module PdfExtract
       puts sample
 
       puts @@reference_model.predict(sample)
-      @@reference_model.predict(sample) == 1
+      @@reference_model.predict(sample) > 0
     end
 
   end

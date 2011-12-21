@@ -1,7 +1,7 @@
 # Gem spec for pdf-extract.
 Gem::Specification.new do |s|
   s.name = "pdf-extract"
-  s.version = "0.0.8"
+  s.version = "0.0.9"
   s.summary = "PDF content extraction tool and library."
   s.files = Dir.glob("{bin,lib,data}/**/**/*")
   s.executables << "pdf-extract"
@@ -17,5 +17,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'sqlite3', '>= 1.3.4'
   s.add_dependency 'commander', '>= 4.0.4'
   s.add_dependency 'json', '>= 1.5.1'
+  s.add_dependency 'libsvm-ruby-swig', '>= 0.4.0'
 end
 

@@ -61,7 +61,8 @@ module PdfExtract
         content = Spatial.get_text_content section
         Spatial.drop_spatial(section).merge({
           :letter_ratio => Language.letter_ratio(content),
-          :year_ratio => Language.year_ratio(content),                                            :cap_ratio => Language.cap_ratio(content),
+          :year_ratio => Language.year_ratio(content),
+          :cap_ratio => Language.cap_ratio(content),
           :name_ratio => Language.name_ratio(content),          
           :word_count => Language.word_count(content),
           :lateness => (last_page / page_count.to_f)             

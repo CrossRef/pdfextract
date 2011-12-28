@@ -1,7 +1,7 @@
 # Gem spec for pdf-extract.
 Gem::Specification.new do |s|
   s.name = "pdf-extract"
-  s.version = "0.0.9"
+  s.version = "0.0.10"
   s.summary = "PDF content extraction tool and library."
   s.files = Dir.glob("{bin,lib,data}/**/**/*")
   s.executables << "pdf-extract"
@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/CrossRef/pdfextract"
   s.required_ruby_version = ">=1.9.1"
 
-  s.add_dependency 'pdf-reader', '>= 0.10.1'
+  s.add_dependency 'pdf-reader', '~> 1.0.0.rc1'
   s.add_dependency 'nokogiri', '>= 1.5.0'
   s.add_dependency 'rmagick', '>= 2.13.1'
   s.add_dependency 'prawn', '>= 0.11.1'

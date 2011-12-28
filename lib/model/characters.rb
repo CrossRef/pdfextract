@@ -128,8 +128,8 @@ module PdfExtract
     def self.build_fonts page
       fonts = {}
       font_metrics = {}
-      page.fonts.each do |label, ref|
-        font = PDF::Reader::Font.new(page.objects, page.objects[ref])
+      page.fonts.each do |label, font_obj|
+        font = PDF::Reader::Font.new(page.objects, font_obj)
         fonts[label] = font
         font_metrics[label] = FontMetrics.new font
       end

@@ -4,7 +4,7 @@ module PdfExtract
   module Margins
 
     def self.axis_spatials pdf, name, axis
-      pdf.spatials name, :paged => true, :depends_on => [:regions] do |parser|
+      pdf.spatials name, :paged => true, :depends_on => [:characters] do |parser|
         axis_mask = MultiRange.new
         page = -1
         page_width = 0
@@ -18,14 +18,14 @@ module PdfExtract
           page = -1
         end
 
-        parser.objects :regions do |region|
+        parser.objects :characters do |character|
           if page == -1
-            page = region[:page]
-            page_width = region[:page_width]
-            page_height = region[:page_height]
+            page = character[:page]
+            page_width = character[:page_width]
+            page_height = character[:page_height]
           end
           
-          axis_mask.append region[axis]..(region[axis]+region[dimension])
+          axis_mask.append character[axis]..(character[axis]+character[dimension])
         end
 
         parser.after do

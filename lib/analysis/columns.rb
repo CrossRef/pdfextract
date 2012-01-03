@@ -26,7 +26,7 @@ module PdfExtract
     end
 
     def self.include_in pdf
-      deps = [:regions, :bodies]
+      deps = [:characters, :bodies]
       pdf.spatials :columns, :paged => true, :depends_on => deps do |parser|
         
         body = nil
@@ -40,9 +40,9 @@ module PdfExtract
           body = b
         end
 
-        parser.objects :regions do |region|
-          if Spatial.contains? body, region
-            body_regions << region
+        parser.objects :characters do |character|
+          if Spatial.contains? body, character
+            body_regions << character
           end
         end
 

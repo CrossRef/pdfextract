@@ -1,8 +1,13 @@
+# -*- coding: utf-8 -*-
+require_relative "../multi_range"
+require_relative "../equal_rows"
+
 module PdfExtract
   module Columns
 
+    # TODO Update name and description
     Settings.declare :column_sample_count, {
-      :default => 8,
+      :default => 6,
       :module => self.name,
       :description => "Columns are detected by sampling :column_sample_count lines across a page and examing the number of regions incident with each line."
     }
@@ -29,33 +34,20 @@ module PdfExtract
       deps = [:characters, :bodies]
       pdf.spatials :columns, :paged => true, :depends_on => deps do |parser|
         
+        rows = nil
         body = nil
-        body_regions = []
-
-        parser.before do
-          body_regions = []
-        end
         
         parser.objects :bodies do |b|
           body = b
+          rows = EqualRows.new b, pdf.settings[:column_sample_count]
         end
 
         parser.objects :characters do |character|
-          if Spatial.contains? body, character
-            body_regions << character
-          end
+          rows.append character
         end
 
         parser.after do
-          column_sample_count = pdf.settings[:column_sample_count]
-          
-          step = 1.0 / (column_sample_count + 1)
-          column_ranges = []
-
-          (1 .. column_sample_count).each do |i|
-            y = body[:y] + (body[:height] * i * step)
-            column_ranges << columns_at(y, body_regions)
-          end
+          column_ranges = rows.column_masks
 
           # Discard those with a coverage of 0.
           column_ranges.reject! { |r| r.covered.zero? }

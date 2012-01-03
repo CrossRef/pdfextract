@@ -30,6 +30,10 @@ module PdfExtract
         end
       end
     end
+
+    def column_masks
+      @rows.map { |row| row[:column_mask] }
+    end
     
   end
 

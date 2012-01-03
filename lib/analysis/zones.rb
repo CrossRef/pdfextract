@@ -11,6 +11,12 @@ module PdfExtract
       :description => "Minium permitted ratio of page height to candidate body zone height. When detecting headers, footers and body (area between header and footer) zones, candidate header and footer areas will be disregarded if they imply a body area whose height to page height ratio is less than :body_ratio."
     }
 
+    Settings.declare :zone_slop, {
+      :default => 4,
+      :module => "Bodies, Headers, Footers",
+      :description => "Vertical slop applied to characters when calculating an x-axis mask used to determine header and footer locations."
+    }
+
     def self.include_in pdf
       deps = [:top_margins, :left_margins, :right_margins, :bottom_margins, :characters]
       pdf.spatials :zones, :paged => true, :depends_on => deps do |parser|
@@ -41,7 +47,9 @@ module PdfExtract
         end
 
         parser.objects :characters do |c|
-          y_mask.append c[:y]..(c[:y] + c[:height])
+          from = c[:y] - pdf.settings[:zone_slop]
+          to = c[:y] + c[:height] + pdf.settings[:zone_slop]
+          y_mask.append from..to
         end
 
         parser.after do

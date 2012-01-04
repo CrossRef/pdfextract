@@ -5,11 +5,10 @@ require_relative "../equal_rows"
 module PdfExtract
   module Columns
 
-    # TODO Update name and description
     Settings.declare :column_sample_count, {
-      :default => 6,
+      :default => 8,
       :module => self.name,
-      :description => "Columns are detected by sampling :column_sample_count lines across a page and examing the number of regions incident with each line."
+      :description => "Columns are detected by sampling :column_sample_count equal rows across a page and examing the number of regions incident with each row."
     }
 
     Settings.declare :max_column_count, {
@@ -18,6 +17,12 @@ module PdfExtract
       :description => "The maximum number of columns that can ever occur. During column detection column counts larger than :max_column_count will be disregarded."
     }
 
+    Settings.declare :column_merge_threshold, {
+      :default => 20,
+      :module => self.name,
+      :description => "Column detection can uncover areas that look like columns but are in fact something more like bullet points or other column-like structures that should really be merged into an adjacent column. Columns under :column_merge_threshold width will be merged into their nearest adjacent column."
+    }
+    
     def self.columns_at y, body_regions
       x_mask = MultiRange.new
 
@@ -49,6 +54,11 @@ module PdfExtract
         parser.after do
           column_ranges = rows.column_masks
 
+          # Merge ranges within each column range if they are very small.
+          column_ranges.each do |column_range|
+            column_range.merge_under! pdf.settings[:column_merge_threshold]
+          end
+          
           # Discard those with a coverage of 0.
           column_ranges.reject! { |r| r.covered.zero? }
           
@@ -58,13 +68,13 @@ module PdfExtract
           if column_ranges.count.zero?
             []
           else
-            # Find the highest column count.
-            most = column_ranges.max_by { |r| r.count }.count
-            column_ranges.reject! { |r| r.count != most }
-
             # Take the columns that are widest.
             widest = column_ranges.map { |r| r.avg }.max
             column_ranges.reject! { |r| r.avg < widest }
+            
+            # Find the highest column count.
+            most = column_ranges.max_by { |r| r.count }.count
+            column_ranges.reject! { |r| r.count != most }
 
             column_ranges.first.ranges.map do |range|
               body.merge({:x => range.min, :width => range.max - range.min })

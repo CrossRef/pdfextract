@@ -100,9 +100,10 @@ def run_for_directory dir
 
             json_path = path.sub(/\.pdf\Z/, ".json")
             json_fail_path = path.sub(/\.pdf\Z/, ".json.fail")
-            
+
+            puts "\tDiff of actual to expected output:"
             puts ""
-            puts `diff #{json_path} #{json_fail_path}`
+            puts `diff #{json_fail_path} #{json_path}`
             puts ""
             
             fail_count = fail_count.next

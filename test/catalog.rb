@@ -16,7 +16,7 @@ require 'json'
 require 'getpdf'
 require_relative '../lib/pdf-extract'
 
-program :name, "catalog"
+program :name, "catalog.rb"
 program :version, "0.0.1"
 program :description, "Build a PDF catalog, with metadata."
 

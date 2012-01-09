@@ -20,9 +20,11 @@ def expected_refs file_path
 end
 
 def actual_refs file_path
-  PdfExtract.parse file_path do |pdf|
+  pdf = PdfExtract.parse file_path do |pdf|
     pdf.references
   end
+  puts pdf.spatial_objects
+  pdf.spatial_objects[:references]
 end
 
 def record_refs file_path, options={}
@@ -37,13 +39,13 @@ def record_refs file_path, options={}
 end
 
 def refs_equal? a, b
-  if a[:references].count != b[:references].count
+  if a.count != b.count
     {:match => false, :reason => "Differing number of references."}
   else
     status = {:match => true}
     
-    a[:references].each_index do |ref, idx|
-      if ref[:content] != b[:references][idx][:content]
+    a.each_index do |ref, idx|
+      if ref[:content] != b[idx][:content]
         status = {
           :match => false,
           :reason => "Reference content does not match at index #{idx}."

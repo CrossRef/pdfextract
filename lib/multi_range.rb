@@ -109,5 +109,52 @@ module PdfExtract
       end
     end
 
+    def intersection bounding_range
+      # We want to keep ranges that are in one of these four
+      # positions:
+      # 1. min is less than bounding min but max is within bounds
+      # 2. max is more than bounding max but min is within bounds
+      # 3. min and max are within bounds.
+      # 4. min is below bounding min and max is above bounding max.
+      #    in this last case we can reset @ranges to a single
+      #    range equal to the bounding range.
+
+      kept_ranges = []
+      
+      @ranges.each do |range|
+        if range.min <= bounding_range.min && range.max >= bounding_range.max
+          kept_ranges = [(bounding_range.min..bounding_range.max)]
+          break
+        elsif bounding_range.include?(range.min) && bounding_range.include?(range.max)
+          kept_ranges << range
+        elsif range.max > bounding_range.max && bounding_range.include?(range.min)
+          kept_ranges << (range.min..bounding_range.max)
+        elsif range.min < bounding_range.min && bounding_range.include?(range.max)
+          kept_ranges << (bounding_range.min..range.max)
+        end
+      end
+
+      @ranges = kept_ranges
+    end
+
+    def widest
+      @ranges.max { |r| r.max - r.min }
+    end
+
+    def widest_gap
+      if @ranges.count.zero?
+        nil
+      else
+        gap = 0
+        last_range = nil
+        @ranges.each do |range|
+          if !last_range.nil? && (range.min - last_range.max > gap)
+            gap = range.min - last_range.max
+          end
+          last_range = range
+        end 
+      end
+    end
+
   end
 end

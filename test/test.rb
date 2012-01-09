@@ -11,9 +11,7 @@ program :description, "Test PDF reference extraction against previous results."
 def expected_refs file_path
   json_path = file_path.sub(/\.pdf\Z/, ".json")
   if File.exists? json_path
-    File.open json_path, "r" do |f|
-      JSON.parse f
-    end
+    JSON.parse File.read(json_path)
   else
     nil
   end
@@ -23,7 +21,6 @@ def actual_refs file_path
   pdf = PdfExtract.parse file_path do |pdf|
     pdf.references
   end
-  puts pdf.spatial_objects
   pdf.spatial_objects[:references]
 end
 
@@ -31,9 +28,9 @@ def record_refs file_path, options={}
   options = {:suffix => ".json", :refs => nil}.merge options
   File.open file_path.sub(/\.pdf\Z/, options[:suffix]), "w" do |f|
     if options[:refs].nil?
-      f.write actual_refs(file_path).to_json
+      f.write JSON.pretty_generate(actual_refs(file_path))
     else
-      f.write options[:refs].to_json
+      f.write JSON.pretty_generate(options[:refs])
     end
   end
 end
@@ -79,20 +76,41 @@ def run_for_directory dir
         puts "FAIL"
         puts "\tNo expected results for this PDF."
         puts "\tWriting actual output..."
-        record_refs path, {:suffix => ".json.fail"}
+        begin
+          record_refs path, {:suffix => ".json.fail"}
+        rescue StandardError => e
+          puts "\tParsing PDF failed due to:"
+          puts "\t#{e.class}: #{e.message}"
+        end
         fail_count = fail_count.next
       else
-        actual = actual_refs path
-        match_status = refs_equal? expected, actual
+        begin
+          actual = actual_refs path
+          match_status = refs_equal? expected, actual
         
-        if match_status[:match]
-          puts "PASS"
-          pass_count = pass_count.next
-        else
+          if match_status[:match]
+            puts "PASS"
+            pass_count = pass_count.next
+          else
+            puts "FAIL"
+            puts "\t" + match_status[:reason]
+
+            puts "\tWriting failed output..."
+            record_refs path, {:suffix => ".json.fail", :refs => actual}
+
+            json_path = path.sub(/\.pdf\Z/, ".json")
+            json_fail_path = path.sub(/\.pdf\Z/, ".json.fail")
+            
+            puts ""
+            puts `diff #{json_path} #{json_fail_path}`
+            puts ""
+            
+            fail_count = fail_count.next
+          end
+        rescue StandardError => e
           puts "FAIL"
-          puts "\t" + match_status[:reason]
-          puts "\tWriting failed output..."
-          record_refs path, {:suffix => ".json.fail", :refs => actual}
+          puts "\tParsing PDF failed due to:"
+          puts "\t#{e.class}: #{e.message}"
           fail_count = fail_count.next
         end
       end

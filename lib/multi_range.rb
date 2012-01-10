@@ -138,21 +138,30 @@ module PdfExtract
     end
 
     def widest
-      @ranges.max { |r| r.max - r.min }
+      @ranges.reduce(0..0) do |widest, r|
+        if (r.max-r.min) > (widest.max-widest.min)
+          r
+        else
+          widest
+        end
+      end
     end
 
     def widest_gap
       if @ranges.count.zero?
         nil
       else
-        gap = 0
+        gap_min = 0
+        gap_max = 0
         last_range = nil
         @ranges.each do |range|
-          if !last_range.nil? && (range.min - last_range.max > gap)
-            gap = range.min - last_range.max
+          if !last_range.nil? && (range.min - last_range.max > (gap_max - gap_min))
+            gap_max = range.min
+            gap_min = last_range.max
           end
           last_range = range
-        end 
+        end
+        (gap_min..gap_max)
       end
     end
 

@@ -134,7 +134,9 @@ module PdfExtract
         end
       end
 
-      @ranges = kept_ranges
+      intersection = MultiRange.new
+      intersection.ranges = kept_ranges
+      intersection
     end
 
     def widest

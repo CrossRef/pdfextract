@@ -52,6 +52,8 @@ module PdfExtract
         end
 
         parser.after do
+          # TODO Find largest gap(s)
+          
           column_ranges = rows.column_masks
 
           # Merge ranges within each column range if they are very small.

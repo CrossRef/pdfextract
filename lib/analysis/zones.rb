@@ -47,78 +47,50 @@ module PdfExtract
         end
 
         parser.objects :characters do |c|
-          from = c[:y] - pdf.settings[:zone_slop]
-          to = c[:y] + c[:height] + pdf.settings[:zone_slop]
+          from = c[:y] #- pdf.settings[:zone_slop]
+          to = c[:y] + c[:height] #+ pdf.settings[:zone_slop]
           y_mask.append from..to
         end
 
         parser.after do
-          # Mask out a middle chunk of the document.
-          marginless_height = t_margin[:y] - (b_margin[:y] + b_margin[:height])
-          a = (marginless_height - (marginless_height * pdf.settings[:body_ratio])) / 2
-          y_mask.append((b_margin[:y] + b_margin[:height] + a)..(t_margin[:y] - a))
+          # TODO Ignore header and/or footer if gap is too small
+          # TODO Would benefit from masking out images and tables
           
+          page_bottom =  b_margin[:y] + b_margin[:height]
+          page_height = t_margin[:y] - page_bottom
+          page_top = page_bottom + page_height
+
+          footer_search = page_bottom .. (page_bottom + (page_height * 0.2))
+          header_search = (page_top - (page_height * 0.2)) .. page_top
+
+          footer_gap = y_mask.intersection(footer_search).widest_gap
+          header_gap = y_mask.intersection(header_search).widest_gap
+
           objs = []
-          
-          if y_mask.count < 2
-            objs << {
-              :group => :bodies,
-              :x => left_margin_x,
-              :y => b_margin[:y] + b_margin[:height],
-              :width => right_margin_x - left_margin_x,
-              :height => t_margin[:y] - (b_margin[:y] + b_margin[:height])
-            }
-          elsif y_mask.count < 3
-            top = {
-              :x => left_margin_x,
-              :y => y_mask.max_excluded,
-              :width => right_margin_x - left_margin_x,
-              :height => t_margin[:y] - y_mask.max_excluded
-            }
 
-            bottom = {
-              :x => left_margin_x,
-              :y => b_margin[:y] + b_margin[:height],
-              :width => right_margin_x - left_margin_x,
-              :height => top[:y] - (b_margin[:y] + b_margin[:height])
-            }
+          objs << {
+            :group => :footers,
+            :x => left_margin_x,
+            :y => b_margin[:y] + b_margin[:height],
+            :width => right_margin_x - left_margin_x,
+            :height => footer_gap.min
+          }
 
-            if top[:height] > bottom[:height]
-              top[:group] = :bodies
-              bottom[:group] = :footers
-            else
-              top[:group] = :headers
-              bottom[:group] = :bodies
-            end
+          objs << {
+            :group => :bodies,
+            :x => left_margin_x,
+            :y => footer_gap.max,
+            :width => right_margin_x - left_margin_x,
+            :height => header_gap.min - footer_gap.max
+          }
 
-            objs += [top, bottom]
-          else
-            header = {
-              :group => :headers,
-              :x => left_margin_x,
-              :y => y_mask.max_excluded,
-              :width => right_margin_x - left_margin_x,
-              :height => t_margin[:y] - y_mask.max_excluded
-            }
-
-            footer = {
-              :group => :footers,
-              :x => left_margin_x,
-              :y => b_margin[:y] + b_margin[:height],
-              :width => right_margin_x - left_margin_x,
-              :height => y_mask.min_excluded - (b_margin[:y] + b_margin[:height])
-            }
-
-            body = {
-              :group => :bodies,
-              :x => left_margin_x,
-              :y => footer[:y] + footer[:height],
-              :width => right_margin_x - left_margin_x,
-              :height => header[:y] - (footer[:y] + footer[:height])
-            }
-
-            objs += [header, body, footer]
-          end
+          objs << {
+            :group => :headers,
+            :x => left_margin_x,
+            :y => header_gap.max,
+            :width => right_margin_x - left_margin_x,
+            :height => t_margin[:y] - header_gap.max
+          }
 
           page_base = {
             :page => t_margin[:page],

@@ -32,26 +32,26 @@ describe PdfExtract::MultiRange do
   it "should remove out of bounds ranges upon intersection" do
     @multi_range.append (10..20)
     @multi_range.append (40..50)
-    @multi_range.intersection (25..35)
-    @multi_range.count.should == 0
+    inter = @multi_range.intersection (25..35)
+    inter.count.should == 0
   end
 
   it "should keep ranges fully within an intersection" do
     @multi_range.append (10..20)
     @multi_range.append (30..40)
-    @multi_range.intersection (5..45)
-    @multi_range.count.should == 2
+    inter = @multi_range.intersection (5..45)
+    inter.count.should == 2
   end
 
   it "should truncate ranges that fall on intersection bounds" do
     @multi_range.append (0..10)
     @multi_range.append (50..60)
     @multi_range.append (100..110)
-    @multi_range.intersection (5..105)
-    @multi_range.min.should be 5
-    @multi_range.max.should be 105
-    @multi_range.ranges.first.min.should == 5
-    @multi_range.ranges.last.max.should == 105
+    inter = @multi_range.intersection (5..105)
+    inter.min.should == 5
+    inter.max.should == 105
+    inter.ranges.first.min.should == 5
+    inter.ranges.last.max.should == 105
   end
     
   it "should locate the widest gap correctly" do

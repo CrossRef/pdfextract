@@ -1,4 +1,5 @@
 require_relative 'pdf'
+require_relative 'model/images'
 require_relative 'model/characters'
 require_relative 'model/chunks'
 require_relative 'model/regions'
@@ -56,6 +57,7 @@ module PdfExtract
   end
 
   def self.init
+    add_parser Images
     add_parser Characters
     add_parser Chunks
     add_parser Regions

@@ -61,7 +61,7 @@ module PdfExtract
             :x => left_margin_x,
             :y => b_margin[:y] + b_margin[:height],
             :width => right_margin_x - left_margin_x,
-            :height => footer_gap.min
+            :height => footer_gap.min - (b_margin[:y] + b_margin[:height])
           }
 
           objs << {

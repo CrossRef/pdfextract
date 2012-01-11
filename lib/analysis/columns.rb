@@ -25,7 +25,8 @@ module PdfExtract
              b.merge({:height => b[:height] / 2, :y => b[:y] + b[:height] / 4})
             ]
 
-          4.times { page_masks << MultiRange.new }
+          page_masks = []
+          page_parts.count.times { page_masks << MultiRange.new }
         end
 
         parser.objects :characters do |character|

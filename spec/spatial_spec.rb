@@ -112,6 +112,10 @@ describe PdfExtract::Spatial do
     it "should return true for a contained region" do
       PdfExtract::Spatial.contains?(@central, @contained).should == true
     end
+
+    it "should return true for the same region" do
+      PdfExtract::Spatial.contains?(@central, @central).should == true
+    end
   end
 
   context "overlap?" do

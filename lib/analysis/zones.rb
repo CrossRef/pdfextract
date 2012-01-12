@@ -8,7 +8,8 @@ module PdfExtract
     }
 
     def self.include_in pdf
-      deps = [:top_margins, :left_margins, :right_margins, :bottom_margins, :characters]
+      deps = [:top_margins, :left_margins, :right_margins,
+              :bottom_margins, :characters, :images]
       pdf.spatials :zones, :paged => true, :depends_on => deps do |parser|
         y_mask = MultiRange.new
         t_margin = nil
@@ -38,6 +39,10 @@ module PdfExtract
 
         parser.objects :characters do |c|
           y_mask.append (c[:y] .. (c[:y] + c[:height]))
+        end
+
+        parser.objects :images do |i|
+          y_mask.append (i[:y] .. (i[:y] + i[:height]))
         end
 
         parser.after do

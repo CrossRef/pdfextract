@@ -148,7 +148,7 @@ module PdfExtract
         paged_objs = {}
         @object_listeners.each_pair do |type, _|
           @pdf.paged_objects(type).each_pair do |page, objs|
-              paged_objs[page] ||= {}
+            paged_objs[page] ||= {}
             paged_objs[page][type] = objs
           end
         end
@@ -159,10 +159,10 @@ module PdfExtract
           if object_calls?
             @object_listeners.each_pair do |type, listeners|
               listeners.each do |listener|
-                if objs[type].nil?
-                  raise "#{@pdf.operating_type} is missing a dependency on #{type}"
-                end
-                objs[type].each { |obj| listener.call obj }
+                # if objs[type].nil?
+                #   raise "#{@pdf.operating_type} is missing a dependency on #{type}"
+                # end
+                objs[type].each { |obj| listener.call obj } if objs[type]
               end
             end
           end

@@ -6,7 +6,7 @@ module PdfExtract
   module Columns
 
     def self.include_in pdf
-      deps = [:characters, :bodies]
+      deps = [:characters, :images, :bodies]
       pdf.spatials :columns, :paged => true, :depends_on => deps do |parser|
         
         body = nil
@@ -33,6 +33,14 @@ module PdfExtract
           page_parts.each_index do |idx|
             if Spatial.contains?(page_parts[idx], character)
               page_masks[idx].append character[:x]..(character[:x]+character[:width])
+            end
+          end
+        end
+
+        parser.objects :images do |image|
+          page_parts.each_index do |idx|
+            if Spatial.contains?(page_parts[idx], image)
+              page_masks[idx].append image[:x]..(image[:x]+image[:width])
             end
           end
         end

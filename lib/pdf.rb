@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'pdf-reader'
 
 module PdfExtract
@@ -51,6 +52,8 @@ module PdfExtract
   
   class Receiver
 
+    @@expanded = {}
+
     def initialize pdf
       @pdf = pdf
       @listeners = {}
@@ -75,15 +78,31 @@ module PdfExtract
     end
 
     def expand_listeners_to_callback_methods
-      # TODO merge on callback_name
+      # Ideally we would collect together any parsers with for calls
+      # and run their callbacks at the same time, with one pass
+      # of the PDF. An optimisation for later. For now, we clear out
+      # any old expanded callbacks.
+
+      @@expanded = {}
+      
       @listeners.each_pair do |callback_name, callback_handler|
         p = proc do |*args|
           spatial_objects = callback_handler[:fn].call args
           self.add_spatial_objects callback_handler[:type], spatial_objects
         end
-        
-        self.class.send :define_method, callback_name, p
+
+        @@expanded[callback_name] = p
+
+        # Wrapper proc since we can't overwrite class methods.
+        wrapper_p = proc do |*args|
+          if @@expanded.has_key?(callback_name)
+            @@expanded[callback_name].call *args
+          end
+        end
+
+        self.class.send :define_method, callback_name, wrapper_p
       end
+        
     end
 
     def call_object_listeners spatial_objects

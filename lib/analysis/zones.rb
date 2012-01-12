@@ -42,7 +42,7 @@ module PdfExtract
 
         parser.after do
           # TODO Ignore header and/or footer if gap is too small
-          # TODO Would benefit from masking out images and tables
+          # TODO case where body does not extend to near bottom of page?
           
           page_bottom =  b_margin[:y] + b_margin[:height]
           page_height = t_margin[:y] - page_bottom

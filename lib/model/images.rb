@@ -4,13 +4,18 @@ require 'matrix'
 module PdfExtract
   module Images
 
+    def self.get_xobj page, name
+      @xobj_cache ||= {}
+      @xobj_cache[name] ||= page.xobjects[name.to_sym].hash
+      @xobj_cache[name]
+    end
+
     def self.include_in pdf
       
       pdf.spatials :images do |parser|
         state = []
         page = nil
         page_n = 0
-        xobjects = {}
 
         parser.for :begin_page do |data|
           state << {
@@ -44,7 +49,7 @@ module PdfExtract
         end
 
         parser.for :invoke_xobject do |data|
-          xobj = page.xobjects[data[0].to_sym].hash
+          xobj = get_xobj page, data[0]
 
           if xobj[:Subtype] == :Image
             {

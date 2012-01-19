@@ -1,12 +1,6 @@
 module PdfExtract
   module Zones
 
-    Settings.declare :body_ratio, {
-      :default => 0.9,
-      :module => "Bodies, Headers, Footers",
-      :description => "Minium permitted ratio of page height to candidate body zone height. When detecting headers, footers and body (area between header and footer) zones, candidate header and footer areas will be disregarded if they imply a body area whose height to page height ratio is less than :body_ratio."
-    }
-
     def self.include_in pdf
       deps = [:top_margins, :left_margins, :right_margins,
               :bottom_margins, :characters, :images]
@@ -48,7 +42,7 @@ module PdfExtract
         parser.after do
           # TODO Ignore header and/or footer if gap is too small
           # TODO case where body does not extend to near bottom of page?
-          
+
           page_bottom =  b_margin[:y] + b_margin[:height]
           page_height = t_margin[:y] - page_bottom
           page_top = page_bottom + page_height

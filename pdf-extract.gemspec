@@ -3,7 +3,7 @@ Gem::Specification.new do |s|
   s.name = "pdf-extract"
   s.version = "0.0.10"
   s.summary = "PDF content extraction tool and library."
-  s.files = Dir.glob("{bin,lib,data}/**/**/*")
+  s.files = Dir.glob("{bin,lib,data,spec}/**/**/*")
   s.executables << "pdf-extract"
   s.authors = ["Karl Jonathan Ward"]
   s.email = ["kward@crossref.org"]

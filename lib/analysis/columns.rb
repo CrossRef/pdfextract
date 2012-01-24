@@ -1,82 +1,68 @@
+# -*- coding: utf-8 -*-
+require_relative "../multi_range"
+require_relative "../equal_rows"
+
 module PdfExtract
   module Columns
 
-    Settings.declare :column_sample_count, {
-      :default => 8,
-      :module => self.name,
-      :description => "Columns are detected by sampling :column_sample_count lines across a page and examing the number of regions incident with each line."
-    }
-
-    Settings.declare :max_column_count, {
-      :default => 3,
-      :module => self.name,
-      :description => "The maximum number of columns that can ever occur. During column detection column counts larger than :max_column_count will be disregarded."
-    }
-
-    def self.columns_at y, body_regions
-      x_mask = MultiRange.new
-
-      body_regions.each do |region|
-        if region[:y] <= y && (region[:y] + region[:height]) >= y
-          x_mask.append(region[:x] .. (region[:x] + region[:width]))
-        end
-      end
-
-      x_mask
-    end
-
     def self.include_in pdf
-      deps = [:regions, :bodies]
+      deps = [:characters, :images, :bodies]
       pdf.spatials :columns, :paged => true, :depends_on => deps do |parser|
         
         body = nil
-        body_regions = []
-
-        parser.before do
-          body_regions = []
-        end
+        page_parts = []
+        page_masks = []
         
         parser.objects :bodies do |b|
           body = b
+          
+          # Whole body, bottom half, top half, middle half. 
+          page_parts =
+            [
+             b,
+             b.merge({:height => b[:height] / 2}),
+             b.merge({:height => b[:height] / 2, :y => b[:y] + b[:height] / 2}),
+             b.merge({:height => b[:height] / 2, :y => b[:y] + b[:height] / 4})
+            ]
+
+          page_masks = []
+          page_parts.count.times { page_masks << MultiRange.new }
         end
 
-        parser.objects :regions do |region|
-          if Spatial.contains? body, region
-            body_regions << region
+        parser.objects :characters do |character|
+          page_parts.each_index do |idx|
+            if Spatial.contains?(page_parts[idx], character)
+              page_masks[idx].append character[:x]..(character[:x]+character[:width])
+            end
+          end
+        end
+
+        parser.objects :images do |image|
+          page_parts.each_index do |idx|
+            if Spatial.contains?(page_parts[idx], image)
+              page_masks[idx].append image[:x]..(image[:x]+image[:width])
+            end
           end
         end
 
         parser.after do
-          column_sample_count = pdf.settings[:column_sample_count]
-          
-          step = 1.0 / (column_sample_count + 1)
-          column_ranges = []
-
-          (1 .. column_sample_count).each do |i|
-            y = body[:y] + (body[:height] * i * step)
-            column_ranges << columns_at(y, body_regions)
-          end
-
-          # Discard those with a coverage of 0.
-          column_ranges.reject! { |r| r.covered.zero? }
-          
-          # Discard those with more than x columns. They've probably hit a table.
-          column_ranges.reject! { |r| r.count > pdf.settings[:max_column_count] }
-
-          if column_ranges.count.zero?
-            []
-          else
-            # Find the highest column count.
-            most = column_ranges.max_by { |r| r.count }.count
-            column_ranges.reject! { |r| r.count != most }
-
-            # Take the columns that are widest.
-            widest = column_ranges.map { |r| r.avg }.max
-            column_ranges.reject! { |r| r.avg < widest }
-
-            column_ranges.first.ranges.map do |range|
-              body.merge({:x => range.min, :width => range.max - range.min })
+          # Find the mask with widest gap for:
+          # - whole body
+          # - top half of body
+          # - bottom half of body
+          # - middle half of body
+          with_max_gap = page_masks.max do |mask|
+            gap = mask.widest_gap
+            if gap.nil?
+              0
+            else
+              gap.max - gap.min
             end
+          end
+          
+          # Choose mask that has the widest gap as columns
+          with_max_gap.ranges.map do |range|
+            body.merge({:x => range.min, :width => range.max - range.min})
           end
         end
         

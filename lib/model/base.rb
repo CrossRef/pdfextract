@@ -3,7 +3,7 @@ require 'matrix'
 require_relative '../font_metrics'
 
 module PdfExtract
-  module Characters
+  module Base
 
     # TODO Implement writing mode and :FontMatrix.
 
@@ -100,6 +100,7 @@ module PdfExtract
         media_box = find_media_box(page.page_object, page.objects)
         
         objs << {
+          :group => :characters,
           :x => px,
           :y => py,
           :width => tr_pos.row(0)[0] - px,
@@ -136,9 +137,15 @@ module PdfExtract
       [fonts, font_metrics]
     end
 
+    def self.get_xobj page, name
+      @xobj_cache ||= {}
+      @xobj_cache[name] ||= page.xobjects[name.to_sym].hash
+      @xobj_cache[name]
+    end
+
     def self.include_in pdf
 
-      pdf.spatials :characters do |parser|
+      pdf.spatials :bases do |parser|
         state = []
         page = nil
         fonts = {}
@@ -338,8 +345,45 @@ module PdfExtract
           
           runs.flatten
         end
+
+        parser.for :invoke_xobject do |data|
+          xobj = get_xobj page, data[0]
+
+          if xobj[:Subtype] == :Image
+            media_box = find_media_box(page.page_object, page.objects)
+            {
+              :group => :images,
+              :page => page_n,
+              :page_width => media_box[2] - media_box[0],
+              :page_height => media_box[3] - media_box[1],
+              :x => state.last[:ctm].row(2)[0],
+              :y => state.last[:ctm].row(2)[1],
+              :width =>state.last[:ctm].row(0)[0],
+              :height => state.last[:ctm].row(1)[1]
+            }
+          else
+            nil
+          end
+        end
+
+        parser.for :begin_inline_image do |data|
+          media_box = find_media_box(page.page_object, page.objects)
+          {
+            :group => :images,
+            :page => page_n,
+            :page_width => media_box[2] - media_box[0],
+            :page_height => media_box[3] - media_box[1],
+            :x => state.last[:ctm].row(2)[0],
+            :y => state.last[:ctm].row(2)[1],
+            :width =>state.last[:ctm].row(0)[0],
+            :height => state.last[:ctm].row(1)[1]
+          }
+        end
         
       end
+
+      pdf.spatials :images, :depends_on => [:bases]
+      pdf.spatials :characters, :depends_on => [:bases]
     end
 
   end

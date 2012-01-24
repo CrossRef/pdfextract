@@ -12,7 +12,7 @@ program :description, 'PDF content extraction toolkit'
 semantic = ['resolved_references', 'references', 'titles', 'sections']
 margins = ['top_margins', 'bottom_margins', 'left_margins', 'right_margins']
 zones = ['headers', 'footers', 'bodies']
-objects = ['characters', 'chunks', 'regions', 'columns'] + semantic + margins + zones
+objects = ['images', 'characters', 'chunks', 'regions', 'columns'] + semantic + margins + zones
 
 resolvers = {
   "sigg" => PdfExtract::Resolve::Sigg,

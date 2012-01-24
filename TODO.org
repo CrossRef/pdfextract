@@ -36,8 +36,8 @@
     different pages.
 *** DONE Some margins calculated with negative x or y. Because of characters
     incorrectly calculated to be out of the mediabox?
-*** TODO Some characters don't get a correct width.
-*** TODO Should merge with region above from right to left (or, in the
+*** DONE Some characters don't get a correct width.
+*** DONE Should merge with region above from right to left (or, in the
     opposite direction to writing direction). Causes last two lines of
     paragraphs to merge incorrectly.
 *** DONE Figure out which state, and when (text object start/end, page
@@ -68,7 +68,7 @@
 *** DONE Characters appear too wide in some3.pdf test PDF.
 *** DONE Characters on pages with images are sometimes not detected. Graphics
     state issue?
-*** TODO When --margins and --zones specified duplicate margins appear
+*** DONE When --margins and --zones specified duplicate margins appear
     in output.
 *** DONE Pass chunk locations through to resolved references.
 
@@ -83,7 +83,7 @@
 ** To version 0.1
 *** DONE Join regions into sections only when their textual attributes match,
     such as letter ratio.
-*** TODO Allow skipping when joining regions, or try to join vertically, then
+*** DONE Allow skipping when joining regions, or try to join vertically, then
     horizontally. Should allow for merging of disparate regions such
     as at the end of an article and beginning of another.
 *** DONE Bug: First line sometimes not appearing in lines or --no-lines content.
@@ -93,9 +93,9 @@
 *** DONE Either move pdf-reader changes into pdf-extract or get patches committed.
 *** DONE Split by line spacing and split by margin
 *** DONE Bug: Section objects appear within <page> elements. Should be pageless.
-*** TODO Bug: When merging chunks left to right, sometimes they merge out of order.
+*** DONE Bug: When merging chunks left to right, sometimes they merge out of order.
     Could be occuring in chunk generation or in region generation.
-*** TODO Bug: Regions appear in reverse y sort order in output. Likely causing
+*** DONE Bug: Regions appear in reverse y sort order in output. Likely causing
     problems with section header analysis.
 
 *** DONE Catalog system, download OAI-PMH metadata and PDFs

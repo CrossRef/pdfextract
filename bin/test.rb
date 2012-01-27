@@ -81,6 +81,8 @@ def run_for_directory dir
         rescue StandardError => e
           puts "\tParsing PDF failed due to:"
           puts "\t#{e.class}: #{e.message}"
+          print "\t"
+          print e.backtrace.join "\n\t"
         end
         fail_count = fail_count.next
       else

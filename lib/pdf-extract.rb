@@ -9,7 +9,6 @@ require_relative 'analysis/columns'
 require_relative 'analysis/sections'
 require_relative 'references/references'
 require_relative 'references/resolved_references'
-require_relative 'view/png_view'
 require_relative 'view/pdf_view'
 require_relative 'view/xml_view'
 
@@ -68,7 +67,6 @@ module PdfExtract
     add_parser ResolvedReferences
 
     add_view :pdf, PdfView
-    add_view :png, PngView
     add_view :xml, XmlView
   end
 

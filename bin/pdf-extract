@@ -22,8 +22,7 @@ resolvers = {
 
 outputs = {
   :xml => proc { :stdout },
-  :pdf => proc { |f| File::basename(f.sub /\.[a-zA-Z0-9]+\Z/, "") + ".mask.pdf" },
-  :png => proc { |f| File::basename(f.sub /\.[a-zA-Z0-9]+\Z/, "") + ".mask.png" }
+  :pdf => proc { |f| File::basename(f.sub /\.[a-zA-Z0-9]+\Z/, "") + ".mask.pdf" }
 }
 
 commands = [

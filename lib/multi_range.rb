@@ -63,6 +63,17 @@ module PdfExtract
       @ranges.reduce(0) { |total, r| total += (r.max - r.min) }
     end
 
+    def cover? point
+      covers = false
+      @ranges.each do |range|
+        if range.cover? point
+          covers = true
+          break
+        end
+      end
+      covers
+    end
+
     def count
       @ranges.count
     end
@@ -165,6 +176,19 @@ module PdfExtract
         end
         (gap_min..gap_max)
       end
+    end
+
+    def gap_at point
+      last_range = nil
+      gap = nil
+      @ranges.each do |range|
+        if !last_range.nil? && range.min > point && last_range.max < point
+          gap = Range.new last_range.max, range.min
+          break
+        end
+        last_range = range
+      end
+      gap
     end
 
   end

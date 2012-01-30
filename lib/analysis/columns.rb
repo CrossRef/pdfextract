@@ -5,6 +5,24 @@ require_relative "../equal_rows"
 module PdfExtract
   module Columns
 
+    # Returns the number of page_masks that are not incident with
+    # any value in boundaries.
+    def self.check_for_columns boundaries, page_masks
+      # Ignore masked regions that contain no content
+      page_masks = page_masks.reject { |mask| mask.covered == 0 }
+      
+      page_masks = page_masks.reject do |mask|
+        uncovered_boundaries = boundaries.reject { |b| mask.cover? b }
+        if uncovered_boundaries.count == boundaries.count
+          mask
+        else
+          nil
+        end
+      end.flatten
+
+      page_masks
+    end
+
     def self.include_in pdf
       deps = [:characters, :images, :bodies]
       pdf.spatials :columns, :paged => true, :depends_on => deps do |parser|
@@ -46,23 +64,34 @@ module PdfExtract
         end
 
         parser.after do
-          # Find the mask with widest gap for:
-          # - whole body
-          # - top half of body
-          # - bottom half of body
-          # - middle half of body
-          with_max_gap = page_masks.max do |mask|
-            gap = mask.widest_gap
-            if gap.nil?
-              0
-            else
-              gap.max - gap.min
-            end
-          end
+          # Check for 1, 2 or 3 columns
+          page_left = body[:x]
+          page_right = body[:x] + body[:width]
+          page_width = body[:width]
           
-          # Choose mask that has the widest gap as columns
-          with_max_gap.ranges.map do |range|
-            body.merge({:x => range.min, :width => range.max - range.min})
+          two_column_boundaries = [page_left + (page_width / 2)]
+          three_column_boundaries = [page_left + (page_width / 3),
+                                     page_left + ((page_width / 3) * 2)]
+
+          two_agree_masks = check_for_columns two_column_boundaries, page_masks
+          three_agree_masks = check_for_columns three_column_boundaries, page_masks
+
+          if two_agree_masks.count.zero? && three_agree_masks.count.zero?
+            # one column
+            [body]
+          elsif two_agree_masks.count >= three_agree_masks.count
+            # two columns
+            column_gap = two_agree_masks.first.gap_at(page_left + (page_width / 2))
+            [body.merge({:width => column_gap.min - page_left}),
+             body.merge({:width => page_right - column_gap.max,
+                         :x => column_gap.max})]
+          else
+            # three columns
+            left_gap = three_agree_masks.first.gap_at(page_left + (page_width / 3))
+            right_gap = three_agree_masks.first.gap_at(page_left + ((page_width / 3) * 2))
+            [body.merge({:width => left_gap.min - page_left}),
+             body.merge({:x => left_gap.max, :width => right_gap.max - left_gap.min}),
+             body.merge({:x => right_gap.max, :width => page_right - right_gap.max})]
           end
         end
         

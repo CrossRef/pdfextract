@@ -47,8 +47,8 @@ module PdfExtract
           page_height = t_margin[:y] - page_bottom
           page_top = page_bottom + page_height
 
-          footer_search = page_bottom .. (page_bottom + (page_height * 0.2))
-          header_search = (page_top - (page_height * 0.2)) .. page_top
+          footer_search = page_bottom .. (page_bottom + (page_height * 0.1))
+          header_search = (page_top - (page_height * 0.1)) .. page_top
 
           footer_gap = y_mask.intersection(footer_search).widest_gap
           header_gap = y_mask.intersection(header_search).widest_gap
@@ -84,7 +84,7 @@ module PdfExtract
             :page_width => t_margin[:page_width],
             :page_height => t_margin[:page_height]
           }
-          
+
           objs.map { |o| page_base.merge o }
         end
       end

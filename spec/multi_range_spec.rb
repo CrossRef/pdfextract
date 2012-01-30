@@ -99,6 +99,30 @@ describe PdfExtract::MultiRange do
     @multi_range.min_excluded.should == 20
   end
 
+  it "should report cover? correctly" do
+    @multi_range.append (10..20)
+    @multi_range.append (30..40)
+    @multi_range.cover?(25).should == false
+    @multi_range.cover?(35).should == true
+    @multi_range.cover?(30).should == true
+    @multi_range.cover?(20).should == true
+  end
+
+  it "should return a range for an uncovered point" do
+    @multi_range.append(10..20)
+    @multi_range.append(30..40)
+    gap = @multi_range.gap_at 25
+    gap.max.should == 30
+    gap.min.should == 20
+  end
+
+  it "should return nil for a covered point" do
+    @multi_range.append(10..20)
+    @multi_range.append(30..40)
+    gap = @multi_range.gap_at 35
+    gap.should == nil
+  end
+
 end
     
 RSpec::Core::Runner.run([])

@@ -41,7 +41,7 @@ to be part of the same region. :line_slop is multiplied by the average line heig
         height_taken = from_top + line[:height]
       end
     end
-    
+
     def self.include_in pdf
       pdf.spatials :regions, :paged => true, :depends_on => [:chunks] do |parser|
         chunks = []
@@ -51,7 +51,7 @@ to be part of the same region. :line_slop is multiplied by the average line heig
           chunks = []
           regions = []
         end
-        
+
         parser.objects :chunks do |chunk|
           y = chunk[:y].floor
 
@@ -72,16 +72,16 @@ to be part of the same region. :line_slop is multiplied by the average line heig
             chunk[:lines] = [Spatial.as_line(chunk)]
             chunk.delete :content
           end
-          
+
           compare_index = 1
           while chunks.count > compare_index
             b = chunks.first
             t = chunks[compare_index]
-              
+
             line_height = b[:line_height]
             line_slop = [line_height, t[:height]].min * pdf.settings[:line_slop]
             incident_y = (b[:y] + b[:height] + line_slop) >= t[:y]
-            
+
             if incident_y && incident(t, b)
               chunks[0] = Spatial.merge t, b, :lines => true
               chunks.delete_at compare_index
@@ -96,7 +96,7 @@ to be part of the same region. :line_slop is multiplied by the average line heig
               compare_index = 1
             end
           end
-          
+
           regions << chunks.first unless chunks.first.nil?
 
           regions.each do |region|
@@ -112,6 +112,6 @@ to be part of the same region. :line_slop is multiplied by the average line heig
         end
       end
     end
-    
+
   end
 end

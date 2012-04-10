@@ -85,7 +85,7 @@ module PdfExtract
             not (column[:page] == region[:page] && Spatial.contains?(column, region))
           end
 
-          containers.first[:regions] << region unless containers.count.zero?
+          containers.first[:regions] << region unless containers.empty?
         end
 
         parser.after do
@@ -110,19 +110,22 @@ module PdfExtract
           merging_region = nil
 
           pages.each_pair do |page, columns|
-            columns.each do |c|
-              column = c[:column]
+            columns.each do |container|
+              column = container[:column]
 
-              c[:regions].each do |region|
+              container[:regions].each do |region|
                 if candidate? pdf, region, column
                   if !merging_region.nil? && match?(merging_region, region)
                     content = Spatial.merge_lines(merging_region, region, {})
+
                     merging_region.merge!(content)
 
                     merging_region[:components] << Spatial.get_dimensions(region)
                   elsif !merging_region.nil?
                     sections << merging_region
-                    merging_region = nil
+                    merging_region = region.merge({
+                      :components => [Spatial.get_dimensions(region)]
+                    })
                   else
                     merging_region = region.merge({
                       :components => [Spatial.get_dimensions(region)]

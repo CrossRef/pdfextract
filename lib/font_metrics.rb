@@ -42,7 +42,15 @@ module PdfExtract
         @ascent = font.ascent
         @descent = font.descent
         @bbox = font.bbox
-        @glyph_width_lookup = proc { |c| font.glyph_width c.codepoints.first }
+        @glyph_width_lookup = proc do |c|
+          begin
+            font.glyph_width c.codepoints.first
+          rescue TypeError => e
+            # It seems some fonts don't have a first char attribute in their
+            # descriptor and this causes problems for pdf-reader.
+            0
+          end
+        end
       end
 
       if not @bbox.nil?

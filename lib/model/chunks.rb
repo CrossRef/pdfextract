@@ -24,14 +24,14 @@ module PdfExtract
     }
 
     def self.include_in pdf
-      
+
       pdf.spatials :chunks, :paged => true, :depends_on => [:characters] do |parser|
         rows = {}
 
         parser.before do
           rows = {}
         end
-        
+
         parser.objects :characters do |chars|
           y = chars[:y]
           rows[y] = [] if rows[y].nil?
@@ -48,7 +48,7 @@ module PdfExtract
           char_slop = pdf.settings[:char_slop]
           word_slop = pdf.settings[:word_slop]
           overlap_slop = pdf.settings[:overlap_slop]
-          
+
           text_chunks = []
 
           rows.each_pair do |y, row|
@@ -105,7 +105,11 @@ module PdfExtract
           end
 
           merged_text_chunks << text_chunks.first
-        end 
+
+          # Remove empty lines - they mess up region detection by
+          # making them join together.
+          merged_text_chunks.reject { |chunk| chunk[:content].strip == "" }
+        end
       end
     end
 

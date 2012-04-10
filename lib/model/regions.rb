@@ -42,6 +42,15 @@ to be part of the same region. :line_slop is multiplied by the average line heig
       end
     end
 
+    # Resplitting looks at line y offsets from the origin of a region. If
+    # a line offset is not uniform a region split occurs.
+    # Resplitting is handy becaue it preserves the maximum width bounds of the
+    # total region while still presenting paragraphs, headers etc as separate
+    # text regions.
+    def self.resplit region
+      
+    end
+
     def self.include_in pdf
       pdf.spatials :regions, :paged => true, :depends_on => [:chunks] do |parser|
         chunks = []

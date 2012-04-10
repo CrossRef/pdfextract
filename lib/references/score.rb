@@ -8,7 +8,7 @@ module PdfExtract
     end
 
     @@reference_model = Model.new(path_to_data("reference.model"))
-    
+
     def self.reference? section
       sample = {
         1 => section[:letter_ratio],

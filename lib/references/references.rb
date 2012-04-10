@@ -16,7 +16,7 @@ module PdfExtract
       :module => self.name,
       :description => "There must be :min_sequence_count or more numbered references within a candidate reference section for them to be parsed as number-delimited references."
     }
-    
+
     Settings.declare :max_reference_order, {
       :default => 1000,
       :module => self.name,
@@ -82,11 +82,11 @@ module PdfExtract
 
       # Determine the charcaters that are most likely part of numeric
       # delimiters.
-      
+
       after = {}
       before = {}
       last_n = -1
-      
+
       s.scan /[^\d]?\d+[^\d]/ do |m|
         n = m[/\d+/].to_i
         if n < pdf.settings[:max_reference_order]
@@ -115,14 +115,14 @@ module PdfExtract
       if ["", "\\[", "\\ "].include?(b_s) && ["", "\\.", "\\]", "\\ "].include?(a_s)
 
         # Split by the delimiters and record separate refs.
-        
+
         last_n = -1
         current_ref = ""
         refs = []
         parts = s.partition(Regexp.new "#{b_s}?\\d+#{a_s}")
-        
+
         while not parts[1].length.zero?
-          n = parts[1][/\d+/].to_i          
+          n = parts[1][/\d+/].to_i
           if n < pdf.settings[:max_reference_order] && last_n == -1
             last_n = n
           elsif n == last_n.next
@@ -139,12 +139,12 @@ module PdfExtract
 
           parts = parts[2].partition(Regexp.new "#{b_s}?\\d+#{a_s}")
         end
-        
+
         refs << {
           :content => (current_ref + parts[0]).strip,
           :order => last_n
         }
-        
+
         refs
 
       else
@@ -177,7 +177,7 @@ module PdfExtract
 
       seq_count >= pdf.settings[:min_sequence_count]
     end
-    
+
     def self.include_in pdf
       pdf.spatials :references, :depends_on => [:sections] do |parser|
 
@@ -190,7 +190,7 @@ module PdfExtract
         parser.after do
           max_score = sections.map {|s| s[:reference_score]}.max
           min_permittable = max_score - (max_score * pdf.settings[:reference_flex])
-          
+
           refs = []
 
           sections = sections.reject do |s|
@@ -199,7 +199,7 @@ module PdfExtract
             # half of an article.
             s[:lateness] < pdf.settings[:min_lateness] || s[:year_ratio].zero?
           end
-          
+
           sections.each do |section|
             if section[:reference_score] >= min_permittable
             # TODO Enable classification once we have a reasonable model.
@@ -213,7 +213,7 @@ module PdfExtract
               end
             end
           end
-          
+
           # TODO Ideally we wouldn't see the ref headers here.
           # Unfortunately publication details can look a lot like references.
           refs.reject do |ref|

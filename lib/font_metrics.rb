@@ -29,7 +29,7 @@ module PdfExtract
       @ascent = 0
       @descent = 0
       @bbox = [0, 0, 0, 0]
-      
+
       base_font = font.basefont.to_s
       if @@base_fonts.key? base_font
         @ascent = @@base_fonts[base_font][:Ascent]
@@ -37,12 +37,12 @@ module PdfExtract
         @bbox = @@base_fonts[base_font][:FontBBox]
         @glyph_width_lookup = proc { |c|
           @@base_fonts[base_font][:Widths].fetch(c.codepoints.first, 0)
-        } 
+        }
       else
         @ascent = font.ascent
         @descent = font.descent
         @bbox = font.bbox
-        @glyph_width_lookup = proc { |c| font.glyph_width c }
+        @glyph_width_lookup = proc { |c| font.glyph_width c.codepoints.first }
       end
 
       if not @bbox.nil?

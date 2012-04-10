@@ -12,12 +12,12 @@ module PdfExtract::Resolve
       resolved = {}
       begin
         doc = Nokogiri::HTML(open url)
-      
+
         result = doc.at_css "div.result"
         unless result.nil?
           score = result.at_css("span.cr_score").content.to_s
           if score.to_i >= 90
-            doi = result.at_css "span.doi" 
+            doi = result.at_css "span.doi"
             resolved[:doi] = doi.content.sub "http://dx.doi.org/", ""
           end
         end
@@ -25,17 +25,17 @@ module PdfExtract::Resolve
       end
       resolved
     end
-    
+
   end
-  
+
   class FreeCite
-    
+
     def self.find ref
       Net::HTTP.start "freecite.library.brown.edu" do |http|
         r = http.post "/citations/create", "citation=#{ref}",
                       "Accept" => "text/xml"
         doc = Nokogiri::XML r.body
-        
+
         {
           :title => doc.at_xpath("//title").content,
           :journal => doc.at_xpath("//journal").content,
@@ -44,13 +44,13 @@ module PdfExtract::Resolve
         }
       end
     end
-    
+
   end
-  
+
   class SimpleTextQuery
 
     @@cookie = nil
-    
+
     def self.find ref
       create_session
 
@@ -68,10 +68,10 @@ module PdfExtract::Resolve
       response = Net::HTTP.start "www.crossref.org" do |http|
         http.request post
       end
-      
+
       doc = Nokogiri::HTML response.body
       doi = doc.at_css "td.resultB > a"
-      
+
       if doi.nil?
         {}
       else
@@ -87,11 +87,11 @@ module PdfExtract::Resolve
         end
       end
     end
-    
+
   end
-  
+
   @@resolvers = [Sigg]
-  
+
   def self.resolvers= resolver
     @@resolvers = resolver
   end
@@ -109,5 +109,5 @@ module PdfExtract::Resolve
     end
     ref
   end
-  
+
 end

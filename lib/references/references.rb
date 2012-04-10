@@ -204,8 +204,10 @@ module PdfExtract
             if section[:reference_score] >= min_permittable
             # TODO Enable classification once we have a reasonable model.
             #if Score.reference?(section)
-              if numeric_sequence? pdf, Spatial.get_text_content(section)
-                refs += split_by_delimiter pdf, Spatial.get_text_content(section)
+              content = Spatial.get_text_content(section)
+              if numeric_sequence? pdf, content
+                puts "looks like numeric content"
+                refs += split_by_delimiter pdf, content
               elsif multi_margin? section[:lines]
                 refs += split_by_margin section[:lines]
               elsif multi_spacing? section[:lines]

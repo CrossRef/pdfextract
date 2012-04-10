@@ -10,7 +10,7 @@ module PdfExtract
       :module => self.name,
       :description => "Minimum ratio of text region width to containing column width for a text region to be considered as part of an article section."
     }
-    
+
     def self.match? a, b
       lh = a[:line_height].round(2) == b[:line_height].round(2)
       f = a[:font] == b[:font]
@@ -19,7 +19,7 @@ module PdfExtract
 
     def self.candidate? pdf, region, column
       # Regions that make up sections or headers must be
-      # both less width than their column width and,
+      # both less wide than their column width and,
       # unless they are a single line, must be within the
       # width_ratio.
       width_ratio = pdf.settings[:width_ratio]
@@ -33,7 +33,7 @@ module PdfExtract
       ideal = 0.1
       ref_cluster = nil
       smallest_diff = 1
-      
+
       clusters.each do |cluster|
         diff = (cluster[:centre][:name_ratio] - ideal).abs
         if diff < smallest_diff
@@ -63,18 +63,18 @@ module PdfExtract
           :letter_ratio => Language.letter_ratio(content),
           :year_ratio => Language.year_ratio(content),
           :cap_ratio => Language.cap_ratio(content),
-          :name_ratio => Language.name_ratio(content),          
+          :name_ratio => Language.name_ratio(content),
           :word_count => Language.word_count(content),
-          :lateness => (last_page / page_count.to_f)             
+          :lateness => (last_page / page_count.to_f)
         })
       end
     end
-      
+
     def self.include_in pdf
       pdf.spatials :sections, :depends_on => [:regions, :columns] do |parser|
 
         columns = []
-        
+
         parser.objects :columns do |column|
           columns << {:column => column, :regions => []}
         end
@@ -107,36 +107,33 @@ module PdfExtract
           end
 
           sections = []
-          found = []
-          
+          merging_region = nil
+
           pages.each_pair do |page, columns|
             columns.each do |c|
               column = c[:column]
-              
-              c[:regions].each do |region|
-               
-                if candidate? pdf, region, column
-                  if !found.last.nil? && match?(found.last, region)
-                    content = Spatial.merge_lines(found.last, region, {})
-                    found.last.merge!(content)
 
-                    found.last[:components] << Spatial.get_dimensions(region)
-                    
+              c[:regions].each do |region|
+                if candidate? pdf, region, column
+                  if !merging_region.nil? && match?(merging_region, region)
+                    content = Spatial.merge_lines(merging_region, region, {})
+                    merging_region.merge!(content)
+
+                    merging_region[:components] << Spatial.get_dimensions(region)
+                  elsif !merging_region.nil?
+                    sections << merging_region
+                    merging_region = nil
                   else
-                    found << region.merge({
+                    merging_region = region.merge({
                       :components => [Spatial.get_dimensions(region)]
                     })
                   end
-                else
-                  sections = sections + found
-                  found = []
                 end
-                
               end
             end
           end
 
-          sections = sections + found
+          sections <<  merging_region if not merging_region.nil?
 
           # We now have sections. Add information to them.
           # add_content_types sections
@@ -155,7 +152,7 @@ module PdfExtract
 
           sections
         end
-        
+
       end
     end
 

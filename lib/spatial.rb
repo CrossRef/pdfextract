@@ -24,13 +24,13 @@ module PdfExtract
 
     def self.merge_lines a, b, so
       so[:lines] = []
-      
+
       if a.key? :lines
         so[:lines] += a[:lines]
       else
         so[:lines] << as_line(a)
       end
-      
+
       if b.key? :lines
         so[:lines] += b[:lines]
       else
@@ -60,7 +60,7 @@ module PdfExtract
         so[:content] = (a[:content] + options[:separator] + b[:content])
         so[:content] = so[:content].gsub /\s+/, " "
       end
-      
+
       if get_text_content(a).length > get_text_content(b).length
         so[:font] = a[:font]
         so[:line_height] = a[:line_height]
@@ -115,12 +115,12 @@ module PdfExtract
     # correct write order, specified by write_mode.
     def self.collapse objs, options={}
       options = @@default_options.merge options
-      
+
       sorted = case write_mode
                when :left_to_right
                  objs.sort_by { |obj| -(obj[:y].floor * 100) + (obj[:x] / 100.0) }
                end
-      
+
       if sorted.count == 1
         sorted.first.dup
       else
@@ -143,7 +143,7 @@ module PdfExtract
       b_y1 = b[:y]
       b_y2 = b[:y] + b[:height]
 
-      b_x1 >= a_x1 && b_x2 <= a_x2 && b_y1 >= a_y1 && b_y2 <= a_y2 
+      b_x1 >= a_x1 && b_x2 <= a_x2 && b_y1 >= a_y1 && b_y2 <= a_y2
     end
 
     def self.overlap? from, by, a, b
@@ -158,7 +158,7 @@ module PdfExtract
         diffs = items.map {|item| (item[f] - ideals[f][0]).abs}
         diffs.map! {|d| d.nan? ? 1 : d}
         max_diff = diffs.max
-        
+
         scores = diffs.map do |d|
           if d == 0
             ideals[f][1]
@@ -173,6 +173,6 @@ module PdfExtract
         end
       end
     end
-    
+
   end
 end

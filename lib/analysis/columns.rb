@@ -63,6 +63,10 @@ module PdfExtract
           # Discard those with more than x columns. They've probably hit a table.
           column_ranges.reject! { |r| r.count > pdf.settings[:max_column_count] }
 
+          # Discard ranges that comprise only of very narrow columns.
+          # Likely tables or columns picking up on false tab stops.
+          column_ranges.reject! { |r| puts r.widest; r.widest < (0.25 * body[:width]) }
+
           if column_ranges.count.zero?
             []
           else

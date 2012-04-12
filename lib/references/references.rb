@@ -6,7 +6,7 @@ module PdfExtract
   module References
 
     Settings.declare :reference_flex, {
-      :default => 0.1,
+      :default => 0.2,
       :module => self.name,
       :description => "Article sections are given a score as potential reference sections. Their score is based on article section features, such as the number of family names that appear, the ratio of uppercase letters to lowercase, and so on. Any article section that has a score that is more than 1 - :reference_flex percent of the best score will be parsed as a reference section."
     }

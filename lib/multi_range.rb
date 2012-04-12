@@ -15,7 +15,7 @@ module PdfExtract
         r.include?(range.min) || r.include?(range.max) ||
           range.include?(r.min) || range.include?(r.max)
       end
-      
+
       incident << range
 
       non_incident = @ranges - incident
@@ -46,11 +46,21 @@ module PdfExtract
     end
 
     def max
-      @max ||= @ranges.sort_by { |r| -r.max }.first.max
+      @ranges.sort_by { |r| -r.max }.first.max
     end
 
     def min
-      @min ||= @ranges.sort_by { |r| r.min }.first.min
+      @ranges.sort_by { |r| r.min }.first.min
+    end
+
+    def widest
+      widest = @ranges.sort_by { |r| r.max - r.min }.last
+      widest.max - widest.min
+    end
+
+    def narrowest
+      narrowest = @ranges.sort_by { |r| r.max - r.min }.first
+      narrowest.max - narrowest.min
     end
 
     def avg

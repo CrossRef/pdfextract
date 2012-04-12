@@ -17,7 +17,7 @@ module PdfExtract::Language
       when "\ufb05" then r << "ft"
       when "\ufb06" then r << "st"
       when "\u1d6b" then r << "ue"
-      
+
       # Normalise some punctuation.
       when "\u2018" then r << "'"
       when "\u2019" then r << "'"
@@ -33,19 +33,19 @@ module PdfExtract::Language
         r << c
       end
     end
-      
+
     r.gsub /\s+/, " "
   end
-  
+
   def self.letter_ratio s
     s.count("A-Z0-9\-[],.\"'()") / s.length.to_f
   end
-  
+
   # TODO Ignore caps in middle of words
   def self.cap_ratio s
     sentence_end = true
     cap_count = 0
-    
+
     s.each_char do |c|
       if c =~ /\./
         sentence_end = true
@@ -56,13 +56,13 @@ module PdfExtract::Language
         sentence_end = false
       end
     end
-    
+
     cap_count / s.split.length.to_f
   end
-  
+
   def self.year_ratio s
     words = s.split
-    
+
     year_words = words.map do |word|
       word =~ /[^\d]\d{4}[^\d]/
     end
@@ -77,6 +77,6 @@ module PdfExtract::Language
   def self.word_count s
     s.split.count
   end
-  
+
 end
 

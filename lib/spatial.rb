@@ -132,11 +132,11 @@ module PdfExtract
       end
     end
 
-    def self.contains? a, b
-      a_x1 = a[:x]
-      a_x2 = a[:x] + a[:width]
-      a_y1 = a[:y]
-      a_y2 = a[:y] + a[:height]
+    def self.contains? a, b, padding=0
+      a_x1 = a[:x] - padding
+      a_x2 = a[:x] + a[:width] + (padding * 2)
+      a_y1 = a[:y] - padding
+      a_y2 = a[:y] + a[:height] + (padding * 2)
 
       b_x1 = b[:x]
       b_x2 = b[:x] + b[:width]

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require_relative '../language'
 require_relative '../spatial'
 require_relative '../kmeans'
@@ -25,6 +26,16 @@ module PdfExtract
       width_ratio = pdf.settings[:width_ratio]
       within_column = region[:width] <= column[:width]
       within_column && (region[:width].to_f / column[:width]) >= width_ratio
+    end
+
+    def self.possible_header? pdf, region, column
+      # Possible headers are narrower than the column width_ratio
+      # but still within the column bounds. They must also be at least
+      # as wide as they are tall (otherwise we may have a table
+      # column, which should be ignored for purposes of determing
+      # page flow).
+      within_column = region[:width] <= column[:width]
+      within_column && (region[:width] >= region[:height])
     end
 
     def self.reference_cluster clusters
@@ -76,13 +87,13 @@ module PdfExtract
         columns = []
 
         parser.objects :columns do |column|
-          columns << {:column => column, :regions => []}
+           columns << {:column => column, :regions => []}
         end
 
         parser.objects :regions do |region|
           containers = columns.reject do |c|
             column = c[:column]
-            not (column[:page] == region[:page] && Spatial.contains?(column, region))
+            not (column[:page] == region[:page] && Spatial.contains?(column, region, 1))
           end
 
           containers.first[:regions] << region unless containers.empty?
@@ -131,6 +142,10 @@ module PdfExtract
                       :components => [Spatial.get_dimensions(region)]
                     })
                   end
+                elsif possible_header? pdf, region, column
+                  # Split sections, ignore the header
+                  sections << merging_region if !merging_region.nil?
+                  merging_region = nil
                 end
               end
             end

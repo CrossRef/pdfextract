@@ -206,7 +206,6 @@ module PdfExtract
             #if Score.reference?(section)
               content = Spatial.get_text_content(section)
               if numeric_sequence? pdf, content
-                puts "looks like numeric content"
                 refs += split_by_delimiter pdf, content
               elsif multi_margin? section[:lines]
                 refs += split_by_margin section[:lines]

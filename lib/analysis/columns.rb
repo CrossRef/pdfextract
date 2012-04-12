@@ -28,14 +28,14 @@ module PdfExtract
     def self.include_in pdf
       deps = [:regions, :bodies]
       pdf.spatials :columns, :paged => true, :depends_on => deps do |parser|
-        
+
         body = nil
         body_regions = []
 
         parser.before do
           body_regions = []
         end
-        
+
         parser.objects :bodies do |b|
           body = b
         end
@@ -48,7 +48,7 @@ module PdfExtract
 
         parser.after do
           column_sample_count = pdf.settings[:column_sample_count]
-          
+
           step = 1.0 / (column_sample_count + 1)
           column_ranges = []
 
@@ -59,7 +59,7 @@ module PdfExtract
 
           # Discard those with a coverage of 0.
           column_ranges.reject! { |r| r.covered.zero? }
-          
+
           # Discard those with more than x columns. They've probably hit a table.
           column_ranges.reject! { |r| r.count > pdf.settings[:max_column_count] }
 
@@ -79,7 +79,7 @@ module PdfExtract
             end
           end
         end
-        
+
       end
     end
 

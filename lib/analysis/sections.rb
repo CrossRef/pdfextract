@@ -13,9 +13,12 @@ module PdfExtract
     }
 
     def self.match? a, b
-      lh = a[:line_height].round(2) == b[:line_height].round(2)
-      f = a[:font] == b[:font]
-      lh && f
+      # A must have a width around the width of B and have the same
+      # font size.
+      avg_width = (a[:width] + b[:width]) / 2.0
+      matched_width = (a[:width] - b[:width]).abs <= avg_width * 0.1
+      matched_font_size = a[:line_height].round(2) == b[:line_height].round(2)
+      matched_width && matched_font_size
     end
 
     def self.candidate? pdf, region, column

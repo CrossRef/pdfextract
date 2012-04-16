@@ -7,7 +7,7 @@ headers, footers, sections, titles and so on. It can analyse and categorise sect
 into reference and non-reference sections and can split reference sections into 
 individual references.
 
-The latest version is *0.1.0*. Earlier versions are far less reliable.
+The latest version is *0.1.1*. Earlier versions are far less reliable.
 
 ## Quick start
 

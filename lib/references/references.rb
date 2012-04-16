@@ -162,12 +162,14 @@ module PdfExtract
 
     def self.numeric_sequence? pdf, content
       last_n = -1
+      first_n = -1
       seq_count = 0
       content.scan /\d+/ do |m|
          # Avoid misinterpreting years as sequence
         if m.to_i < pdf.settings[:max_reference_order]
           if last_n == -1
             last_n = m.to_i
+            first_n = m.to_i if first_n == -1
           elsif last_n.next == m.to_i
             last_n = last_n.next
             seq_count = seq_count.next
@@ -175,7 +177,10 @@ module PdfExtract
         end
       end
 
-      seq_count >= pdf.settings[:min_sequence_count]
+      # Sequence must be long enough and first number of sequence
+      # must appear near the very start of content.
+      large_enough = seq_count >= pdf.settings[:min_sequence_count]
+      large_enough && content[0..30] =~ /#{first_n.to_s}/
     end
 
     def self.include_in pdf

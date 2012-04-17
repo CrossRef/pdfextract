@@ -9,6 +9,8 @@ individual references.
 
 The latest version is *0.1.1*. Earlier versions are far less reliable.
 
+pdf-extract requires Ruby 1.9.1 or above.
+
 ## Quick start
 
 Install the latest version with:
@@ -60,7 +62,7 @@ As above, but try to increase the reference_flex a bit a time:
 Keep trying with small increments to reference_flex. Note that a reference_flex of
 1 means pdf-extract will identify *all* sections as reference sections.
 
-### pdf-extract is still producing weird output after fiddling with reference_flex
+### pdf-extract is still producing weird output after fiddling with reference_flex.
 
 Have a look at pdf-extract's settings:
 

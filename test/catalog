@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
 
 # Grab some DOIS and metadata via OAI PMH.
 
@@ -7,116 +8,18 @@
 # If there is no corresponding PDF in the test-data dir, download it using
 # get-pdf.
 
-require 'cgi'
-require 'net/http'
-require 'uri/http'
 require 'commander/import'
 require 'nokogiri'
 require 'json'
-require 'getpdf'
+require 'mongo'
 require_relative '../lib/pdf-extract'
 
 program :name, "catalog"
 program :version, "0.0.1"
 program :description, "Build a PDF catalog, with metadata."
 
-def query_uri verb, options={}
-  prefix = options[:prefix]
-  journal = options[:journal]
-  year = options[:year]
-
-  if prefix.nil? || (!year.nil? && journal.nil?)
-    fail "Must specify one of prefix, prefix:journal, or prefix:journal:year"
-  end
-
-  set = CGI.escape [prefix, journal, year].compact.join(":")
-  q = "verb=#{verb}&metadataPrefix=cr_unixml&set=#{set}"
-  URI::HTTP.build({
-    :host => "oai.crossref.org",
-    :path => "/OAIHandler",
-    :query => q
-  })
-end
-
-def parse_dois xml
-  doc = Nokogiri::XML::Document.parse xml
-  identifiers = doc.css "identifier"
-  identifiers.map { |id| id.text.sub "info:doi/", "" }
-end
-
-def parse_records xml
-  doc = Nokogiri::XML::Document.parse xml
-  ns = {"cr" => "http://www.crossref.org/xschema/1.0"}
-
-  doc.xpath("//cr:crossref", ns).map do |metadata|
-    publication = {
-       :title => metadata.at_xpath(".//cr:full_title", ns).text,
-       :issue => metadata.at_xpath(".//cr:issue", ns).text,
-       :volume => metadata.at_xpath(".//cr:volume", ns).text
-    }
-
-    contributors = metadata.xpath(".//cr:person_name", ns).map do |name|
-      full_name = name.at_xpath(".//cr:given_name", ns).text
-      full_name += " "
-      full_name += name.at_xpath(".//cr:surname", ns).text
-      full_name
-    end
-
-    citations = metadata.xpath(".//cr:unstructured_citation", ns).map { |c| c.text }
-
-    article = {
-      :doi => metadata.at_xpath(".//cr:doi", ns).text,
-      :title => metadata.at_xpath(".//cr:title", ns).text,
-      :publication => publication,
-      :contributors => contributors,
-      :citations => citations
-    }
-
-    if metadata.at_xpath ".//cr:first_page", ns
-      article[:first_page] = metadata.at_xpath ".//cr:first_page", ns
-    end
-
-    if metadata.at_xpath ".//cr:last_page", ns
-      article[:last_page] = metadata.at_xpath ".//cr:last_page", ns
-    end
-
-    article
-  end
-end
-
-def parse_setspecs xml
-  doc = Nokogiri::XML::Document.parse xml
-  doc.css("setSpec").map { |s| s.text }.uniq
-end
-
-def get_xml verb, options
-  uri = query_uri verb, options
-
-  Net::HTTP.start uri.host do |http|
-    response = http.get uri.request_uri
-
-    if response.code.to_i == 200
-      response.body
-    else
-      fail "Failed to get metadata. OAI server returned: #{response.code}"
-    end
-  end
-end
-
-def get_records options
-  parse_records get_xml("ListRecords", options)
-end
-
-def get_dois options
-  parse_dois get_xml("ListIdentifiers", options)
-end
-
-def get_sets options
-  parse_setspecs get_xml("ListSets", options)
-end
-
 def catalog_filename
-  File.join File.dirname(__FILE__), "catalog.json"
+  "catalog.json"
 end
 
 def read_catalog filename=catalog_filename
@@ -151,66 +54,48 @@ def diff_list left, right
   (left.count - right.count).abs
 end
 
-$set_spec = {}
+def get_references doi
+  $mongo ||= Mongo::Connection.new($mongo_host || "192.168.1.152")
+  citations = $mongo["crossref"]["citations"]
 
-["prefix", "journal", "year"].each do |item|
-  global_option "--#{item.downcase}=#{item.upcase}" do |value|
-    $set_spec[item.to_sym] = value
-  end
+  docs = citations.find({"from.doi" => doi})
+  docs.map { |doc| doc["to"]["unstructured_citation"] }.compact
 end
 
-command :list do |c|
-  c.syntax = "catalog list --prefix=10.1109"
-  c.description = "List set specs in OAI metadata"
+global_option "--mongo host" do |val|
+  $mongo_host = val
+end
+
+command :add do |c|
+  # add doi for PDF filename
+
+  c.syntax = "catalog add doi pdf"
+  c.description = "Add a PDF to the catalog with given DOI"
 
   c.action do |args, options|
-    get_sets($set_spec).each do |setspec|
-      say setspec
+    doi, filename = args
+    with_catalog do |catalog|
+      catalog[doi] = {
+        :pdf => filename,
+        :citations => get_references(doi)
+      }
+      say "Found #{catalog[doi][:citations].count} citations in CrossRef Cited-by data"
     end
   end
 end
 
-command :populate do |c|
-  c.syntax = "catalog populate --prefix=10.5555 --journal=5 --year=2002"
-  c.description = "Add CrossRef metadata to a catalog"
+command :accept do |c|
+  c.syntax = "catalog accept doi"
+  c.description = "Accept extracted references as test examples"
 
   c.action do |args, options|
-    records = get_records $set_spec
-    
     with_catalog do |catalog|
-      records.each do |record|
-        catalog[record[:doi]] = record.merge(:from => $set_spec)
+      args.each do |doi|
+        xml_filename =  catalog[doi]["pdf"] + ".xml"
+        refs = File.open(xml_filename) { |file| parse_xml_citations(file.read) }
+        catalog[doi]["citations"] = refs
       end
     end
-
-    say "Added or updated #{records.count} records"
-  end
-end
-
-command :pdfs do |c|
-  c.syntax = "catalog pdfs"
-  c.description = "Locate and download PDFs for DOIs in a catalog"
-
-  c.action do |args, options|
-    pdfs_added = 0
-    
-    with_catalog do |catalog|
-      catalog.each do |doi, record|
-        unless record["pdf"]
-          say "Crawling for #{doi}..."
-          pdf_filename = GetPdf.get_from_doi doi
-          if pdf_filename.nil?
-            say "Couldn't find PDF"
-          else
-            record[:pdf] = pdf_filename
-            say "Found PDF"
-            pdfs_added = pdfs_added.next
-          end
-        end
-      end
-    end
-
-    say "Found #{pdfs_added} PDFs."
   end
 end
 
@@ -233,8 +118,8 @@ command :run do |c|
 
     with_catalog do |catalog|
       catalog.each do |doi, record|
-        if record["pdf"] and not record["extracted"]
-          say "Running pdfextract for #{doi}..."
+        if record["pdf"]
+          say "Running pdfextract for #{record["pdf"]} ( #{doi} )..."
 
           begin
             xml = PdfExtract.view(record["pdf"], :as => :xml) do |pdf|
@@ -242,7 +127,7 @@ command :run do |c|
             end
 
             references_filename = record["pdf"] + ".xml"
-          
+
             File.open(references_filename, "w") do |file|
               file.write xml
             end
@@ -265,14 +150,15 @@ command :stats do |c|
   c.action do |args, options|
 
     with_catalog do |catalog|
-      
+
       diffs = []
-      
+
       catalog.each do |doi, record|
-        if record["pdf"] and record["extracted"]
-          diffs << diff_list(parse_xml_citations(xml), record[:citations])
+        if record["pdf"]
+          xml = File.open(record["pdf"] + ".xml") { |file| file.read }
+          diffs << diff_list(parse_xml_citations(xml), record["citations"])
         end
-      end 
+      end
 
       if diffs.count.zero?
         say "No records with a PDF and pdf-extract results"
@@ -280,12 +166,12 @@ command :stats do |c|
         successful = diffs.count { |diff| diff.zero? }
         unsuccessful = diffs.count - successful
 
-        success_percent = (successful / diffs.count) * 100.0
-        
-        say "Successfully matched all references: #{successful} (#{success_percent}%)"
+        success_percent = (successful / diffs.count.to_f) * 100.0
+
+        say "Successfully matched all references: #{successful}/#{diffs.count} (#{success_percent}%)"
       end
     end
-    
+
   end
 end
 

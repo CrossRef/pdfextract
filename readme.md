@@ -68,6 +68,6 @@ Have a look at pdf-extract's settings:
 
     $ pdf-extract settings
 
-This command will produce a list of settings along with descriptions of what they effect.
+This command will produce a list of settings along with descriptions of what they affect.
 They can be set by passing a `--set key:value` argument to pdf-extract.
 

@@ -2,8 +2,8 @@
 
 require 'commander/import'
 require 'json'
-require_relative '../lib/pdf-extract'
-require_relative '../lib/references/resolve'
+require_relative '../lib/pdf-extract.rb'
+require_relative '../lib/pdf/extract/references/resolve.rb'
 
 program :name, 'pdf-extract'
 program :version, '0.0.1'
@@ -146,7 +146,7 @@ command :settings do |c|
     else
       say "<%= color('AT DEFAULT:', BOLD) %>\n\n"
       s.unmodified.each_pair { |k, v| say "#{k}:\t#{v}" }
-    
+
       say "\n<%= color('OVERRIDDEN:', BOLD) %>\n\n"
       s.modified.each_pair { |k, v| say "#{k}:\t#{v}   (#{s.agent(k)})" }
     end

@@ -1,4 +1,4 @@
-require_relative "names"
+require_relative 'names.rb'
 
 module PdfExtract::Language
 

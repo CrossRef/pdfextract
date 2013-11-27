@@ -1,8 +1,8 @@
-require "net/http"
-require "json"
-require "sqlite3"
+require 'net/http'
+require 'json'
+require 'sqlite3'
 
-require_relative "pdf-extract"
+require_relative '../extract.rb'
 
 module PdfExtract::Names
 
@@ -11,12 +11,13 @@ module PdfExtract::Names
     @@unambiguous_weighting = 1.0
 
     def self.path_to_data data_filename
-      File.join(File.dirname(File.expand_path(__FILE__)), "../data/" + data_filename)
+      File.expand_path(File.join('../../../data', data_filename),
+                       File.dirname(__FILE__))
     end
 
     @@db = SQLite3::Database.new(path_to_data("familynames.db"), {:readonly => true})
     @@stop_words = File.open(path_to_data("stopwords.txt")).read.split(",")
-   
+
     def self.detect_names content
       words = content.split
       sum = 0.0
@@ -37,7 +38,7 @@ module PdfExtract::Names
             end
           end
         end
-        
+
       end
 
       if sum == 0
@@ -47,7 +48,7 @@ module PdfExtract::Names
       end
     end
   end
-      
+
   class NamesService
     def self.detect_names content
       data = {:name_frequency => 0.0}
@@ -55,7 +56,7 @@ module PdfExtract::Names
         response = Net::HTTP.start "names.crrd.dyndns.org" do |http|
           http.post "/detect", content
         end
-      
+
         if response.code == "200"
           data = JSON.parse response.body
         end
@@ -80,6 +81,6 @@ module PdfExtract::Names
   def self.detect_names content
     @@detector.detect_names content
   end
-  
+
 end
 

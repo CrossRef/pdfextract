@@ -1,13 +1,14 @@
-require "svm"
+require 'libsvm'
 
 module PdfExtract
   module Score
 
     def self.path_to_data data_filename
-      File.join(File.dirname(File.expand_path(__FILE__)), "../../data/" + data_filename)
+      File.expand_path(File.join('../../../../data', data_filename),
+                       File.dirname(__FILE__))
     end
 
-    @@reference_model = Model.new(path_to_data("reference.model"))
+    @@reference_model = Libsvm::Model.load(path_to_data('reference.model'))
 
     def self.reference? section
       sample = {

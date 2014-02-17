@@ -1,5 +1,5 @@
 # Taken from pdfminer, in turn extracted from AFM files at:
-# 
+#
 #   http://www.ctan.org/tex-archive/fonts/adobe/afm/
 #
 
@@ -39,12 +39,13 @@ module PdfExtract
           @@base_fonts[base_font][:Widths].fetch(c.codepoints.first, 0)
         }
       else
-        @ascent = font.ascent
-        @descent = font.descent
-        @bbox = font.bbox
+        font_descriptor = font.font_descriptor
+        @ascent = font_descriptor.ascent
+        @descent = font_descriptor.descent
+        @bbox = font_descriptor.font_bounding_box
         @glyph_width_lookup = proc do |c|
           begin
-            font.glyph_width c.codepoints.first
+            font.glyph_width(c.codepoints.first) || 0
           rescue TypeError => e
             # It seems some fonts don't have a first char attribute in their
             # descriptor and this causes problems for pdf-reader.

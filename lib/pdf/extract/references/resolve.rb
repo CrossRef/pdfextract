@@ -2,31 +2,47 @@ require 'cgi'
 require 'nokogiri'
 require 'open-uri'
 require 'net/http'
+require 'json'
 
 module PdfExtract::Resolve
 
   class Sigg
 
     def self.find ref
-      url = "http://api.labs.crossref.org/search?q=#{CGI.escape(ref)}"
       resolved = {}
-      begin
-        doc = Nokogiri::HTML(open url)
-
-        result = doc.at_css "div.result"
-        unless result.nil?
-          score = result.at_css("span.cr_score").content.to_s
-          if score.to_i >= 90
-            doi = result.at_css "span.doi"
-            resolved[:doi] = doi.content.sub "http://dx.doi.org/", ""
-          end
-        end
-      rescue
+      url = "http://search.labs.crossref.org/dois?q=#{CGI.escape(ref)}&rows=1"
+      query = JSON.parse(open(url).read())
+      unless query.nil?
+        resolved[:doi] = query[0]["doi"]
+        resolved[:score] = query[0]["score"]
       end
       resolved
     end
 
   end
+
+  # class Sigg
+
+  #   def self.find ref
+  #     url = "http://api.labs.crossref.org/search?q=#{CGI.escape(ref)}"
+  #     resolved = {}
+  #     begin
+  #       doc = Nokogiri::HTML(open url)
+
+  #       result = doc.at_css "div.result"
+  #       unless result.nil?
+  #         score = result.at_css("span.cr_score").content.to_s
+  #         if score.to_i >= 90
+  #           doi = result.at_css "span.doi"
+  #           resolved[:doi] = doi.content.sub "http://dx.doi.org/", ""
+  #         end
+  #       end
+  #     rescue
+  #     end
+  #     resolved
+  #   end
+
+  # end
 
   class FreeCite
 

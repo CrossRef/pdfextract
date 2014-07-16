@@ -13,8 +13,9 @@ module PdfExtract::Resolve
       url = "http://search.labs.crossref.org/dois?q=#{CGI.escape(ref)}&rows=1"
       query = JSON.parse(open(url).read())
       unless query.nil?
-        resolved[:doi] = query[0]["doi"]
+        resolved[:doi] = query[0]["doi"].sub "http://dx.doi.org/",""
         resolved[:score] = query[0]["score"]
+        puts "Found DOI from Text: #{resolved[:doi]} (Score: #{resolved[:score]})"
       end
       resolved
     end

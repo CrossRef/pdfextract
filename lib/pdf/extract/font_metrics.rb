@@ -40,9 +40,15 @@ module PdfExtract
         }
       else
         font_descriptor = font.font_descriptor
-        @ascent = font_descriptor.ascent
-        @descent = font_descriptor.descent
-        @bbox = font_descriptor.font_bounding_box
+        unless font_descriptor.nil?
+          @ascent = font_descriptor.ascent
+          @descent = font_descriptor.descent
+          @bbox = font_descriptor.font_bounding_box
+        else
+          # pdf-reader will initialize new Font objects with font_descriptor = nil
+          # if the font is a CID font. So "ascent", etc. throws a NoMethodError.
+          0
+        end
         @glyph_width_lookup = proc do |c|
           begin
             font.glyph_width(c.codepoints.first) || 0

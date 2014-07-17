@@ -9,13 +9,15 @@ module PdfExtract::Resolve
   class Sigg
 
     def self.find ref
-      resolved = {}
+      resolved = {:doi => nil, :score => nil}
       url = "http://search.labs.crossref.org/dois?q=#{CGI.escape(ref)}&rows=1"
       query = JSON.parse(open(url).read())
-      unless query.nil?
+      unless query.nil? or query[0].nil?
         resolved[:doi] = query[0]["doi"].sub "http://dx.doi.org/",""
         resolved[:score] = query[0]["score"]
         puts "Found DOI from Text: #{resolved[:doi]} (Score: #{resolved[:score]})"
+      else
+        puts "Could not resolve DOI for following reference: #{ref}. Skipping..."
       end
       resolved
     end

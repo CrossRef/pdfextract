@@ -14,18 +14,20 @@ module PdfExtract
         objs.each do |obj|
 
           if obj.key? :doi and obj.key? :score
+            unless obj[:doi].nil? or obj[:score].nil?
 
-            if obj[:score] > 1
-              url = "http://api.crossref.org/works/#{obj[:doi]}/transform/application/x-bibtex"
-              begin
-                bib = open(URI.encode(url)).read()
-              rescue URI::InvalidURIError
-                puts "DOI not a valid URL: #{obj[:doi]}"
-              rescue OpenURI::HTTPError
-                puts "DOI not found on CrossRef: #{obj[:doi]}"
-              else
-                puts "Found BibTeX from DOI: #{obj[:doi]}"
-                bibs << bib
+              if obj[:score] > 1
+                url = "http://api.crossref.org/works/#{obj[:doi]}/transform/application/x-bibtex"
+                begin
+                  bib = open(URI.encode(url)).read()
+                rescue URI::InvalidURIError
+                  puts "DOI not a valid URL: #{obj[:doi]}"
+                rescue OpenURI::HTTPError
+                  puts "DOI not found on CrossRef: #{obj[:doi]}"
+                else
+                  puts "Found BibTeX from DOI: #{obj[:doi]}"
+                  bibs << bib
+                end
               end
             end
             

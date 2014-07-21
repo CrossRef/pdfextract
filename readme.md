@@ -39,6 +39,10 @@ origin):
 Extract regions of text from a PDF without line information (prettier and easier to read):
 
     $ pdf-extract extract --regions --no-lines myfile.pdf
+    
+Resolve references to DOIs and output related metadata as BibTeX:
+
+    $ pdf-extract extract-bib --resolved_references myfile.pdf
 
 ## Problems
 

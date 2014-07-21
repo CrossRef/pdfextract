@@ -22,6 +22,7 @@ resolvers = {
 
 outputs = {
   :xml => proc { :stdout },
+  :bib => proc { |f| File::basename(f.sub /\.[a-zA-Z0-9]+\Z/, "") + ".refs.bib" },
   :pdf => proc { |f| File::basename(f.sub /\.[a-zA-Z0-9]+\Z/, "") + ".mask.pdf" }
 }
 
@@ -30,6 +31,11 @@ commands = [
     :name => "extract",
     :view => :xml,
     :description => "Extract objects as XML."
+  },
+  {
+    :name => "extract-bib",
+    :view => :bib,
+    :description => "Extract resolved references in BibTeX format."
   },
   {
     :name => "mark",

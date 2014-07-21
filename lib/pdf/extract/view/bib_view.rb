@@ -15,7 +15,7 @@ module PdfExtract
 
           if obj.key? :doi and obj.key? :score
             unless obj[:doi].nil? or obj[:score].nil? or obj[:score] < 1
-              url = "http://api.crossref.org/works/#{obj[:doi]}/transform/application/x-bibtex"
+              url = "http://api.crossref.org/v1/works/#{obj[:doi]}/transform/application/x-bibtex"
               begin
                 bib = open(URI.encode(url)).read()
               rescue URI::InvalidURIError

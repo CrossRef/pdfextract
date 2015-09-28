@@ -27,14 +27,18 @@ module PdfExtract
 
           #   be no less tall than a factor of the tallest text,
           titles.sort_by! { |r| -r[:line_height] }
-          tallest_line = titles.first[:line_height]
-          title_slop = tallest_line - (tallest_line * pdf.settings[:title_slop])
-          titles.reject! { |r| r[:line_height] < title_slop }
+          if not titles.count.zero?
+            tallest_line = titles.first[:line_height]
+            title_slop = tallest_line - (tallest_line * pdf.settings[:title_slop])
+            titles.reject! { |r| r[:line_height] < title_slop }
+          end
           
           #   be on the earliest page with text,
           titles.sort_by! { |r| r[:page] }
-          first_page = titles.first[:page]
-          titles.reject! { |r| r[:page] != first_page }
+          if not titles.count.zero?
+            first_page = titles.first[:page]
+            titles.reject! { |r| r[:page] != first_page }
+          end
 
           #   be the highest of the above.
           titles.sort_by! { |r| -r[:y] }

@@ -141,7 +141,8 @@ module PdfExtract
             @object_listeners.each_pair do |type, listeners|
               listeners.each do |listener|
                 if objs[type].nil?
-                  raise "#{@pdf.operating_type} is missing a dependency on #{type}"
+                  #raise "#{@pdf.operating_type} is missing a dependency on #{type}"
+                  next
                 end
                 objs[type].each { |obj| listener.call obj }
               end

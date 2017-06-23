@@ -148,7 +148,7 @@ module PdfExtract
 
     def self.overlap? from, by, a, b
       a_top = a[from] + a[by]
-      b_top = b[rom] + b[by]
+      b_top = b[from] + b[by]
 
       (b_top <= a_top && b_top >= a[from]) || (b[from] >= a[from] && b[from] <= b_top)
     end

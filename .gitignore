@@ -1,4 +1,4 @@
 bin/*.pdf
-
+.idea/*
 *.sw*
 .DS_Store

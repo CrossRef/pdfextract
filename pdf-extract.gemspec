@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://github.com/CrossRef/pdfextract"
   s.required_ruby_version = ">=1.9.1"
 
-  s.add_dependency 'pdf-reader', '= 1.3.3'
+  s.add_dependency 'pdf-reader', '= 1.2.0'
   s.add_dependency 'nokogiri', '>= 1.5.0'
   s.add_dependency 'prawn', '>= 0.11.1'
   s.add_dependency 'sqlite3', '>= 1.3.4'
